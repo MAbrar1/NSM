@@ -245,7 +245,7 @@ function sectionsHtml<T>(doc: ReportDoc<T>, rtl: boolean): string {
 function reportHtml<T>(
   doc: ReportDoc<T>,
   settings: ReportSettings,
-  opts: { rtl?: boolean; generatedAt?: Date } = {}
+  opts: { rtl?: boolean; generatedAt?: Date; paper?: "A4" | "A5"; pageNumbers?: boolean } = {}
 ): string {
   const rtl = opts.rtl ?? false;
   const dir = rtl ? 'dir="rtl" lang="ur"' : 'dir="ltr" lang="en"';
@@ -394,7 +394,10 @@ ${PRINT_SCHEME_SCRIPT}
   }
   .doc-footer .gen { font-variant-numeric: tabular-nums; }
 
-  @page { size: A4; margin: 12mm 10mm; }
+  /* A4 default; A5 halves the sheet (callsites pick per report).
+     thead { display: table-header-group } + tr { page-break-inside:
+     avoid } above repeat the table header and keep rows whole. */
+  @page { size: ${opts.paper ?? "A4"}; margin: 12mm 10mm; }
   @media print {
     /* Paper is always light, even when the user previews in dark mode. */
     :root, [data-scheme="dark"], [data-scheme="auto"] {
@@ -452,13 +455,29 @@ ${PRINT_SCHEME_SCRIPT}
 
     <div class="doc-footer">
       <span>${esc(settings.storeName)}${rtl ? " — " : " — "}${rtl ? "دستاویز" : "Document"}</span>
-      <span class="gen">${esc(generated)}</span>
+      <span class="gen">${esc(generated)}${opts.pageNumbers ? ' · <span class="page-of" data-page-of="1">Page 1</span>' : ""}</span>
     </div>
   </div>
+  ${opts.pageNumbers ? PAGE_NUMBER_SCRIPT : ""}
   ${PAGE_MEASURE_SCRIPT}
 </body>
 </html>`;
 }
+
+/**
+ * Footer page numbers. @page margin-boxes (@bottom-center content:
+ * counter(page)) are NOT reliably supported in Chromium/WebKitGTK
+ * print paths, so the preview and printed footer carry a JS-injected
+ * "Page X of Y" that counts laid-out A4/A5 sheets the same way the
+ * page-break ruler does (same usable-height math). The static footer
+ * remains legible when JS is off — it just shows no number.
+ */
+export const PAGE_NUMBER_SCRIPT =
+  `<script>(function(){var MM_PER_PX=25.4/96;function usablePx(){var a4=297-24;if(a4===0)return 0;var pageMM=(document.documentElement.getAttribute("data-paper")==="a5")?210-24:297-24;return (1/MM_PER_PX)*pageMM;}` +
+  `function pages(){var el=document.querySelector(".sheet");if(!el)return 1;return Math.max(1,Math.ceil(el.scrollHeight/usablePx()));}` +
+  `function update(){var n=pages();var el=document.querySelector("[data-page-of]");if(el)el.textContent=(document.documentElement.dir==="rtl"?"صفحة 1 من "+n:"Page 1 of "+n);}` +
+  `if(document.readyState!=="loading"){update();}else{document.addEventListener("DOMContentLoaded",update);}` +
+  `window.addEventListener("load",update);})();</script>`;
 
 export interface PrintReportOptions<T> {
   /** Force RTL layout (defaults to the app's document direction). */
@@ -480,7 +499,7 @@ export interface PrintReportOptions<T> {
 export function buildReportHtml<T>(
   doc: ReportDoc<T>,
   settings: ReportSettings,
-  opts?: { rtl?: boolean; generatedAt?: Date }
+  opts?: { rtl?: boolean; generatedAt?: Date; paper?: "A4" | "A5"; pageNumbers?: boolean }
 ): string {
   return reportHtml(doc, settings, opts);
 }
@@ -493,9 +512,9 @@ export function buildReportHtml<T>(
 export function printReport<T>(
   doc: ReportDoc<T>,
   settings: ReportSettings,
-  opts?: { rtl?: boolean; onBlocked?: () => void; windowTitle?: string }
+  opts?: { rtl?: boolean; onBlocked?: () => void; windowTitle?: string; paper?: "A4" | "A5"; pageNumbers?: boolean }
 ): void {
-  const html = buildReportHtml(doc, settings, { rtl: opts?.rtl });
+  const html = buildReportHtml(doc, settings, { rtl: opts?.rtl, paper: opts?.paper, pageNumbers: opts?.pageNumbers });
   const win = window.open("", "_blank", "width=880,height=1000");
   if (!win) {
     opts?.onBlocked?.();
@@ -518,9 +537,9 @@ export function printReport<T>(
 export async function previewReport<T>(
   doc: ReportDoc<T>,
   settings: ReportSettings,
-  opts?: { rtl?: boolean; filename?: string }
+  opts?: { rtl?: boolean; filename?: string; paper?: "A4" | "A5"; pageNumbers?: boolean }
 ): Promise<void> {
-  const html = buildReportHtml(doc, settings, { rtl: opts?.rtl });
+  const html = buildReportHtml(doc, settings, { rtl: opts?.rtl, paper: opts?.paper, pageNumbers: opts?.pageNumbers });
   const { openPrintPreview } = await import("@/components/print/print-preview");
   openPrintPreview(html, opts?.filename ?? "report");
 }
