@@ -1,0 +1,17 @@
+=== audit-refunds.mjs  [15:48:39] ===
+exit=1 [15:52:25]
+═══ 29 PASS / 4 FAIL ═══
+
+=== audit5.mjs  [15:52:25] ===
+exit=1 [15:57:38]
+═══ 9 PASS / 22 FAIL ═══
+
+=== audit-followups-ui.mjs  [15:57:38] ===
+exit=9 [16:01:21]
+  - dashboard: Total Products card renders  missing
+  - dashboard: 'Needs Restock' card renders  missing
+  - reports/inventory: Total Products card renders  (missing)
+
+=== audit-checkout-ui.mjs  [16:01:22] ===
+exit=1 [16:10:19]
+=== AFTER DONE PART 2 [16:10:19] ===

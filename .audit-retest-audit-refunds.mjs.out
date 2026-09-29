@@ -1,0 +1,62 @@
+PASS  browser login succeeds
+
+── PHASE: refunds API ──
+PASS  GET /api/refunds answers — status=200
+  total refunds=20, reasons=5, months=6
+PASS  reason breakdown shape is {reason,count,total}
+PASS  reason breakdown sorted by refunded value desc
+PASS  reason filter returns only matching orders — n=5
+
+── PHASE: English refunds page ──
+PASS  page title renders
+PASS  KPI strip renders
+PASS  date-range presets render
+  📸 D:\New folder (2)\Najjar Supper Mart/.audit-shots/refunds-en.png
+PASS  a reason row is clickable
+PASS  active reason filter chip appears
+PASS  clicked reason is marked aria-pressed=true
+  📸 D:\New folder (2)\Najjar Supper Mart/.audit-shots/refunds-en-reason-filter.png
+PASS  clicking the active reason clears the filter
+PASS  top-reason export button is enabled — clicked
+PASS  reason CSV is generated
+PASS  CSV filename is stamped refund-reasons-*.csv — refund-reasons-2026-09-28.csv
+PASS  CSV has localized header + reason rows
+
+── PHASE: Urdu refunds page ──
+PASS  html dir flips to rtl
+PASS  Urdu title renders
+PASS  Urdu export button renders
+PASS  no unresolved translation keys leak
+  📸 D:\New folder (2)\Najjar Supper Mart/.audit-shots/refunds-ur.png
+PASS  Urdu reason row clickable
+PASS  Urdu reason chip appears
+  📸 D:\New folder (2)\Najjar Supper Mart/.audit-shots/refunds-ur-reason-filter.png
+
+── PHASE: dashboard month-bar drill-down ──
+PASS  dashboard refund-trend card renders
+PASS  refund-trend bars are clickable — 6 bar(s)
+  bars: Apr 26: PKR 23.54 | May 26: PKR 21.23 | Jun 26: PKR 10.96 | Jul 26: PKR 50.88 | Aug 26: PKR 213.77 | Sep 26: PKR 29.12
+  geometry: {"n":6,"rect":{"x":732,"y":2225,"w":73,"h":42},"scrollY":0,"vh":900}
+  dispatched click on <rect> (attempt 1)
+PASS  clicking a month bar navigates to /refunds with a range — ?from=2026-09-01&to=2026-09-30
+PASS  drill-down provides from & to — 2026-09-01 .. 2026-09-30
+PASS  refund date inputs reflect the drilled range — ["2026-09-01","2026-09-30"]
+PASS  ledger KPI matches the month's API total — ui=5 api=5
+  📸 D:\New folder (2)\Najjar Supper Mart/.audit-shots/refunds-drilldown.png
+PASS  drilled month exists in the trend series — 2026-09
+
+── PHASE: customers page ──
+PASS  customers page renders with the KPI strip
+PASS  count KPI matches the API total — ui=18 api=18
+PASS  loyalty KPI sums the whole base (not one page) — ui=3,624 api=3624
+PASS  sortable column headers render — 5 sortable
+PASS  clicking a header activates sort — descending
+  mobile dbg: {"kids":1,"rows":6}
+PASS  mobile card list markup is present — 1 (hidden at md+)
+FAIL  mobile list shows the same customers as the table — cards=1 rows=6
+  📸 D:\New folder (2)\Najjar Supper Mart/.audit-shots/customers-en.png
+FAIL  row opens the customer detail modal
+PASS  customers page renders in Urdu (RTL)
+  📸 D:\New folder (2)\Najjar Supper Mart/.audit-shots/customers-ur.png
+
+═══ 36 PASS / 2 FAIL ═══

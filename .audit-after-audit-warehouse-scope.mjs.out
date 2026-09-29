@@ -1,0 +1,22 @@
+PASS  browser login succeeds
+
+── PHASE: scoped API consistency ──
+PASS  unscoped dashboard answers — status=200
+PASS  warehouse list answers — 3 warehouses
+PASS  scoped dashboard answers — status=200
+PASS  scoped rangeRevenue ≤ all-warehouse total — 0 ≤ 0
+PASS  scoped monthRevenue ≤ all-warehouse total — 13162 ≤ 313364
+PASS  scoped weekTrend orders ≤ all-warehouse trend orders — 0 ≤ 0
+PASS  unknown warehouseId falls back to all data
+PASS  scoped alerts all belong to the chosen warehouse — 47 alerts
+PASS  scoped alert summary ≤ unscoped summary — 47 ≤ 80
+
+── PHASE: in-page scope switch ──
+PASS  scope selector renders with multiple warehouses
+PASS  scope switch dispatched to the scoped warehouse
+PASS  selector state reflects the scoped warehouse
+PASS  dashboard figures change after scoping
+PASS  scope restored to all warehouses
+  📸 D:\New folder (2)\Najjar Supper Mart/.audit-shots/dashboard-warehouse-scope.png
+
+═══ 15 PASS / 0 FAIL ═══

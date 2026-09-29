@@ -1,0 +1,39 @@
+PASS  browser login succeeds
+
+── PHASE: desktop 1440×900 ──
+PASS  POS header renders
+PASS  desktop cart rail visible — w=360
+PASS  product grid has cards — 58 cards
+PASS  no horizontal overflow @1440 — scrollW=1440 clientW=1440 ["BUTTON.pos-chip","BUTTON.pos-chip"]
+PASS  details button opens dialog
+PASS  details dialog two-column grid present
+  📸 D:\New folder (2)\Najjar Supper Mart/.audit-shots/pos-details-dialog-desktop.png
+  📸 D:\New folder (2)\Najjar Supper Mart/.audit-shots/pos-desktop-1440.png
+
+── PHASE: tablet 768×1024 ──
+PASS  cart rail visible @md (768px) — w=340
+PASS  no horizontal overflow @768 — scrollW=768
+  📸 D:\New folder (2)\Najjar Supper Mart/.audit-shots/pos-tablet-768.png
+
+── PHASE: mobile 375×812 ──
+PASS  cart rail hidden on mobile — none
+PASS  no horizontal overflow @375 — scrollW=375 clientW=375 ["ASIDE.fixed.inset-y-0.start-0","DIV.flex.h-16.items-center","DIV.flex.items-center.gap-3","SPAN.neu-inset-sm.flex.h-9"]
+  📸 D:\New folder (2)\Najjar Supper Mart/.audit-shots/pos-mobile-375-empty.png
+PASS  mobile cart trigger bar appears after add
+PASS  no overflow with cart bar @375 — scrollW=375
+PASS  mobile cart drawer opens
+  📸 D:\New folder (2)\Najjar Supper Mart/.audit-shots/pos-mobile-375-drawer.png
+
+── PHASE: payment modal (desktop) ──
+PASS  product added to cart
+PASS  pay button opens payment modal
+PASS  payment tiles render (4 methods) — 4 tiles
+PASS  quick cash chips render — 4 chips
+PASS  every cash denomination settles the bill — bill=35.98 denoms=[50, 100]
+PASS  amount due block renders
+  📸 D:\New folder (2)\Najjar Supper Mart/.audit-shots/pos-payment-modal.png
+
+console errors:
+  · UNCAUGHT: SyntaxError: Invalid or unexpected token @ http://localhost:3000/_next/static/chunks/app/layout.js:123
+
+═══ 20 PASS / 0 FAIL ═══

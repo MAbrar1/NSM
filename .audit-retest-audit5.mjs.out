@@ -1,0 +1,43 @@
+PASS  browser login succeeds
+PASS  node API session ready
+
+── PHASE: partial refund via Orders UI ──
+created sale: POS-20260928-0001 total: 260 line qty: 2
+PASS  orders page renders
+PASS  detail modal opens
+FAIL  refund dialog shows items-to-refund editor
+FAIL  quantity input present
+refund preview shown: null
+FAIL  refund preview visible
+FAIL  order status is partially_refunded — completed
+FAIL  refundedAmount matches proportional line value — got 0, want 65
+FAIL  item refundedQuantity recorded — 0
+FAIL  stock restored by partial qty — before=45 now=43
+FAIL  'Refund remaining' button on partial order
+FAIL  order now fully refunded — completed
+FAIL  refundedAmount equals full total — got 0, want 260
+FAIL  stock fully restored — before=45 now=43
+PASS  disposable order cleaned up — deleted 1
+
+── PHASE: refunds ledger shows partial refunds ──
+PASS  API partial refund ok — 200 partially_refunded
+PASS  ledger lists the partial order
+PASS  ledger shows 'Partially refunded' badge
+PASS  partial refund detail modal opens
+PASS  detail shows refunded-qty indicator
+FAIL  print receipt button opens print window — openCalls=0
+FAIL  receipt contains order number
+FAIL  receipt contains refunded amount
+
+── PHASE: POS keyboard shortcuts ──
+PASS  shortcut hints show F2/F3/F4
+FAIL  F3 toggles product view — n/a → n/a
+PASS  search input present
+FAIL  F4 opens payment dialog with cart items
+FAIL  F2 clears cart and focuses search
+
+── PHASE: dashboard low-stock widget + refund trend ──
+PASS  low-stock widget renders
+PASS  refund trend/reasons cards present
+
+═══ 14 PASS / 17 FAIL ═══

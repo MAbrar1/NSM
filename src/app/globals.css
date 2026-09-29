@@ -1,0 +1,3065 @@
+@import "tailwindcss";
+
+/* ═══════════════════════════════════════════════════════════════
+   ELITE POS — PROFESSIONAL DESIGN SYSTEM (v3)
+   
+   CRITICAL FIX: The previous CSS had `* { box-sizing: border-box; }`
+   OUTSIDE @layer base, which overrides Tailwind's border utilities
+   and causes buttons/inputs to lose their borders and padding.
+   
+   All resets MUST be inside @layer base to not conflict with
+   Tailwind's utility layer.
+   ═══════════════════════════════════════════════════════════════ */
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* The legacy `--color-brand-*` blue palette is GONE. The accent
+     migration moved every on-screen usage, and the print/excel palette
+     now mirrors the neu accent tokens too, so nothing referenced it any
+     more. The neu "interactive accent" block below is the only accent
+     palette — on screen and on paper. */
+
+  /* ─── Surface ─── */
+  --color-surface-50: #f8fafc;
+  --color-surface-100: #f1f5f9;
+  --color-surface-200: #e2e8f0;
+  --color-surface-300: #cbd5e1;
+  --color-surface-400: #94a3b8;
+  --color-surface-500: #64748b;
+  --color-surface-600: #475569;
+  --color-surface-700: #334155;
+  --color-surface-800: #1e293b;
+  --color-surface-900: #0f172a;
+  --color-surface-950: #020617;
+
+  /* ─── Success ─── */
+  --color-success-50: #f0fdf4;
+  --color-success-100: #dcfce7;
+  --color-success-500: #22c55e;
+  --color-success-600: #16a34a;
+  --color-success-700: #15803d;
+
+  /* ─── Warning ─── */
+  --color-warning-50: #fffbeb;
+  --color-warning-100: #fef3c7;
+  --color-warning-500: #f59e0b;
+  --color-warning-600: #d97706;
+  --color-warning-700: #b45309;
+
+  /* ─── Danger ─── */
+  --color-danger-50: #fef2f2;
+  --color-danger-100: #fee2e2;
+  --color-danger-500: #ef4444;
+  --color-danger-600: #dc2626;
+  --color-danger-700: #b91c1c;
+
+  /* ─── Info ─── */
+  --color-info-50: #eff6ff;
+  --color-info-100: #dbeafe;
+  --color-info-500: #3b82f6;
+  --color-info-600: #2563eb;
+  --color-info-700: #1d4ed8;
+
+  /* ─── Typography ─── */
+  --font-sans: "Inter", "system-ui", "-apple-system", "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+
+  /* ─── Radius ─── */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+  --radius-full: 9999px;
+
+  /* ─── Shadows ─── */
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+
+  /* ─── Z-Index ─── */
+  --z-sidebar: 40;
+  --z-header: 30;
+  --z-overlay: 45;
+  --z-modal: 50;
+  --z-toast: 60;
+
+  /* ─── Neumorphism ───
+     Registered here purely so components get real utilities
+     (`text-neu-muted`, `bg-neu-bg`, …). The values themselves are
+     declared once in the :root neu block further down, which is what
+     the recipes and the dark-mode override both read. */
+  --color-neu-bg: var(--neu-bg);
+  --color-neu-primary: var(--neu-text-primary);
+  --color-neu-muted: var(--neu-text-muted);
+  --color-neu-faint: var(--neu-text-faint);
+  --color-neu-cyan: var(--neu-accent-cyan);
+  --color-neu-green: var(--neu-accent-green);
+  --color-neu-amber: var(--neu-accent-amber);
+  --color-neu-red: var(--neu-accent-red);
+  /* legible inks for text / glyphs / indicators */
+  --color-neu-ink-cyan: var(--neu-ink-cyan);
+  --color-neu-ink-green: var(--neu-ink-green);
+  --color-neu-ink-amber: var(--neu-ink-amber);
+  --color-neu-ink-red: var(--neu-ink-red);
+  --color-neu-ink-violet: var(--neu-ink-violet);
+  /* Mode-aware page-markup surfaces: let bespoke markup say "a divider"
+     or "a recessed panel" with ONE class instead of a legacy surface
+     tint plus a `dark:` override. */
+  --color-neu-hairline: var(--neu-hairline);
+  --color-neu-sunken: var(--neu-sunken);
+  /* Mode-STABLE, for the two cases where a colour must not follow the
+     theme: an overlay that sits on imagery (a scrim stays dark in both
+     modes) and a white mark/fill on a solid (`bg-neu-solid-ink`). */
+  --color-neu-scrim: rgb(var(--neu-scrim-rgb));
+  --color-neu-solid-ink: var(--neu-solid-ink);
+  /* The solid status fills. These are what a legacy `bg-success-500`
+     (a badge fill, a chart series, an indicator bar) migrates ONTO: one
+     hue, mode-stable, chosen to clear 3:1 as a GRAPHIC against `--neu-bg`
+     in BOTH modes — so a series colour needs no `dark:` twin either. */
+  --color-neu-solid-cyan: var(--neu-solid-cyan);
+  --color-neu-solid-green: var(--neu-solid-green);
+  --color-neu-solid-amber: var(--neu-solid-amber);
+  --color-neu-solid-red: var(--neu-solid-red);
+  /* The interactive accent. This is what the legacy blue `--color-brand-*`
+     palette migrates ONTO: accent text, tinted washes, borders/rings and
+     the solid fills all read one of these instead of a raw brand step. */
+  --color-neu-accent-ink: var(--neu-accent-ink);
+  --color-neu-accent-ink-strong: var(--neu-accent-ink-strong);
+  --color-neu-accent-line: var(--neu-accent-line);
+  --color-neu-accent-wash: var(--neu-accent-wash);
+  --color-neu-accent-solid: var(--neu-accent-solid);
+  --color-neu-accent-solid-strong: var(--neu-accent-solid-strong);
+  /* The status washes. This is what the legacy `--color-success/warning/
+     danger/info-*` washes migrate ONTO: one mode-aware tint per status hue,
+     so a legacy `bg-success-50 text-success-700 dark:bg-success-500/15
+     dark:text-success-500` collapses to `bg-neu-wash-green
+     text-neu-ink-green` with no `dark:` twin at all. */
+  --color-neu-wash-cyan: var(--neu-wash-cyan);
+  --color-neu-wash-green: var(--neu-wash-green);
+  --color-neu-wash-amber: var(--neu-wash-amber);
+  --color-neu-wash-red: var(--neu-wash-red);
+
+  /* ─── Easing ─── */
+  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ELECTRIC EMBOSSED NEUMORPHISM (neu) — THE DESIGN SYSTEM
+   ═══════════════════════════════════════════════════════════════
+   This REPLACES the global theme: the page surface, the focus ring
+   and every shared `src/components/ui/*` component are built from
+   the tokens + recipes below.
+
+   A shadow is a recipe, not a one-off, so every emboss in the app is
+   declared exactly ONCE, here. Component files opt in with a class
+   (`.neu-raised`, `.neu-input`, …) and must never contain a raw
+   `box-shadow` string or a one-off hex.
+
+   The legacy `--color-*` palette in @theme stays defined because
+   bespoke page markup (data tables, POS tiles, chips) still
+   references it; new work should use the `--neu-*` tokens.
+
+   Recipes live in @layer components so Tailwind utility classes
+   (w-full, mt-4, …) can still override them at the call site.
+   ═══════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ─── surface + text ─── */
+  --neu-bg: #e6ecf0;
+  --neu-text-primary: #334155;
+  /* WCAG: the spec's #64748b measures 3.99:1 on --neu-bg — below the
+     4.5:1 AA floor for the 13–14px text this token is used at — so
+     the default is the darker #475569 (6.36:1), which is itself
+     demoted to 8.69:1 under prefers-contrast: more. */
+  --neu-text-muted: #475569;
+  /* The third step (light 4.83:1, dark 4.93:1). AA on a mid-tone surface
+     leaves only so much room, so `faint` is a NARROW but real step below
+     `muted`: it restores the hierarchy the legacy five-step grey had
+     (meta text, timestamps, SKUs, placeholders) without dropping under
+     4.5:1. Kept deliberately light — do not use it for body copy.
+     Darkens to the default muted under prefers-contrast: more. */
+  --neu-text-faint: #5a6779;
+
+  /* ─── shadow pair — regenerate BOTH together if --neu-bg changes ─── */
+  --neu-shadow-dark: #babecc;
+  --neu-shadow-light: #ffffff;
+
+  /* ─── semantic accents — DECORATION ONLY ───
+     The "electric" hues: card glow, accent lines, colour washes, the
+     glow behind a ring. Deliberately saturated, and therefore NOT
+     legible as ink — see --neu-ink-* below. */
+  --neu-accent-cyan: #00f2fe;  /* info */
+  --neu-accent-green: #22c55e; /* success */
+  --neu-accent-amber: #f59e0b; /* warning */
+  --neu-accent-red: #ef4444;   /* danger / error */
+
+  /* ─── semantic INK — anything whose colour carries meaning ───
+     Text, glyphs and indicators must clear WCAG AA (4.5:1 for text,
+     3:1 for meaningful graphics). The vivid accents above measure
+     only 1.16–3.16:1 on --neu-bg, so every badge label, delta chip,
+     status heading and icon uses these same-hue darker inks instead.
+     Values measured against --neu-bg at the point of use. */
+  --neu-ink-cyan: #155e75;  /* 6.10:1 */
+  --neu-ink-green: #166534; /* 5.98:1 */
+  --neu-ink-amber: #92400e; /* 5.95:1 */
+  --neu-ink-red: #b91c1c;   /* 5.43:1 */
+  /* The sixth hue exists for multi-series charts: five categories need five
+     distinguishable fills, and borrowing a status hue for a neutral series
+     would falsely imply a state. Same rule as the inks above — it carries
+     meaning, so it clears AA on --neu-bg and flips in `.dark`. */
+  --neu-ink-violet: #6d28d9; /* 5.96:1 */
+
+  /* ─── solid fills — MODE-STABLE, carry --neu-solid-ink ───
+     A solid fill that has to hold a WHITE glyph (the 64px status badge,
+     `.neu-badge-solid`). Because the mark is white in both modes, the
+     fill must stay dark enough in both — so unlike --neu-ink-*, these
+     deliberately do NOT flip under `.dark`. Deep rather than vivid: the
+     spec's vivid accents only reach 2.15–2.28:1 behind white, which
+     fails the 3:1 non-text minimum for the badge glyph.
+     Measured against #fff: cyan 5.36:1, green 5.01:1, amber 5.02:1,
+     red 6.47:1. */
+  --neu-solid-ink: #ffffff;
+  --neu-solid-cyan: #0e7490;
+  --neu-solid-green: #15803d;
+  --neu-solid-amber: #b45309;
+  --neu-solid-red: #b91c1c;
+
+  /* ─── focus indicator ───
+     WCAG 2.2 SC 1.4.11 wants 3:1 on the focus ring itself, and
+     --neu-accent-cyan is only 1.16:1 on --neu-bg — so the ring has
+     its own AA-safe cyan (3.09:1 light / 8.10:1 dark, measured
+     against --neu-bg in each mode by audit-neu-theme.mjs). */
+  --neu-focus-ring: #0891b2;
+  --neu-focus-rgb: 8 145 178;
+
+  /* ─── interactive accent (replaces the legacy blue brand palette) ───
+     Three roles, because ONE step cannot serve all three:
+       `ink`  — accent TEXT/glyphs. AA on the page surface AND on the wash.
+       `line` — borders, rings and tint/heat fills. Needs SC 1.4.11's 3:1,
+                so it is the SAME value as the focus ring: one cyan that is
+                proven to sit on the surface, used for every edge.
+       `wash` — a tinted panel behind accent content.
+     ink / ink-strong / line / wash are MODE-AWARE; the two solid fills are
+     MODE-STABLE because they carry --neu-solid-ink (see the block above).
+     Measured on --neu-bg: ink 6.10:1 (5.36:1 on the wash), ink-strong
+     7.65:1 (6.72:1), line 3.09:1. White on accent-solid 5.36:1. */
+  --neu-accent-ink: #155e75;
+  --neu-accent-ink-strong: #164e63;
+  --neu-accent-line: var(--neu-focus-ring);
+  --neu-accent-wash: color-mix(in srgb, var(--neu-focus-ring) 12%, var(--neu-bg));
+  /* The wash as a FLAT hex, for surfaces that are not --neu-bg: paper,
+     spreadsheet bands and exported documents. Those are always light
+     (ink-saving, universally legible), so unlike the wash this one has no
+     dark counterpart — the print engines hard-code light for paper.
+     print-brand.ts mirrors it; tests/print-brand-sync.test.ts fails if
+     the two drift. */
+  /* ─── status washes ───
+     A uniform 8% of the hue's VIVID accent mixed into `--neu-bg`. Two
+     things make that the right construction and not just a convenience:
+
+     · Mixing the vivid accent (not the dark ink) keeps the HUE legible —
+       an 8% tint of the ink measures sat 0.00 for amber, i.e. a neutral
+       grey with no warning signal left in it.
+     · Mixing into `--neu-bg` means the mode flip is free: the same
+       declaration tints DOWN from the light surface and UP from the dark
+       one, so there is no `.dark` override to drift out of sync. It also
+       matches what `--neu-sunken` already does.
+
+     Contrast is enforced by audit-neu-theme.mjs: the matching ink stays
+     AA on its own wash in BOTH modes. Red is the binding constraint
+     (4.95:1 light / 4.96:1 dark, against 4.5 required) because
+     `--neu-ink-red` is the least bright ink in both modes.
+
+     This also FIXES a real defect: the legacy pairing it replaces
+     (`dark:bg-danger-500/15` behind `dark:text-danger-500`) measured
+     only 4.26:1 — a self-tinted wash and a bright ink pull towards each
+     other, so every dark-mode danger badge shipped below AA. */
+  --neu-wash-cyan: color-mix(in srgb, var(--neu-accent-cyan) 8%, var(--neu-bg));
+  --neu-wash-green: color-mix(in srgb, var(--neu-accent-green) 8%, var(--neu-bg));
+  --neu-wash-amber: color-mix(in srgb, var(--neu-accent-amber) 8%, var(--neu-bg));
+  --neu-wash-red: color-mix(in srgb, var(--neu-accent-red) 8%, var(--neu-bg));
+
+  --neu-accent-tint: #cbe1e9;
+  --neu-accent-solid: var(--neu-solid-cyan);
+  --neu-accent-solid-strong: #155e75;
+
+  /* Channel triplets — lets the recipes compose rgb(… / a) without
+     re-stating a hex, so the accents stay single-sourced. */
+  --neu-cyan-rgb: 0 242 254;
+  --neu-red-rgb: 239 68 68;
+  --neu-green-rgb: 34 197 94;
+  --neu-amber-rgb: 245 158 11;
+  --neu-scrim-rgb: 51 65 85;
+
+  /* ─── page-markup surfaces ───
+     A hairline is a shadow edge (same value the neu recipes already use
+     for `.pagination-footer` / table rows), and a "sunken" panel is the
+     recessed wash that replaces the old `bg-surface-50/100/200` fills.
+     Both are re-pointed in `.dark`, so markup never needs a `dark:`. */
+  --neu-hairline: var(--neu-shadow-dark);
+  --neu-sunken: color-mix(in srgb, var(--neu-shadow-dark) 22%, var(--neu-bg));
+
+  /* ─── radii ─── */
+  --neu-radius-lg: 28px;
+  --neu-radius-md: 16px;
+  --neu-radius-sm: 12px;
+  --neu-radius-full: 9999px;
+
+  /* ─── motion ─── */
+  --neu-transition: 150ms ease;
+
+  /* ─── control constants (shared by CSS + component specs) ─── */
+  --neu-border-w: 2px;
+  --neu-btn-h: 52px;
+  --neu-btn-h-sm: 36px;
+  --neu-btn-icon: 44px;
+  --neu-input-h: 48px;
+  --neu-otp-w: 56px;
+  --neu-otp-h: 64px;
+
+  /* ─── Composed shadows ───
+     The recipe geometry lives here too, so a page-level surface can
+     reuse an emboss with `var(--neu-shadow-inset)` instead of
+     re-typing offsets — the shadow pair stays the only colour source.
+
+     NOTE: these are declared on :root, so the pair inside them is
+     substituted against the root element. That is safe here because
+     ThemeProvider always puts `.dark` on <html> (= :root); the
+     `dark: composed shadows re-derive` check in audit-neu-theme.mjs
+     guards that invariant. */
+  --neu-shadow-raised: 6px 6px 14px var(--neu-shadow-dark), -6px -6px 14px var(--neu-shadow-light);
+  --neu-shadow-inset: inset 4px 4px 8px var(--neu-shadow-dark), inset -4px -4px 8px var(--neu-shadow-light);
+  --neu-shadow-inset-sm: inset 2px 2px 4px var(--neu-shadow-dark), inset -2px -2px 4px var(--neu-shadow-light);
+  --neu-shadow-elevated: 10px 10px 20px var(--neu-shadow-dark), -10px -10px 20px var(--neu-shadow-light);
+  /* The bar's scrolled state: a lid, not a floating card — downward only, so
+     the bar separates from the content under it without needing a light side
+     above it. Offset-free in RTL on purpose: a light source is a property of
+     the room, not of the reading direction. */
+  --neu-shadow-bar: 0 10px 18px -12px var(--neu-shadow-dark);
+  --neu-shadow-raised-sm: 3px 3px 7px var(--neu-shadow-dark), -3px -3px 7px var(--neu-shadow-light);
+  --neu-shadow-card: 14px 14px 28px var(--neu-shadow-dark), -14px -14px 28px var(--neu-shadow-light),
+    0 0 15px rgb(var(--neu-cyan-rgb) / 0.15);
+  --neu-shadow-focus: inset 2px 2px 4px var(--neu-shadow-dark), 0 0 12px rgb(var(--neu-focus-rgb) / 0.5);
+  --neu-shadow-error: inset 2px 2px 4px var(--neu-shadow-dark), 0 0 12px rgb(var(--neu-red-rgb) / 0.4);
+  /* A 1px inset edge rather than an emboss — the dark hairline under a
+     sticky table header, declared here so it stays a token like every
+     other shadow instead of a one-off offset. */
+  --neu-shadow-edge: inset 0 -1px 0 var(--neu-shadow-dark);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --neu-transition: 0ms; }
+}
+
+@media (prefers-contrast: more) {
+  :root {
+    --neu-text-primary: #1e293b;
+    --neu-text-muted: #334155;
+    /* Faint darkens too — otherwise the ink ladder would INVERT under
+       this preference (faint would stay #5a6779 / 4.83:1 while muted
+       jumped to 8.69:1). It lands on the default muted, which keeps
+       the three steps distinct and still ordered. */
+    --neu-text-faint: #475569;
+  }
+}
+
+/* ═══ Motion primitives ═══
+   Only opacity/transform — never a shadow tween. Each is disabled
+   under prefers-reduced-motion at the bottom of this block. */
+@keyframes neuShimmer {
+  100% { transform: translateX(100%); }
+}
+@keyframes neuToastIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes neuStateIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+/* The dialog panel is centred by the `translate-x-[-50%] translate-y-[-50%]`
+   utilities in dialog.tsx. Tailwind v4 emits those as the modern `translate`
+   PROPERTY, not as a `transform` — and the two compose rather than override.
+   So this keyframe must NOT repeat the centring translate: doing so applied
+   it a second time and shoved every dialog half its own size up and to the
+   left, off-screen on small viewports. Animating the standalone `scale`
+   property keeps the tween independent of the centring transform, which is
+   also what `prefers-reduced-motion` can disable without losing the position.
+   (Guarded by audit-neu-theme.mjs "motion: no transform ..." and measured on
+   real dialogs by audit-neu-pages.mjs "overlay fits the viewport".) */
+@keyframes neuDialogIn {
+  from { opacity: 0; scale: 0.96; }
+  to   { opacity: 1; scale: 1; }
+}
+
+@layer components {
+
+  /* ═══════════════════════════════════════════════════════════
+     1. CORE SHADOW RECIPES
+     The only place in the codebase a box-shadow is written.
+     ═══════════════════════════════════════════════════════════ */
+
+  .neu-raised {
+    background: var(--neu-bg);
+    box-shadow: var(--neu-shadow-raised);
+    transition: box-shadow var(--neu-transition);
+  }
+  /* The small raised step. `--neu-shadow-raised-sm` already existed — it is
+     what a disabled button wears — but it had no recipe, so small chrome
+     (keycaps, the logo tile, 34px toolbar chips) could only fake depth with
+     a border. 3px/7px is the correct scale for a 20–34px surface: the 6px
+     recipe on a keycap reads as a lifted tile, not a key. */
+  .neu-raised-sm {
+    background: var(--neu-bg);
+    box-shadow: var(--neu-shadow-raised-sm);
+    transition: box-shadow var(--neu-transition), color var(--neu-transition), background-color var(--neu-transition);
+  }
+  .neu-inset {
+    background: var(--neu-bg);
+    box-shadow: var(--neu-shadow-inset);
+  }
+  .neu-inset-sm {
+    background: var(--neu-bg);
+    box-shadow: var(--neu-shadow-inset-sm);
+  }
+  .neu-elevated {
+    /* toasts — floats higher than a card */
+    background: var(--neu-bg);
+    box-shadow: var(--neu-shadow-elevated);
+  }
+  /* The bar's two states. At rest it is flush with the page and separates
+     itself with the two-line `.neu-separator-h` emboss; once content has been
+     scrolled under it, it lifts on a DOWNWARD-only shadow — a bar is a lid,
+     not a floating card, so the pair is deliberately asymmetric. It takes its
+     colour from `--neu-shadow-dark`, so it re-derives in dark mode like every
+     other shadow in the system, and it is offset-free in RTL on purpose: a
+     light source is a property of the room, not of the reading direction. */
+  .neu-bar-lifted {
+    box-shadow: var(--neu-shadow-bar);
+  }
+  .neu-disabled {
+    box-shadow: var(--neu-shadow-raised-sm);
+    color: var(--neu-text-muted);
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+  .neu-card {
+    background: var(--neu-bg);
+    border-radius: var(--neu-radius-lg);
+    padding: 36px 28px;
+    position: relative;
+    box-shadow: var(--neu-shadow-card);
+  }
+  .neu-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, rgb(var(--neu-cyan-rgb) / 0.6), rgb(var(--neu-cyan-rgb) / 0) 60%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+  /* Containers that own their internal padding (Card + CardHeader /
+     CardContent, the dialog body, …) drop the recipe's 36/28 padding
+     rather than double-padding their children. */
+  .neu-card-flush { padding: 0; }
+
+  /* ═══════════════════════════════════════════════════════════
+     2. KEYBOARD FOCUS
+     One cyan ring for every interactive element. Uses `outline`
+     (not box-shadow) so it composes with whichever emboss recipe
+     the element is already wearing. Inputs additionally get the
+     glow + inset shown in the Input spec. */
+
+  .neu-focus:focus-visible {
+    outline: var(--neu-border-w) solid var(--neu-focus-ring);
+    outline-offset: 2px;
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     3. BUTTON
+     ═══════════════════════════════════════════════════════════ */
+
+  .neu-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    height: var(--neu-btn-h);
+    padding-inline: 1.5rem;
+    border: none;
+    border-radius: var(--neu-radius-md);
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1;
+    color: var(--neu-text-primary);
+    background: var(--neu-bg);
+    box-shadow: var(--neu-shadow-raised);
+    transition: box-shadow var(--neu-transition), color var(--neu-transition);
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .neu-btn:active,
+  .neu-btn[aria-pressed="true"],
+  .neu-btn[data-state="on"] {
+    /* pressed — swap to the inset recipe */
+    box-shadow: var(--neu-shadow-inset);
+  }
+  .neu-btn:disabled,
+  .neu-btn[aria-disabled="true"] {
+    box-shadow: var(--neu-shadow-raised-sm);
+    color: var(--neu-text-muted);
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+  /* Spec says danger hovers to red; it uses the legible red ink so the
+     label stays above 4.5:1 (the vivid red is only 3.16:1). */
+  .neu-btn-danger:hover:not(:disabled):not([aria-disabled="true"]) {
+    color: var(--neu-ink-red);
+  }
+  /* `--sm` / `--icon` size variants from the Button spec. */
+  .neu-btn-sm {
+    height: var(--neu-btn-h-sm);
+    padding-inline: 0.875rem;
+    font-size: 13px;
+    border-radius: var(--neu-radius-sm);
+  }
+  .neu-btn-icon {
+    width: var(--neu-btn-icon);
+    height: var(--neu-btn-icon);
+    padding-inline: 0;
+    color: var(--neu-text-muted);
+  }
+  .neu-btn-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+  .neu-btn-icon-sm {
+    width: 34px;
+    height: 34px;
+    padding-inline: 0;
+    border-radius: var(--neu-radius-sm);
+    color: var(--neu-text-muted);
+  }
+  .neu-btn-icon-lg {
+    width: 52px;
+    height: 52px;
+    padding-inline: 0;
+    color: var(--neu-text-muted);
+  }
+  /* The spec's "full width" CTA. Opt-in rather than forced on
+     `.neu-btn`, because ~170 call sites use buttons inside toolbars,
+     table rows and icon slots where 100% width is wrong. */
+  .neu-btn-block { width: 100%; }
+  /* Link variant — no emboss, no surface, just underlined text in the
+     primary ink (cyan would measure 1.16:1 on --neu-bg). */
+  .neu-btn-plain {
+    height: auto;
+    padding: 0;
+    background: transparent;
+    border-radius: 0;
+    box-shadow: none;
+    color: var(--neu-text-primary);
+    font-weight: 500;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+  .neu-btn-plain:active,
+  .neu-btn-plain[aria-pressed="true"],
+  .neu-btn-plain:disabled {
+    box-shadow: none;
+    background: transparent;
+    color: var(--neu-text-muted);
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     4. INPUT (text / numeric / OTP)
+     ═══════════════════════════════════════════════════════════ */
+
+  .neu-input {
+    width: 100%;
+    height: var(--neu-input-h);
+    padding-inline: 16px;
+    border: var(--neu-border-w) solid transparent;
+    border-radius: var(--neu-radius-md);
+    background: var(--neu-bg);
+    box-shadow: var(--neu-shadow-inset);
+    color: var(--neu-text-primary);
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 500;
+    text-align: start;
+    -webkit-appearance: none;
+    appearance: none;
+    outline: none;
+    transition: box-shadow var(--neu-transition), border-color var(--neu-transition);
+  }
+  .neu-input::placeholder {
+    color: var(--neu-text-muted);
+    opacity: 1;
+  }
+  .neu-input:focus,
+  .neu-input:focus-visible {
+    outline: none;
+    /* 2px ring in the AA-safe focus cyan + its glow */
+    border-color: var(--neu-focus-ring);
+    box-shadow: var(--neu-shadow-focus);
+  }
+  .neu-input[aria-invalid="true"],
+  .neu-input.is-error {
+    /* the red ring is a border (3.16:1 light / 3.89:1 dark), which
+       already clears the 3:1 non-text minimum */
+    border-color: var(--neu-accent-red);
+    box-shadow: var(--neu-shadow-error);
+  }
+  .neu-input:disabled {
+    box-shadow: var(--neu-shadow-raised-sm);
+    color: var(--neu-text-muted);
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+  /* OTP box — 56×64, 24px/700 centred. */
+  .neu-input-otp {
+    width: var(--neu-otp-w);
+    height: var(--neu-otp-h);
+    padding-inline: 0;
+    text-align: center;
+    font-size: 24px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  /* Numeric fields keep the spinners off — they break the emboss. */
+  .neu-input[type="number"]::-webkit-outer-spin-button,
+  .neu-input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  .neu-input[type="number"] { -moz-appearance: textfield; }
+
+  /* Select — same surface as the input, native chrome stripped.
+     The chevron data-URIs are the one deliberate hex pair in this
+     file: they mirror --neu-text-muted in each mode, because a
+     data-URI cannot read a custom property. */
+  .neu-select {
+    width: 100%;
+    height: var(--neu-input-h);
+    padding-inline: 16px 44px;
+    border: var(--neu-border-w) solid transparent;
+    border-radius: var(--neu-radius-md);
+    background-color: var(--neu-bg);
+    box-shadow: var(--neu-shadow-inset);
+    color: var(--neu-text-primary);
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 500;
+    -webkit-appearance: none;
+    appearance: none;
+    outline: none;
+    cursor: pointer;
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    background-size: 16px 16px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23475569' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+    transition: box-shadow var(--neu-transition), border-color var(--neu-transition);
+  }
+  html[dir="rtl"] .neu-select {
+    background-position: left 16px center;
+    padding-inline: 44px 16px;
+  }
+  .dark .neu-select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+  }
+  .neu-select:focus,
+  .neu-select:focus-visible {
+    outline: none;
+    border-color: var(--neu-focus-ring);
+    box-shadow: var(--neu-shadow-focus);
+  }
+  .neu-select:disabled {
+    box-shadow: var(--neu-shadow-raised-sm);
+    color: var(--neu-text-muted);
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     5. LABEL — typography only, never a shadow/box, not interactive
+     ═══════════════════════════════════════════════════════════ */
+
+  .neu-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--neu-text-muted);
+    letter-spacing: 0.01em;
+  }
+  .neu-label[data-required="true"]::after {
+    content: " *";
+    color: var(--neu-ink-red);
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     6. SEPARATOR — no surface for a blurred shadow to read on, so a
+     two-line emboss instead of .neu-inset.
+     ═══════════════════════════════════════════════════════════ */
+
+  .neu-separator-h {
+    height: 1px;
+    background: transparent;
+    border-top: 1px solid var(--neu-shadow-dark);
+    border-bottom: 1px solid var(--neu-shadow-light);
+  }
+  /* DELIBERATELY PHYSICAL: this is the vertical separator's two-line EMBOSS —
+     a dark edge facing the light and a lit edge away from it. Like every other
+     shadow in the system it does not mirror, because a light source is a
+     property of the room and not of the reading direction (see the docs'
+     deviations). Only layout anchors are logical. */
+  .neu-separator-v {
+    width: 1px;
+    background: transparent;
+    border-left: 1px solid var(--neu-shadow-dark);
+    border-right: 1px solid var(--neu-shadow-light);
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     7. BADGE — the smaller inset; 4px reads muddy at pill scale.
+     Colour variants are INK, not accent: at 12px they need 4.5:1 and
+     the vivid accents measure 1.16–3.16:1 on --neu-bg. The hues are
+     the same; only the lightness differs. See the contrast report in
+     docs/DESIGN-NEUMORPHISM.md.
+     ═══════════════════════════════════════════════════════════ */
+
+  .neu-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    height: 24px;
+    padding-inline: 10px;
+    border: none;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+    background: var(--neu-bg);
+    box-shadow: var(--neu-shadow-inset-sm);
+    color: var(--neu-text-muted);
+  }
+  /* Ink, not accent: these are 12px labels and need 4.5:1. The hues are
+     the same; only the lightness differs. */
+  .neu-badge-info { color: var(--neu-ink-cyan); }
+  .neu-badge-success { color: var(--neu-ink-green); }
+  .neu-badge-warning { color: var(--neu-ink-amber); }
+  .neu-badge-danger { color: var(--neu-ink-red); }
+  .neu-badge-neutral { color: var(--neu-text-muted); }
+  /* Filled escape hatch for places that need AA-safe small text: a deep
+     mode-stable fill + white ink (4.97–6.47:1 on both backgrounds). */
+  .neu-badge-solid {
+    box-shadow: none;
+    background: var(--neu-text-primary);
+    color: var(--neu-bg);
+  }
+  .neu-badge-solid.neu-badge-info { background: var(--neu-solid-cyan); color: var(--neu-solid-ink); }
+  .neu-badge-solid.neu-badge-success { background: var(--neu-solid-green); color: var(--neu-solid-ink); }
+  .neu-badge-solid.neu-badge-warning { background: var(--neu-solid-amber); color: var(--neu-solid-ink); }
+  .neu-badge-solid.neu-badge-danger { background: var(--neu-solid-red); color: var(--neu-solid-ink); }
+
+  /* ═══════════════════════════════════════════════════════════
+     8. SKELETON — static emboss alone doesn't read as "loading",
+     so a low-opacity sweep rides on top.
+     (`.skeleton` is kept as an alias for the existing callers.)
+     ═══════════════════════════════════════════════════════════ */
+
+  .neu-skeleton,
+  .skeleton {
+    position: relative;
+    overflow: hidden;
+    background: var(--neu-bg);
+    border-radius: var(--neu-radius-sm);
+    box-shadow: var(--neu-shadow-inset);
+  }
+  .neu-skeleton::after,
+  .skeleton::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.4), transparent);
+    animation: neuShimmer 1.6s infinite;
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     9. CHART — the shadow lives on the container, never the data.
+     ═══════════════════════════════════════════════════════════ */
+
+  .neu-chart-grid {
+    stroke: var(--neu-shadow-dark);
+    opacity: 0.4;
+  }
+  .neu-chart-baseline {
+    stroke: var(--neu-shadow-dark);
+    opacity: 0.6;
+  }
+  .neu-chart-axis {
+    fill: var(--neu-text-muted);
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+  }
+  .neu-chart-value {
+    fill: var(--neu-text-primary);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ─── Golden overrides for shared chart primitives ───
+     The chart recipes read --neu-* tokens, so Golden just re-points the
+     semantic ladder. ~
+     ═══════════════════════════════════════════════════════════ */
+  .golden .neu-chart-grid  { stroke: var(--gold-shadow-dark); }
+  .golden .neu-chart-baseline { stroke: var(--gold-shadow-dark); }
+  .golden .neu-chart-axis    { fill: var(--gold-text-muted); }
+  .golden .neu-chart-value   { fill: var(--gold-text-primary); }
+
+  /* ═══════════════════════════════════════════════════════════
+     10. IMAGE FRAME — never shadow the <img> itself, only its frame.
+     ═══════════════════════════════════════════════════════════ */
+
+  .neu-image-frame {
+    padding: 8px;
+    border-radius: var(--neu-radius-md);
+    background: var(--neu-bg);
+    box-shadow: var(--neu-shadow-raised);
+  }
+  .neu-image-frame > img {
+    display: block;
+    width: 100%;
+    /* frame radius minus the 8px frame padding */
+    border-radius: 8px;
+  }
+
+  /* ─── Golden image frame ───
+     Uses the same raised emboss recipe, only the gold shadow pair. */
+  .golden .neu-image-frame {
+    background: var(--gold-bg);
+    box-shadow: var(--neu-shadow-raised);
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     11. DIALOG — entrance/exit is opacity + scale, never a shadow.
+     ═══════════════════════════════════════════════════════════ */
+
+  .neu-dialog-overlay {
+    background: rgb(var(--neu-scrim-rgb) / 0.35);
+    -webkit-backdrop-filter: blur(2px);
+    backdrop-filter: blur(2px);
+  }
+  .neu-dialog-panel {
+    animation: neuDialogIn 150ms ease both;
+  }
+  .neu-dialog-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--neu-text-primary);
+  }
+  .neu-dialog-text {
+    font-size: 14px;
+    color: var(--neu-text-muted);
+  }
+
+  /* ─── Golden dialog tokens ───
+     The dialog recipe reads --neu-* tokens, so Golden just supplies the
+     gold equivalents. The overlay keeps its scrim (mode-STABLE) so it
+     still reads as a real overlay in both modes; the panel gets the gold
+     surface + hairline + emboss so it looks like one premium card, not a
+     gold wash taped onto Neu. */
+  .golden .neu-dialog-overlay {
+    background: rgb(var(--gold-scrim-rgb) / 0.4);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+  }
+  .golden .neu-dialog-title { color: var(--gold-text-primary); }
+  .golden .neu-dialog-text  { color: var(--gold-text-muted); }
+
+  /* ═══════════════════════════════════════════════════════════
+     12. TOASTER — more elevation than a card; slides, never morphs.
+     ═══════════════════════════════════════════════════════════ */
+
+  .neu-toast {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 10px;
+    border-radius: var(--neu-radius-md);
+    padding: 12px 16px;
+    animation: neuToastIn 150ms ease both;
+  }
+  .neu-toast-icon { flex-shrink: 0; }
+  .neu-toast-icon svg { width: 18px; height: 18px; }
+  /* Icons are meaningful graphics — they need 3:1, so ink not accent. */
+  .neu-toast-icon-success { color: var(--neu-ink-green); }
+  .neu-toast-icon-danger { color: var(--neu-ink-red); }
+  .neu-toast-icon-warning { color: var(--neu-ink-amber); }
+  .neu-toast-icon-info { color: var(--neu-ink-cyan); }
+
+  /* ─── Toast card (used by Toaster) ───
+     Compact neumorphic tile: radius-md, 12/16 padding, elevated
+     shadow, row layout with 10px gap, inline 18px ink icon + caption.
+     Entrance is opacity + translateY(8px→0); exit is a quick opacity
+     fade. The stack itself is a flex column; each card is a flex row.
+     Hue is carried by a 3px solid dot on the leading edge, because at
+     card scale the vivid accent on the icon would compete with the text.
+     ═══════════════════════════════════════════════════════════ */
+
+  .shadow-neu-toast {
+    box-shadow: var(--neu-shadow-elevated);
+  }
+
+  /* Golden toast ink/dot override — uses the gold ink set, same contract
+     as Neu (glyph = ink, dot = solid gold) so the card still reads as one
+     compact tile and never as gold paint. */
+  .golden .neu-toast-icon-success { color: var(--gold-ink-brass); }
+  .golden .neu-toast-icon-danger  { color: var(--gold-ink-rose); }
+  .golden .neu-toast-icon-warning { color: var(--gold-ink-amber); }
+  .golden .neu-toast-icon-info    { color: var(--gold-ink-gold); }
+  .golden .text-neu-primary {
+    color: var(--gold-text-primary);
+  }
+  .golden .text-neu-muted {
+    color: var(--gold-text-muted);
+  }
+
+  .golden .text-neu-faint { color: var(--gold-text-faint); }
+  .golden .text-neu-accent-ink { color: var(--gold-accent-ink); }
+  .golden .text-neu-accent-ink-strong { color: var(--gold-accent-ink-strong); }
+
+  .golden .text-neu-accent-solid {
+    color: var(--gold-solid-ink);
+  }
+
+  .golden .text-neu-solid-ink {
+    color: var(--gold-solid-ink);
+  }
+
+  .golden .bg-neu-solid-cyan { background-color: var(--gold-solid-gold); }
+  .golden .bg-neu-solid-green { background-color: var(--gold-solid-brass); }
+  .golden .bg-neu-solid-amber { background-color: var(--gold-solid-amber); }
+  .golden .bg-neu-solid-red   { background-color: var(--gold-solid-rose); }
+
+  .golden .border-neu-solid-cyan { border-color: var(--gold-solid-gold); }
+  .golden .border-neu-solid-green { border-color: var(--gold-solid-brass); }
+  .golden .border-neu-solid-amber { border-color: var(--gold-solid-amber); }
+  .golden .border-neu-solid-red   { border-color: var(--gold-solid-rose); }
+
+  .golden .shadow-neu-toast { box-shadow: var(--neu-shadow-elevated); }
+
+  .golden .neu-elevated   { box-shadow: var(--neu-shadow-elevated); }
+  .golden .neu-raised     { box-shadow: var(--neu-shadow-raised); }
+  .golden .neu-inset      { box-shadow: var(--neu-shadow-inset); }
+  .golden .neu-inset-sm   { box-shadow: var(--neu-shadow-inset-sm); }
+  .golden .neu-card       { box-shadow: var(--neu-shadow-card); }
+  .golden .neu-focus:focus-visible { outline: var(--neu-border-w) solid var(--neu-focus-ring); }
+  .golden .neu-focus:focus-visible { outline-color: var(--gold-focus-ring); }
+  .golden .neu-disabled { box-shadow: var(--neu-shadow-raised-sm); }
+  .golden .neu-bar-lifted { box-shadow: var(--neu-shadow-bar); }
+  .golden .neu-shadow-focus { box-shadow: var(--neu-shadow-focus); }
+  .golden .neu-shadow-error { box-shadow: var(--neu-shadow-error); }
+  .golden .neu-separator-h {
+    border-top-color: var(--gold-shadow-dark);
+    border-bottom-color: var(--gold-shadow-light);
+  }
+  .golden .neu-separator-v {
+    border-left-color: var(--gold-shadow-dark);
+    border-right-color: var(--gold-shadow-light);
+  }
+  .golden .neu-image-frame {
+    box-shadow: var(--neu-shadow-raised);
+  }
+  .golden .neu-card::before {
+    background: linear-gradient(
+      135deg,
+      rgb(var(--gold-cyan-rgb) / 0.6),
+      rgb(var(--gold-cyan-rgb) / 0) 60%
+    );
+  }
+  .golden .neu-toast,
+  .golden .neu-dialog-panel,
+  .golden .is-success,
+  .golden .is-status-in {
+    animation: none;
+  }
+  .golden .neu-skeleton::after,
+  .golden .skeleton::after {
+    animation: none;
+    background: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .golden .neu-bar-lifted { box-shadow: none; }
+    .golden .neu-disabled { box-shadow: none; }
+    .golden .neu-shadow-focus { box-shadow: none; }
+    .golden .neu-shadow-error { box-shadow: none; }
+    .golden .neu-elevated { box-shadow: var(--neu-shadow-elevated); }
+    .golden .neu-raised { box-shadow: var(--neu-shadow-raised); }
+    .golden .neu-inset { box-shadow: var(--neu-shadow-inset); }
+    .golden .neu-inset-sm { box-shadow: var(--neu-shadow-inset-sm); }
+    .golden .neu-card { box-shadow: var(--neu-shadow-card); }
+    .golden .neu-card::before { display: none; }
+    .golden .neu-badge { box-shadow: var(--neu-shadow-inset-sm); }
+    .golden .neu-badge-solid { box-shadow: none; }
+    .golden .neu-image-frame { box-shadow: var(--neu-shadow-raised); }
+    .golden .neu-status-badge-success { box-shadow: 0 8px 20px rgb(var(--gold-green-rgb) / 0.35); }
+    .golden .neu-status-badge-warning { box-shadow: 0 8px 20px rgb(var(--gold-amber-rgb) / 0.35); }
+    .golden .neu-status-badge-danger { box-shadow: 0 8px 20px rgb(var(--gold-red-rgb) / 0.35); }
+    .golden .neu-raised-sm { box-shadow: var(--neu-shadow-raised-sm); }
+    .golden .neu-shadow-edge { box-shadow: var(--neu-shadow-edge); }
+  .golden .neu-separator-h { border-top-color: var(--gold-shadow-dark); border-bottom-color: var(--gold-shadow-light); }
+  .golden .neu-separator-v { border-left-color: var(--gold-shadow-dark); border-right-color: var(--gold-shadow-light); }
+    .golden .neu-toast { animation: none; }
+    .golden .neu-dialog-panel { animation: none; }
+    .golden .is-success { animation: none; }
+    .golden .is-status-in { animation: none; }
+    .golden .neu-skeleton::after,
+    .golden .skeleton::after {
+      animation: none;
+      background: none;
+    }
+    .golden .neu-focus:focus-visible { outline-color: var(--gold-focus-ring); }
+  }
+    .golden .neu-disabled { box-shadow: 0 0 0 transparent; }
+    .golden .neu-focus:focus-visible { outline-color: var(--gold-focus-ring); }
+    .golden .neu-shadow-focus { box-shadow: 0 0 0 transparent; }
+    .golden .neu-shadow-error { box-shadow: 0 0 0 transparent; }
+    .golden .neu-elevated { box-shadow: var(--neu-shadow-elevated); }
+    .golden .neu-raised { box-shadow: var(--neu-shadow-raised); }
+    .golden .neu-inset { box-shadow: var(--neu-shadow-inset); }
+    .golden .neu-inset-sm { box-shadow: var(--neu-shadow-inset-sm); }
+    .golden .neu-card { box-shadow: var(--neu-shadow-card); }
+    .golden .neu-card::before { display: none; }
+    .golden .neu-badge { box-shadow: var(--neu-shadow-inset-sm); }
+    .golden .neu-badge-solid { box-shadow: none; }
+    .golden .neu-image-frame { box-shadow: var(--neu-shadow-raised); }
+    .golden .neu-status-badge-success { box-shadow: 0 8px 20px rgb(var(--gold-green-rgb) / 0.35); }
+    .golden .neu-status-badge-warning { box-shadow: 0 8px 20px rgb(var(--gold-amber-rgb) / 0.35); }
+    .golden .neu-status-badge-danger { box-shadow: 0 8px 20px rgb(var(--gold-red-rgb) / 0.35); }
+    .golden .neu-bar-lifted { box-shadow: none; }
+    .golden .neu-disabled { box-shadow: none; }
+    .golden .neu-focus:focus-visible { outline-color: var(--gold-focus-ring); }
+    .golden .neu-shadow-focus { box-shadow: none; }
+    .golden .neu-shadow-error { box-shadow: none; }
+    .golden .neu-elevated { box-shadow: var(--neu-shadow-elevated); }
+    .golden .neu-raised { box-shadow: var(--neu-shadow-raised); }
+    .golden .neu-inset { box-shadow: var(--neu-shadow-inset); }
+    .golden .neu-inset-sm { box-shadow: var(--neu-shadow-inset-sm); }
+    .golden .neu-card { box-shadow: var(--neu-shadow-card); }
+    .golden .neu-card::before { display: none; }
+    .golden .neu-badge { box-shadow: var(--neu-shadow-inset-sm); }
+    .golden .neu-badge-solid { box-shadow: none; }
+    .golden .neu-image-frame { box-shadow: var(--neu-shadow-raised); }
+    .golden .neu-status-badge-success { box-shadow: 0 8px 20px rgb(var(--gold-green-rgb) / 0.35); }
+    .golden .neu-status-badge-warning { box-shadow: 0 8px 20px rgb(var(--gold-amber-rgb) / 0.35); }
+    .golden .neu-status-badge-danger { box-shadow: 0 8px 20px rgb(var(--gold-red-rgb) / 0.35); }
+  .golden .neu-status-badge-success {
+    background: var(--gold-solid-brass);
+    box-shadow: 0 8px 20px rgb(var(--gold-green-rgb) / 0.35);
+  }
+  .golden .neu-status-badge-warning {
+    background: var(--gold-solid-amber);
+    box-shadow: 0 8px 20px rgb(var(--gold-amber-rgb) / 0.35);
+  }
+  .golden .neu-status-badge-danger {
+    background: var(--gold-solid-rose);
+    box-shadow: 0 8px 20px rgb(var(--gold-red-rgb) / 0.35);
+  }
+  .golden .neu-status-heading-success { color: var(--gold-ink-brass); }
+  .golden .neu-status-heading-warning { color: var(--gold-ink-amber); }
+  .golden .neu-status-heading-danger { color: var(--gold-ink-rose); }
+  .golden .neu-delta-up { color: var(--gold-ink-brass); }
+  .golden .neu-delta-down { color: var(--gold-ink-rose); }
+  .golden .neu-badge-solid {
+    background: var(--gold-text-primary);
+    color: var(--gold-bg);
+  }
+  .golden .neu-badge-solid.neu-badge-info {
+    background: var(--gold-solid-gold);
+    color: var(--gold-solid-ink);
+  }
+  .golden .neu-badge-solid.neu-badge-success {
+    background: var(--gold-solid-brass);
+    color: var(--gold-solid-ink);
+  }
+  .golden .neu-badge-solid.neu-badge-warning {
+    background: var(--gold-solid-amber);
+    color: var(--gold-solid-ink);
+  }
+  .golden .neu-badge-solid.neu-badge-danger {
+    background: var(--gold-solid-rose);
+    color: var(--gold-solid-ink);
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     13. EMPTY STATE
+     ═══════════════════════════════════════════════════════════ */
+
+  .neu-empty-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    margin-bottom: 16px;
+    background: var(--neu-bg);
+    box-shadow: var(--neu-shadow-inset);
+    color: var(--neu-text-muted);
+  }
+  .neu-empty-icon svg { width: 28px; height: 28px; }
+  .neu-empty-icon-error { color: var(--neu-ink-red); }
+  .golden .neu-empty-icon-error-gold { color: var(--gold-ink-rose); }
+  .neu-empty-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--neu-text-primary);
+  }
+  .neu-empty-body {
+    font-size: 14px;
+    color: var(--neu-text-muted);
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     14. STAT CARD
+     ═══════════════════════════════════════════════════════════ */
+
+  .neu-stat-value {
+    font-size: 30px;
+    font-weight: 700;
+    line-height: 1.15;
+    color: var(--neu-text-primary);
+    font-variant-numeric: tabular-nums;
+  }
+  .neu-stat-label {
+    font-size: 13px;
+    color: var(--neu-text-muted);
+  }
+  .neu-delta-up { color: var(--neu-ink-green); }
+  .neu-delta-down { color: var(--neu-ink-red); }
+
+  /* ═══════════════════════════════════════════════════════════
+     15. STATUS / SUCCESS STATE SWAP
+     Toggled with `.is-success` on a sibling element — a fade, not a
+     frame-by-frame animation built from the reference stills.
+     ═══════════════════════════════════════════════════════════ */
+
+  .neu-status-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    /* solid accent — deliberately NOT embossed */
+  }
+  .neu-status-badge svg {
+    width: 28px;
+    height: 28px;
+    /* white mark on a solid fill — never emoji or an icon font.
+       The fill is a mode-stable --neu-solid-* so the glyph clears 3:1
+       in both modes: white on the vivid accent was only 2.15–2.28:1. */
+    color: var(--neu-solid-ink);
+  }
+  .neu-status-badge-success {
+    background: var(--neu-solid-green);
+    box-shadow: 0 8px 20px rgb(var(--neu-green-rgb) / 0.35);
+  }
+  .neu-status-badge-warning {
+    background: var(--neu-solid-amber);
+    box-shadow: 0 8px 20px rgb(var(--neu-amber-rgb) / 0.35);
+  }
+  .neu-status-badge-danger {
+    background: var(--neu-solid-red);
+    box-shadow: 0 8px 20px rgb(var(--neu-red-rgb) / 0.35);
+  }
+  .neu-status-heading {
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.25;
+    text-align: center;
+  }
+  /* 22px/700 is "large text" (3:1 floor), but the vivid greens/ambers
+     are 1.8–1.9:1 — below even that — so the heading uses ink. */
+  .neu-status-heading-success { color: var(--neu-ink-green); }
+  .neu-status-heading-warning { color: var(--neu-ink-amber); }
+  .neu-status-heading-danger { color: var(--neu-ink-red); }
+  .neu-status-body {
+    font-size: 14px;
+    text-align: center;
+    color: var(--neu-text-muted);
+  }
+  .is-success { animation: neuStateIn 150ms ease both; }
+  .is-status-in { animation: neuStateIn 150ms ease both; }
+}
+
+/* ─── Neu animation/transition opt-outs ───
+   The global reduced-motion block further down neutralises every
+   transition; these disable the specific neu animations outright. */
+@media (prefers-reduced-motion: reduce) {
+  .neu-skeleton::after,
+  .skeleton::after { animation: none; background: none; }
+  .neu-toast,
+  .neu-dialog-panel,
+  .is-success,
+  .is-status-in { animation: none; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   GOLDEN THEME — Electric Embossed Gold (premium luxury surface)
+
+   Golden is a FIRST-CLASS surface, not a tint of Neu. It uses the SAME
+   pattern Neu does: one light surface + shadow pair, dark mode re-derived
+   from both together under `.dark`. Every recipe, every ink, every solid
+   fill is re-pointed at a gold palette so the whole app feels like one
+   coherent premium product instead of Neu wearing gold paint.
+
+   Contrast rules are identical to Neu:
+     • text/glyph colours are INK (not vivid gold) so they clear AA on the
+       gold surface in both modes;
+     • compact indicators (toast dot, badge dot) use the solid gold set so
+       they carry the hue without fighting the text;
+     • the focus ring is its own AA-safe gold (not the vivid accent);
+     • status washes mix 8% of the vivid gold into the gold surface so the
+       mode flip is free.
+   ═══════════════════════════════════════════════════════════════ */
+
+:root.golden {
+  --gold-bg: #fbf7ef;
+  --gold-text-primary: #3b3226;
+  --gold-text-muted: #6a5c49;
+  --gold-text-faint: #8a775f;
+
+  --gold-shadow-dark: #cdbb9c;
+  --gold-shadow-light: #ffffff;
+
+  --gold-accent-gold: #c9a227;
+  --gold-accent-brass: #9a7b14;
+  --gold-accent-amber: #8a5a1c;
+  --gold-accent-rose: #9c3a2a;
+
+  --gold-ink-gold: #5a4611;
+  --gold-ink-brass: #4a3a0e;
+  --gold-ink-amber: #4a2f0a;
+  --gold-ink-rose: #7a2418;
+  --gold-ink-violet: #5b3a8a;
+
+  --gold-solid-ink: #fffaf0;
+  --gold-solid-gold: #9a7b14;
+  --gold-solid-brass: #6a4f0c;
+  --gold-solid-amber: #8a5a1c;
+  --gold-solid-rose: #7a2418;
+
+  --gold-focus-ring: #8a6a14;
+  --gold-focus-rgb: 138 106 20;
+
+  --gold-accent-ink: #5a4611;
+  --gold-accent-ink-strong: #3a2d0a;
+  --gold-accent-line: var(--gold-focus-ring);
+  --gold-accent-wash: color-mix(in srgb, var(--gold-focus-ring) 12%, var(--gold-bg));
+
+  --gold-wash-gold: color-mix(in srgb, var(--gold-accent-gold) 8%, var(--gold-bg));
+  --gold-wash-brass: color-mix(in srgb, var(--gold-accent-brass) 8%, var(--gold-bg));
+  --gold-wash-amber: color-mix(in srgb, var(--gold-accent-amber) 8%, var(--gold-bg));
+  --gold-wash-rose: color-mix(in srgb, var(--gold-accent-rose) 8%, var(--gold-bg));
+
+  --gold-cyan-rgb: 201 162 39;
+  --gold-red-rgb: 156 58 42;
+  --gold-green-rgb: 122 98 18;
+  --gold-amber-rgb: 138 90 28;
+  --gold-scrim-rgb: 59 50 38;
+
+  --gold-hairline: var(--gold-shadow-dark);
+  --gold-sunken: color-mix(in srgb, var(--gold-shadow-dark) 22%, var(--gold-bg));
+
+  --neu-radius-lg: 28px;
+  --neu-radius-md: 16px;
+  --neu-radius-sm: 12px;
+  --neu-radius-full: 9999px;
+
+  --neu-border-w: 2px;
+  --neu-btn-h: 52px;
+  --neu-btn-h-sm: 36px;
+  --neu-btn-icon: 44px;
+  --neu-input-h: 48px;
+  --neu-otp-w: 56px;
+  --neu-otp-h: 64px;
+
+  --neu-transition: 150ms ease;
+
+  --neu-shadow-raised: 6px 6px 14px var(--gold-shadow-dark), -6px -6px 14px var(--gold-shadow-light);
+  --neu-shadow-inset: inset 4px 4px 8px var(--gold-shadow-dark), inset -4px -4px 8px var(--gold-shadow-light);
+  --neu-shadow-inset-sm: inset 2px 2px 4px var(--gold-shadow-dark), inset -2px -2px 4px var(--gold-shadow-light);
+  --neu-shadow-elevated: 10px 10px 20px var(--gold-shadow-dark), -10px -10px 20px var(--gold-shadow-light);
+  --neu-shadow-bar: 0 10px 18px -12px var(--gold-shadow-dark);
+  --neu-shadow-raised-sm: 3px 3px 7px var(--gold-shadow-dark), -3px -3px 7px var(--gold-shadow-light);
+  --neu-shadow-card: 14px 14px 28px var(--gold-shadow-dark), -14px -14px 28px var(--gold-shadow-light),
+    0 0 15px rgb(var(--gold-cyan-rgb) / 0.15);
+  --neu-shadow-focus: inset 2px 2px 4px var(--gold-shadow-dark), 0 0 12px rgb(var(--gold-focus-rgb) / 0.5);
+  --neu-shadow-error: inset 2px 2px 4px var(--gold-shadow-dark), 0 0 12px rgb(var(--gold-red-rgb) / 0.4);
+  --neu-shadow-edge: inset 0 -1px 0 var(--gold-shadow-dark);
+
+  --color-neu-bg: var(--gold-bg);
+  --color-neu-primary: var(--gold-text-primary);
+  --color-neu-muted: var(--gold-text-muted);
+  --color-neu-faint: var(--gold-text-faint);
+  --color-neu-cyan: var(--gold-accent-gold);
+  --color-neu-green: var(--gold-accent-brass);
+  --color-neu-amber: var(--gold-accent-amber);
+  --color-neu-red: var(--gold-accent-rose);
+  --color-neu-ink-cyan: var(--gold-ink-gold);
+  --color-neu-ink-green: var(--gold-ink-brass);
+  --color-neu-ink-amber: var(--gold-ink-amber);
+  --color-neu-ink-red: var(--gold-ink-rose);
+  --color-neu-ink-violet: var(--gold-ink-violet);
+  --color-neu-hairline: var(--gold-hairline);
+  --color-neu-sunken: var(--gold-sunken);
+  --color-neu-scrim: rgb(var(--gold-scrim-rgb));
+  --color-neu-solid-ink: var(--gold-solid-ink);
+  --color-neu-solid-cyan: var(--gold-solid-gold);
+  --color-neu-solid-green: var(--gold-solid-brass);
+  --color-neu-solid-amber: var(--gold-solid-amber);
+  --color-neu-solid-red: var(--gold-solid-rose);
+  --color-neu-accent-ink: var(--gold-accent-ink);
+  --color-neu-accent-ink-strong: var(--gold-accent-ink-strong);
+  --color-neu-accent-line: var(--gold-accent-line);
+  --color-neu-accent-wash: var(--gold-accent-wash);
+  --color-neu-accent-solid: var(--gold-solid-gold);
+  --color-neu-accent-solid-strong: var(--gold-accent-ink-strong);
+  --color-neu-wash-cyan: var(--gold-wash-gold);
+  --color-neu-wash-green: var(--gold-wash-brass);
+  --color-neu-wash-amber: var(--gold-wash-amber);
+  --color-neu-wash-red: var(--gold-wash-rose);
+}
+
+/* Golden dark mode — re-derived from the gold pair, same contract as Neu. */
+.dark.golden {
+  --gold-bg: #241d15;
+  --gold-text-primary: #f6efde;
+  --gold-text-muted: #cdbb9c;
+  --gold-text-faint: #b8a17a;
+  --gold-shadow-dark: #100c07;
+  --gold-shadow-light: #3a2f20;
+
+  --gold-accent-gold: #e8c64f;
+  --gold-accent-brass: #c9a227;
+  --gold-accent-amber: #b87714;
+  --gold-accent-rose: #c94a2a;
+
+  --gold-ink-gold: #f2d76b;
+  --gold-ink-brass: #e8c64f;
+  --gold-ink-amber: #f0b836;
+  --gold-ink-rose: #e85a3a;
+  --gold-ink-violet: #b896e0;
+
+  --gold-focus-ring: #e8c64f;
+  --gold-focus-rgb: 232 198 79;
+
+  --gold-accent-ink: #f2d76b;
+  --gold-accent-ink-strong: #f6efde;
+  --gold-accent-line: var(--gold-focus-ring);
+  --gold-accent-wash: color-mix(in srgb, var(--gold-focus-ring) 14%, var(--gold-bg));
+
+  --gold-wash-gold: color-mix(in srgb, var(--gold-accent-gold) 10%, var(--gold-bg));
+  --gold-wash-brass: color-mix(in srgb, var(--gold-accent-brass) 10%, var(--gold-bg));
+  --gold-wash-amber: color-mix(in srgb, var(--gold-accent-amber) 10%, var(--gold-bg));
+  --gold-wash-rose: color-mix(in srgb, var(--gold-accent-rose) 10%, var(--gold-bg));
+
+  --gold-hairline: var(--gold-shadow-light);
+  --gold-sunken: color-mix(in srgb, var(--gold-shadow-light) 30%, var(--gold-bg));
+
+  --color-neu-bg: var(--gold-bg);
+  --color-neu-primary: var(--gold-text-primary);
+  --color-neu-muted: var(--gold-text-muted);
+  --color-neu-faint: var(--gold-text-muted);
+  --color-neu-cyan: var(--gold-accent-gold);
+  --color-neu-green: var(--gold-accent-brass);
+  --color-neu-amber: var(--gold-accent-amber);
+  --color-neu-red: var(--gold-accent-rose);
+  --color-neu-ink-cyan: var(--gold-ink-gold);
+  --color-neu-ink-green: var(--gold-ink-brass);
+  --color-neu-ink-amber: var(--gold-ink-amber);
+  --color-neu-ink-red: var(--gold-ink-rose);
+  --color-neu-ink-violet: var(--gold-ink-violet);
+  --color-neu-hairline: var(--gold-hairline);
+  --color-neu-sunken: var(--gold-sunken);
+  --color-neu-scrim: rgb(var(--gold-scrim-rgb));
+  --color-neu-solid-ink: var(--gold-solid-ink);
+  --color-neu-solid-cyan: var(--gold-solid-gold);
+  --color-neu-solid-green: var(--gold-solid-brass);
+  --color-neu-solid-amber: var(--gold-solid-amber);
+  --color-neu-solid-red: var(--gold-solid-rose);
+  --color-neu-accent-ink: var(--gold-accent-ink);
+  --color-neu-accent-ink-strong: var(--gold-accent-ink-strong);
+  --color-neu-accent-line: var(--gold-accent-line);
+  --color-neu-accent-wash: var(--gold-accent-wash);
+  --color-neu-accent-solid: var(--gold-solid-gold);
+  --color-neu-accent-solid-strong: var(--gold-accent-ink-strong);
+  --color-neu-wash-cyan: var(--gold-wash-gold);
+  --color-neu-wash-green: var(--gold-wash-brass);
+  --color-neu-wash-amber: var(--gold-wash-amber);
+  --color-neu-wash-red: var(--gold-wash-rose);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   DARK MODE — Override CSS custom properties
+   ═══════════════════════════════════════════════════════════════ */
+
+.dark {
+  color-scheme: dark;
+  --color-surface-50: #0f172a;
+  --color-surface-100: #1e293b;
+  --color-surface-200: #334155;
+  --color-surface-300: #475569;
+  --color-surface-400: #94a3b8;
+  --color-surface-500: #cbd5e1;
+  --color-surface-600: #e2e8f0;
+  --color-surface-700: #f1f5f9;
+  --color-surface-800: #f8fafc;
+  --color-surface-900: #f8fafc;
+  --color-surface-950: #ffffff;
+  --color-success-500: #4ade80;
+  --color-success-600: #22c55e;
+  --color-danger-500: #f87171;
+  --color-danger-600: #ef4444;
+  --color-warning-500: #fbbf24;
+  --color-warning-600: #f59e0b;
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.3);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5);
+
+  /* ─── Neumorphism: derived dark pair ───
+     The system only ships one light --neu-bg, so the dark surface and
+     BOTH shadows are re-derived from it together (never one in
+     isolation). Contrast: primary 13.3:1, muted 5.7:1 on --neu-bg. */
+  --neu-bg: #1e293b;
+  --neu-text-primary: #f1f5f9;
+  --neu-text-muted: #94a3b8;
+  --neu-shadow-dark: #141c28;
+  --neu-shadow-light: #283449;
+
+  /* Ink flips to the lighter shade so it clears 4.5:1 on the dark
+     surface (5.3–8.8:1), and the focus ring gets brighter too. */
+  --neu-ink-cyan: #22d3ee;
+  --neu-ink-green: #4ade80;
+  --neu-ink-amber: #fbbf24;
+  --neu-ink-red: #f87171;
+  --neu-ink-violet: #a78bfa;
+  --neu-focus-ring: #22d3ee;
+  --neu-focus-rgb: 34 211 238;
+
+  /* The accent flips with the surface: on #1e293b the ink is 8.09:1 (7.46:1
+     on the dark wash), `ink-strong` goes BRIGHTER rather than darker, and
+     the tint/heat fills lighten because --neu-focus-ring does. The two
+     solid fills stay put — they hold white ink in both modes. */
+  --neu-accent-ink: #22d3ee;
+  --neu-accent-ink-strong: #67e8f9;
+  --neu-accent-line: var(--neu-focus-ring);
+  --neu-accent-wash: color-mix(in srgb, var(--neu-focus-ring) 14%, var(--neu-bg));
+
+  /* Faint flips lighter too, and stays the dimmer of the two sub-inks
+     (muted 5.71:1 vs faint 4.93:1 on the dark surface). */
+  --neu-text-faint: #8a97a8;
+
+  /* A hairline is a LIGHT edge on a dark surface, and the recessed wash
+     is built from the light half of the pair. */
+  --neu-hairline: var(--neu-shadow-light);
+  --neu-sunken: color-mix(in srgb, var(--neu-shadow-light) 30%, var(--neu-bg));
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   GLOBAL RESET — MUST be inside @layer base
+   ═══════════════════════════════════════════════════════════════ */
+
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    min-height: 100dvh;
+    /* The neu surface is the app surface (global replace). */
+    color: var(--neu-text-primary);
+    background: var(--neu-bg);
+    transition: color var(--neu-transition), background-color var(--neu-transition);
+  }
+
+  /* Urdu (RTL): Nastaliq renderings for better readability & authenticity */
+  html[dir="rtl"] body {
+    font-family: "Noto Nastaliq Urdu", "Jameel Noori Nastaliq", "Alvi Nastaleeq",
+      "Urdu Typesetting", "Pak Nastaleeq", var(--font-sans);
+  }
+  html[dir="rtl"] body {
+    line-height: 1.7;
+    letter-spacing: 0;
+  }
+  html[dir="rtl"] .font-mono,
+  html[dir="rtl"] code,
+  html[dir="rtl"] kbd,
+  html[dir="rtl"] [class*="font-mono"] {
+    font-family: var(--font-mono);
+  }
+  /* Nastaliq descenders can clip with overflow-hidden row shells */
+  html[dir="rtl"] .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Focus ring — one cyan ring for the whole system, in the AA-safe
+     --neu-focus-ring (SC 1.4.11 needs 3:1). */
+  :focus-visible {
+    outline: var(--neu-border-w) solid var(--neu-focus-ring);
+    outline-offset: 2px;
+  }
+
+  /* Selection */
+  ::selection {
+    background: rgb(var(--neu-cyan-rgb) / 0.25);
+  }
+
+  /* Scrollbar — the thumb is a tint of the shadow pair, so the same
+     rule reads correctly in both modes with no dark override. */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--neu-shadow-dark) 75%, transparent);
+    border-radius: var(--neu-radius-full);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--neu-text-muted);
+  }
+
+  /* Smooth transitions for interactive elements */
+  button, a, input, select, textarea {
+    transition: border-color 150ms ease, background-color 150ms ease, color 150ms ease, box-shadow 150ms ease;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ANIMATIONS
+   ═══════════════════════════════════════════════════════════════ */
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes scaleIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+@keyframes glowPulse { 0%, 100% { opacity: 0.45; } 50% { opacity: 1; } }
+@keyframes spinSlow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+.animate-fade-in { animation: fadeIn 200ms ease both; }
+.animate-fade-in-up { animation: fadeInUp 300ms var(--ease-smooth) both; }
+.animate-scale-in { animation: scaleIn 200ms var(--ease-spring) both; }
+.animate-slide-up { animation: slideUp 300ms var(--ease-smooth) both; }
+.animate-glow-pulse { animation: glowPulse 3.2s ease-in-out infinite; }
+.animate-spin-slow { animation: spinSlow 14s linear infinite; }
+
+/* ─── Skeleton ───
+   Moved into the neu layer (see `.neu-skeleton` / `.skeleton` above).
+   It was unlayered here, which would have out-ranked the layered neu
+   recipe regardless of source order. */
+
+/* ─── Stagger Children ─── */
+.stagger > * { animation: fadeInUp 300ms var(--ease-smooth) both; }
+.stagger > *:nth-child(1) { animation-delay: 0ms; }
+.stagger > *:nth-child(2) { animation-delay: 50ms; }
+.stagger > *:nth-child(3) { animation-delay: 100ms; }
+.stagger > *:nth-child(4) { animation-delay: 150ms; }
+.stagger > *:nth-child(5) { animation-delay: 200ms; }
+.stagger > *:nth-child(6) { animation-delay: 250ms; }
+.stagger > *:nth-child(n+7) { animation-delay: 300ms; }
+
+/* ─── Reduced Motion ─── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ─── Safe Area ─── */
+.safe-area-bottom { padding-bottom: env(safe-area-inset-bottom, 0); }
+
+/* ─── POS Grid ─── */
+.pos-grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+}
+@media (min-width: 640px) {
+  .pos-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+}
+@media (min-width: 1024px) {
+  .pos-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+}
+@media (max-width: 767px) {
+  .pos-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.5rem; }
+}
+
+/* ─── POS Card ─── */
+.pos-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.pos-card-image {
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+}
+.pos-card-image img {
+  transition: transform 400ms var(--ease-smooth);
+}
+.pos-card:hover .pos-card-image img,
+.pos-card:focus-visible .pos-card-image img {
+  transform: scale(1.04);
+}
+
+/* ─── POS Segmented Toggle ───
+   Neu translation of a segmented control: the control itself is a
+   recessed channel, and the SELECTED segment pops back out of it.
+   That replaces the old blue-tinted fill — selection reads as
+   "raised out of the groove" instead of "brand coloured". */
+.pos-segmented {
+  display: inline-flex;
+  border-radius: var(--neu-radius-lg);
+  padding: 3px;
+  background: var(--neu-bg);
+  box-shadow: var(--neu-shadow-inset);
+}
+.pos-segmented-btn {
+  flex: 1;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--neu-text-muted);
+  background: transparent;
+  border: none;
+  border-radius: calc(var(--neu-radius-lg) - 3px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  transition: box-shadow var(--neu-transition), color var(--neu-transition);
+  cursor: pointer;
+}
+.pos-segmented-btn:focus-visible {
+  outline: var(--neu-border-w) solid var(--neu-focus-ring);
+  outline-offset: -2px;
+}
+.pos-segmented-btn svg {
+  flex-shrink: 0;
+}
+/* No dividers: the recess + the raised selection already separate the
+   segments, and a 1px rule inside a groove reads as dirt. */
+.pos-segmented-btn.active {
+  background: var(--neu-bg);
+  color: var(--neu-text-primary);
+  font-weight: 600;
+  box-shadow: var(--neu-shadow-raised-sm);
+}
+.pos-segmented-btn:hover:not(.active) {
+  background: var(--neu-bg);
+  color: var(--neu-text-primary);
+  box-shadow: var(--neu-shadow-inset-sm);
+}
+
+/* ─── POS Stock Badge Dots ─── */
+.pos-stock-badge::before {
+  content: "";
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: 999px;
+  background: currentColor;
+  opacity: 0.85;
+}
+
+/* ─── POS Touch-Friendly Add Button ─── */
+@media (hover:none) and (pointer:coarse){
+  .pos-card-add-float{
+    opacity:1!important;
+    transform:scale(1)!important;
+  }
+}
+/* ─── POS Rail (right cart panel) ─── */
+.pos-rail {
+  --rail-width: 340px;
+}
+@media (min-width: 768px) and (max-width: 1023px) {
+  .pos-rail { --rail-width: 300px; }
+}
+@media (min-width: 1024px) {
+  .pos-rail { --rail-width: 360px; }
+}
+
+/* ─── POS Cart Item Row ─── */
+.pos-cart-item {
+  animation: fadeInUp 250ms var(--ease-smooth) both;
+}
+.pos-cart-item-remove {
+  animation: fadeIn 200ms ease reverse both;
+}
+
+/* ─── POS Cash Quick Amounts ─── */
+.pos-cash-quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.pos-cash-quick-btn {
+  flex: 1 1 0;
+  min-width: 4rem;
+  padding: 0.4375rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-align: center;
+  border: none;
+  border-radius: var(--neu-radius-lg);
+  background: var(--neu-bg);
+  color: var(--neu-text-primary);
+  box-shadow: var(--neu-shadow-raised-sm);
+  transition: box-shadow var(--neu-transition), color var(--neu-transition);
+  cursor: pointer;
+}
+.pos-cash-quick-btn:active {
+  /* the recess is the feedback — no scale transform */
+  box-shadow: var(--neu-shadow-inset-sm);
+}
+
+/* ─── POS Totals ─── */
+.pos-total-due {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+/* ─── POS Payment Method Tile ───
+   Raised at rest, recessed when selected — the same in/out idiom as
+   the segmented control, so "chosen" is legible without colour. */
+.pos-pay-tile {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: var(--neu-radius-md);
+  border: none;
+  padding: 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--neu-text-muted);
+  background: var(--neu-bg);
+  box-shadow: var(--neu-shadow-raised);
+  text-align: start;
+  transition: box-shadow var(--neu-transition), color var(--neu-transition);
+  cursor: pointer;
+}
+.pos-pay-tile:hover {
+  color: var(--neu-text-primary);
+}
+.pos-pay-tile:active {
+  box-shadow: var(--neu-shadow-inset);
+}
+.pos-pay-tile-active {
+  color: var(--neu-text-primary);
+  font-weight: 600;
+  box-shadow: var(--neu-shadow-inset);
+}
+.pos-pay-tile:focus-visible {
+  outline: var(--neu-border-w) solid var(--neu-focus-ring);
+  outline-offset: 2px;
+}
+
+/* ─── POS Receipt Preview ─── */
+.pos-receipt-preview {
+  width: 100%;
+  max-width: 26rem;
+}
+@media (min-width: 640px) {
+  .pos-receipt-preview { max-width: 30rem; }
+}
+
+/* ─── POS Money ─── */
+.pos-money {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+.pos-money-xs { font-size: 0.75rem; }
+.pos-money-sm { font-size: 0.875rem; }
+.pos-money-base { font-size: 1rem; }
+.pos-money-lg { font-size: 1.25rem; }
+.pos-money-xl { font-size: 1.5rem; }
+.pos-money-2xl { font-size: 1.875rem; }
+
+/* ─── POS Caption Scale ─── */
+.pos-caption-xs { font-size: 0.625rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+.pos-caption-sm { font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; }
+.pos-caption-xs-mono { font-size: 0.625rem; font-family: var(--font-mono); }
+
+/* ─── POS Stock Badge ───
+   A pill on the neu surface: small inset + the legible ink for its
+   state (the old pale tint fills have no equivalent in a monochrome
+   embossed system). */
+.pos-stock-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.125rem;
+  padding: 0.125rem 0.375rem;
+  border-radius: var(--neu-radius-full);
+  font-size: 0.625rem;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  background: var(--neu-bg);
+  box-shadow: var(--neu-shadow-inset-sm);
+  color: var(--neu-text-muted);
+}
+/* 10px label — needs 4.5:1, so ink rather than accent. */
+.pos-stock-badge-danger { color: var(--neu-ink-red); }
+.pos-stock-badge-warning { color: var(--neu-ink-amber); }
+.pos-stock-badge-ok {
+  background: transparent;
+  box-shadow: none;
+  color: var(--neu-text-muted);
+}
+
+/* ─── POS Flash Animation ─── */
+@keyframes posFlash {
+  0% { background-color: rgb(var(--neu-focus-rgb) / 0.18); }
+  100% { background-color: transparent; }
+}
+.pos-flash {
+  animation: posFlash 900ms ease-out both;
+}
+
+/* ─── Scrollbar for POS panels ─── */
+.pos-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
+.pos-scroll::-webkit-scrollbar-track { background: transparent; }
+/* Thumbs use ink, so one rule works in both modes and stays visible
+   against the surface instead of disappearing into it. */
+.pos-scroll::-webkit-scrollbar-thumb {
+  background: var(--neu-text-muted);
+  border-radius: var(--neu-radius-full);
+}
+.pos-scroll::-webkit-scrollbar-thumb:hover { background: var(--neu-text-primary); }
+
+/* ─── Products Table ─── */
+.products-table {
+  width: 100%;
+}
+.products-table-row {
+  transition: background-color var(--neu-transition);
+}
+/* 45% of the highlight side lifts the row off the surface in light
+   mode and off the dark surface in dark mode, with one rule. */
+.products-table-row:hover {
+  background-color: color-mix(in srgb, var(--neu-shadow-light) 45%, transparent);
+}
+
+/* ─── POS Scan Line (barcode scanner) ─── */
+@keyframes scanY {
+  0% { top: 4%; opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { top: 94%; opacity: 0; }
+}
+.animate-scan {
+  animation: scanY 2.2s var(--ease-smooth) infinite;
+}
+
+/* ─── POS Chip Row (category chips) ─── */
+.pos-chip-row {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.pos-chip-row::-webkit-scrollbar {
+  display: none;
+}
+
+/* ─── POS Category Chip ───
+   Raised at rest, recessed when it is the active filter. */
+.pos-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  flex-shrink: 0;
+  border: none;
+  border-radius: var(--neu-radius-full);
+  padding: 0.3125rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+  color: var(--neu-text-muted);
+  background: var(--neu-bg);
+  box-shadow: var(--neu-shadow-raised-sm);
+  cursor: pointer;
+  transition: box-shadow var(--neu-transition), color var(--neu-transition);
+}
+.pos-chip:hover {
+  color: var(--neu-text-primary);
+}
+.pos-chip:focus-visible {
+  outline: var(--neu-border-w) solid var(--neu-focus-ring);
+  outline-offset: 2px;
+}
+.pos-chip-active {
+  color: var(--neu-text-primary);
+  font-weight: 600;
+  box-shadow: var(--neu-shadow-inset-sm);
+}
+
+/* ─── POS Cart Line Totals ─── */
+.pos-line-total {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* ─── POS Icon Button ─── */
+.pos-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: none;
+  border-radius: var(--neu-radius-md);
+  background: var(--neu-bg);
+  color: var(--neu-text-muted);
+  box-shadow: var(--neu-shadow-raised-sm);
+  cursor: pointer;
+  transition: box-shadow var(--neu-transition), color var(--neu-transition);
+}
+.pos-icon-btn:hover {
+  color: var(--neu-text-primary);
+}
+.pos-icon-btn:active {
+  box-shadow: var(--neu-shadow-inset-sm);
+}
+.pos-icon-btn:focus-visible {
+  outline: var(--neu-border-w) solid var(--neu-focus-ring);
+  outline-offset: 2px;
+}
+
+/* ─── Products Filter Bar ─── */
+.filters-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+.filters-bar-clear {
+  /* logical: pushes the control to the far END of the row, whichever edge that is */
+  margin-inline-start: auto;
+}
+
+/* ─── Product Thumbnail ─── */
+.product-thumb {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--neu-radius-sm);
+  /* recessed well so the thumbnail sits *in* the row */
+  background: var(--neu-bg);
+  box-shadow: var(--neu-shadow-inset-sm);
+  overflow: hidden;
+}
+.product-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ─── Product Price Cell ─── */
+.product-price {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.product-price-unit {
+  font-size: 0.625rem;
+  color: var(--neu-text-muted);
+  margin-inline-start: 0.125rem;
+}
+
+/* ─── Stock Cell ─── */
+.stock-cell {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  /* Logical alignment: flips correctly in RTL (unlike text-align: right). */
+  text-align: end;
+}
+.stock-low {
+  color: var(--neu-ink-red);
+  font-weight: 600;
+}
+.stock-low-label {
+  font-size: 0.6875rem;
+  color: var(--neu-ink-red);
+  margin-inline-start: 0.25rem;
+}
+
+/* ─── Action Buttons (icon row) ─── */
+.action-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.125rem;
+}
+.action-buttons a:focus-visible,
+.action-buttons button:focus-visible {
+  outline: var(--neu-border-w) solid var(--neu-focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--neu-radius-md);
+}
+
+/* ─── Products Status Dot (Badge::before) ─── */
+.products-table .pos-stock-badge::before,
+.products-table [class*="badge"]::before { content: none; }
+.status-dot {
+  display: inline-block;
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: var(--neu-radius-full);
+  background: currentColor;
+  opacity: 0.85;
+}
+
+/* ─── Products Bulk Toolbar ───
+   A selection tray: recessed into the surface instead of tinted, so
+   "items are selected" is signalled by depth rather than hue. */
+.bulk-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 1rem;
+  background: var(--neu-bg);
+  box-shadow: var(--neu-shadow-inset);
+  animation: fadeIn 200ms var(--ease-smooth) both;
+}
+.bulk-bar-count {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--neu-text-primary);
+}
+.bulk-bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-inline-start: auto;
+}
+
+/* ─── Products Grid View (card mode) ─── */
+.product-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(10.5rem, 1fr));
+  gap: 0.875rem;
+  padding: 1rem;
+}
+@media (min-width: 640px) {
+  .product-cards { grid-template-columns: repeat(auto-fill, minmax(11.5rem, 1fr)); }
+}
+/* ─── Products Grid View (card mode) ─── */
+.product-card {
+  display: flex;
+  flex-direction: column;
+  text-align: start;
+  border: none;
+  border-radius: var(--neu-radius-lg);
+  background: var(--neu-bg);
+  box-shadow: var(--neu-shadow-raised);
+  overflow: hidden;
+  cursor: pointer;
+  transition: box-shadow var(--neu-transition);
+}
+/* Hover steps up to the card recipe (deeper pair + the cyan halo). */
+.product-card:hover {
+  box-shadow: var(--neu-shadow-card);
+}
+.product-card:focus-visible {
+  outline: var(--neu-border-w) solid var(--neu-focus-ring);
+  outline-offset: 2px;
+}
+.product-card-thumb {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* recessed image well */
+  background: var(--neu-bg);
+  box-shadow: var(--neu-shadow-inset-sm);
+  overflow: hidden;
+}
+.product-card-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 250ms var(--ease-smooth);
+}
+.product-card:hover .product-card-thumb img { transform: scale(1.045); }
+.product-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.625rem 0.75rem 0.75rem;
+  flex: 1 1 auto;
+}
+.product-card-name {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--neu-text-primary);
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 2.2em;
+}
+.product-card-meta {
+  font-size: 0.6875rem;
+  color: var(--neu-text-muted);
+}
+.product-card-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: auto;
+  padding-top: 0.5rem;
+  /* dark edge of the separator emboss */
+  border-top: 1px solid var(--neu-shadow-dark);
+}
+.product-card-price {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--neu-text-primary);
+  letter-spacing: -0.01em;
+}
+
+/* ─── Table Skeleton Shimmer ─── */
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
+}
+.skeleton-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.skeleton-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.4), transparent);
+  animation: neuShimmer 1.6s infinite;
+}
+
+/* ─── Dialog Section Header ─── */
+.form-section {
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid var(--neu-shadow-dark);
+}
+.form-section-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--neu-text-primary);
+}
+
+/* ─── Conversion Chip ─── */
+.conv-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.375rem;
+  border-radius: var(--neu-radius-full);
+  background: var(--neu-bg);
+  box-shadow: var(--neu-shadow-inset-sm);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--neu-text-primary);
+}
+
+/* ─── Quick Conversion Chip ─── */
+.quick-conv-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--neu-radius-full);
+  border: none;
+  background: var(--neu-bg);
+  box-shadow: var(--neu-shadow-raised-sm);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--neu-text-muted);
+  cursor: pointer;
+  transition: box-shadow var(--neu-transition), color var(--neu-transition);
+}
+.quick-conv-chip:hover {
+  color: var(--neu-text-primary);
+}
+.quick-conv-chip:active {
+  box-shadow: var(--neu-shadow-inset-sm);
+}
+.quick-conv-chip:focus-visible {
+  outline: var(--neu-border-w) solid var(--neu-focus-ring);
+  outline-offset: 2px;
+}
+
+/* ─── Variant Option Chip ─── */
+.option-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.125rem;
+  padding: 0.125rem 0.5rem 0.125rem 0.375rem;
+  border-radius: var(--neu-radius-full);
+  border: none;
+  background: var(--neu-bg);
+  box-shadow: var(--neu-shadow-inset-sm);
+  font-size: 0.75rem;
+  color: var(--neu-text-primary);
+}
+
+/* ─── Image Gallery ─── */
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+@media (min-width: 640px) { .gallery-grid { grid-template-columns: repeat(4, 1fr); } }
+@media (min-width: 768px) { .gallery-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 1024px) { .gallery-grid { grid-template-columns: repeat(4, 1fr); } }
+
+.gallery-item {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border-radius: var(--neu-radius-md);
+  border: none;
+  /* recessed tile so the photo sits in a well, framed by the emboss */
+  background: var(--neu-bg);
+  box-shadow: var(--neu-shadow-inset-sm);
+}
+.gallery-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 300ms var(--ease-smooth);
+}
+.gallery-item:hover img { transform: scale(1.04); }
+
+.primary-badge {
+  position: absolute;
+  inset-inline-start: 0.125rem;
+  top: 0.125rem;
+  padding: 0.125rem 0.375rem;
+  border-radius: var(--neu-radius-sm);
+  /* inverted surface — an 8px label needs maximum contrast */
+  background: var(--neu-text-primary);
+  color: var(--neu-bg);
+  font-size: 0.5rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.gallery-hover-controls {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  background: rgb(0 0 0 / 0);
+  opacity: 0;
+  transition: opacity 150ms ease, background-color 150ms ease;
+}
+.gallery-item:hover .gallery-hover-controls,
+.gallery-item:focus-within .gallery-hover-controls {
+  background: rgb(var(--neu-scrim-rgb) / 0.45);
+  opacity: 1;
+}
+/* These controls float over arbitrary photography, so they stay opaque
+   chips rather than neu surfaces — the emboss cannot be read over an
+   image. Only their shadow/hover came across. */
+.gallery-control-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: var(--neu-radius-full);
+  background: rgb(255 255 255 / 0.92);
+  color: var(--neu-text-primary);
+  box-shadow: var(--neu-shadow-raised-sm);
+  transition: background-color 150ms var(--neu-transition), color 150ms var(--neu-transition);
+}
+.gallery-control-btn:hover { background: #ffffff; }
+.gallery-control-btn-danger {
+  background: var(--neu-ink-red);
+  color: #ffffff;
+}
+.gallery-control-btn-danger:hover { background: var(--neu-ink-red); }
+
+/* ─── Gallery drag-to-reorder (HTML5 DnD) ─── */
+/* Tiles are draggable; the grab cursor advertises it. */
+.gallery-item[draggable="true"] {
+  cursor: grab;
+}
+/* Source tile while dragging: dimmed + lifted ghost. */
+.gallery-item-dragging {
+  opacity: 0.35;
+  cursor: grabbing;
+  transform: scale(0.97);
+}
+/* Hovered drop target: focus-ring outline + inset ring. */
+.gallery-item-drop-target {
+  outline: var(--neu-border-w) solid var(--neu-focus-ring);
+  outline-offset: 2px;
+  box-shadow: var(--neu-shadow-inset-sm);
+}
+/* External-file drop affordance on the whole grid. */
+.gallery-grid-file-over {
+  outline: var(--neu-border-w) dashed var(--neu-focus-ring);
+  outline-offset: 4px;
+  border-radius: var(--neu-radius-md);
+}
+/* Tiny drag-hint glyph (equals/moves icon) in the tile corner. */
+.gallery-drag-hint {
+  position: absolute;
+  inset-inline-end: 0.25rem;
+  bottom: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: var(--neu-radius-sm);
+  background: rgb(255 255 255 / 0.85);
+  color: var(--neu-text-primary);
+  opacity: 0;
+  transition: opacity 150ms var(--neu-transition);
+  pointer-events: none; /* never blocks tile dragging or button clicks */
+}
+.gallery-drag-hint svg { color: var(--neu-text-primary); }
+/* In dark mode --neu-text-primary is the light ink, so the same token
+   stays legible on this darker chip — no second rule needed. */
+.dark .gallery-drag-hint {
+  background: rgb(15 23 42 / 0.8);
+}
+.gallery-item:hover .gallery-drag-hint,
+.gallery-item:focus-within .gallery-drag-hint {
+  opacity: 1;
+}
+/* Touch devices have no HTML5 DnD — but long-press drag IS supported,
+   so keep the hint visible (it advertises both paths now). */
+@media (hover: none) {
+  .gallery-item[draggable="true"] { cursor: default; }
+}
+
+/* ─── Long-press touch reordering ─── */
+/* Suppress iOS long-press callout + text selection on tiles. */
+.gallery-item {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+/* Lifted tile while touch-dragging: raised shadow + slight scale.
+   (touch-action guards against any scroll-jank during the hold). */
+.gallery-item-touch-lift {
+  z-index: 10;
+  transform: scale(1.05);
+  /* the card recipe = deepest pair + cyan halo, i.e. maximum lift */
+  box-shadow: var(--neu-shadow-card);
+  opacity: 0.92;
+  touch-action: none;
+}
+.gallery-grid {
+  touch-action: pan-y; /* vertical scroll still works; drag handled manually */
+}
+
+/* ─── Barcode Label Card ───
+   PAPER EXCEPTION — deliberately NOT migrated to the neu surface.
+   This is a print preview: it has to stay pure white with the darkest
+   ink so what you see is what the thermal/desktop printer produces,
+   and the @media print block below forces black. The ink is pinned
+   explicitly (it used to inherit the page colour, so in dark mode the
+   label previewed as light text on white). */
+.barcode-label-card {
+  display: inline-block;
+  width: 4in;
+  max-width: 100%;
+  padding: 0.75rem;
+  background: #ffffff;
+  color: #000000;
+  border: 1px solid var(--neu-shadow-dark);
+  border-radius: var(--neu-radius-md);
+}
+@media (max-width: 640px) {
+  .barcode-label-card { width: 100%; }
+}
+
+/* ─── Loading Skeleton (table row) ─── */
+.table-skeleton {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+}
+.table-skeleton .skeleton + .skeleton { margin-inline-start: 0.5rem; }
+
+/* ─── File Input (styled) ─── */
+.file-input-styled {
+  display: inline-block;
+  cursor: pointer;
+}
+.file-input-styled input[type="file"] {
+  display: none;
+}
+
+/* ─── Clear Filters Button ─── */
+.clear-filters-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.375rem 0.75rem;
+  border: none;
+  border-radius: var(--neu-radius-md);
+  background: var(--neu-bg);
+  box-shadow: var(--neu-shadow-raised-sm);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--neu-text-muted);
+  cursor: pointer;
+  transition: box-shadow var(--neu-transition), color var(--neu-transition);
+}
+.clear-filters-btn:hover {
+  color: var(--neu-text-primary);
+}
+.clear-filters-btn:active {
+  box-shadow: var(--neu-shadow-inset-sm);
+}
+.clear-filters-btn:focus-visible {
+  outline: var(--neu-border-w) solid var(--neu-focus-ring);
+  outline-offset: 2px;
+}
+
+/* ─── Pagination Footer ─── */
+.pagination-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  /* dark edge of the separator emboss */
+  border-top: 1px solid var(--neu-shadow-dark);
+}
+.pagination-info {
+  font-size: 0.875rem;
+  color: var(--neu-text-muted);
+}
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.pagination-page {
+  font-size: 0.875rem;
+  color: var(--neu-text-muted);
+  padding: 0 0.75rem;
+}
+
+/* ─── Inventory Stats Card ─── */
+.inventory-stat-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+/* One recessed chip for every tone; only the icon ink changes. That
+   replaces five pale tint fills, which have no equivalent in a
+   monochrome embossed system, and the ink clears 3:1 (icons). */
+.inventory-stat-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--neu-radius-md);
+  flex-shrink: 0;
+  background: var(--neu-bg);
+  box-shadow: var(--neu-shadow-inset-sm);
+  color: var(--neu-text-muted);
+  transition: transform 200ms var(--ease-smooth);
+}
+.group:hover .inventory-stat-icon { transform: scale(1.04); }
+.inventory-stat-icon-warning { color: var(--neu-ink-amber); }
+.inventory-stat-icon-danger { color: var(--neu-ink-red); }
+.inventory-stat-icon-success { color: var(--neu-ink-green); }
+.inventory-stat-body { min-width: 0; }
+.inventory-stat-label { font-size: 0.75rem; color: var(--neu-text-muted); line-height: 1.25; }
+.inventory-stat-value { font-size: 1.5rem; font-weight: 700; color: var(--neu-text-primary); line-height: 1.2; font-variant-numeric: tabular-nums; }
+.inventory-stat-value-danger { color: var(--neu-ink-red); }
+
+/* ─── Inventory Tabs ─── */
+.inventory-tabs {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  border-bottom: 1px solid var(--neu-shadow-dark);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.inventory-tabs::-webkit-scrollbar { display: none; }
+.inventory-tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--neu-text-muted);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  white-space: nowrap;
+  transition: color var(--neu-transition), border-color var(--neu-transition);
+  cursor: pointer;
+}
+.inventory-tab svg { flex-shrink: 0; }
+.inventory-tab:hover {
+  color: var(--neu-text-primary);
+}
+.inventory-tab:focus-visible {
+  outline: var(--neu-border-w) solid var(--neu-focus-ring);
+  outline-offset: -2px;
+  border-radius: var(--neu-radius-md);
+}
+/* The active tab is marked by the AA-safe cyan rule, which is a
+   2px non-text indicator (3.09:1) rather than a brand tint. */
+.inventory-tab.active {
+  color: var(--neu-text-primary);
+  border-bottom-color: var(--neu-focus-ring);
+  font-weight: 600;
+}
+.inventory-tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  height: 1.125rem;
+  padding: 0 0.375rem;
+  border-radius: var(--neu-radius-full);
+  background: var(--neu-bg);
+  box-shadow: var(--neu-shadow-inset-sm);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--neu-text-muted);
+  font-variant-numeric: tabular-nums;
+  transition: color var(--neu-transition);
+}
+.inventory-tab.active .inventory-tab-count {
+  color: var(--neu-text-primary);
+  font-weight: 700;
+}
+
+/* ─── Inventory Data Table ───
+    Shared with the products table (below): border-collapse MUST stay
+    `separate` — sticky thead loses its background/borders under `collapse`. */
+.inventory-table {
+  width: 100%;
+  min-width: 48rem;
+}
+.inventory-table-wide { min-width: 56rem; }
+.inventory-table tbody tr {
+  border-bottom: 1px solid var(--neu-shadow-dark);
+}
+.inventory-table tbody tr:last-child { border-bottom: none; }
+.inv-th {
+  padding: 0.5rem 1rem;
+  text-align: start;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--neu-text-muted);
+  white-space: nowrap;
+}
+.inv-th-end { text-align: end; }
+.inv-th-center { text-align: center; }
+.inv-td { padding: 0.5rem 1rem; vertical-align: middle; }
+
+/* ═══ Shared data-table plumbing: sticky thead + scroll wrapper ═══
+   Products + inventory tables share one implementation:
+   - `border-collapse: separate` (sticky thead breaks under `collapse`)
+   - sticky thead pins INSIDE `.table-scroll-lg` (an overflow wrapper
+     with a viewport-capped max-height), so long lists scroll in place
+     with the column headers visible — the app header + filters stay
+     on screen, and footers (pagination/bulk bar) sit outside the
+     scroller.
+   - On small screens the wrapper stays natural-height; only horizontal
+     scrolling happens (max-height kicks in at md and up). */
+.products-table,
+.inventory-table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+/* Sticky headers must be opaque (content scrolls under them), so they
+   take the solid neu surface + a dark hairline as the emboss edge. */
+.products-table thead th,
+.inventory-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--neu-bg);
+  box-shadow: var(--neu-shadow-edge);
+}
+
+.table-scroll-lg {
+  overflow-x: auto;
+}
+@media (min-width: 768px) {
+  .table-scroll-lg {
+    max-height: calc(100dvh - 13.5rem);
+    min-height: 12rem;
+    overflow-y: auto;
+  }
+}
+
+/* Products table zebra rows (inventory tables keep plain rows).
+   Both modes read "shaded row" from a tint of the shadow pair, so a
+   single pair of rules replaces the light + dark variants. */
+.products-table tbody tr:nth-child(even) {
+  background-color: color-mix(in srgb, var(--neu-shadow-dark) 22%, transparent);
+}
+.products-table tbody tr:hover,
+.products-table tbody tr:hover:nth-child(even) {
+  background-color: color-mix(in srgb, var(--neu-shadow-light) 55%, transparent);
+}
+
+/* ─── Stock level vs-min bar ───
+   A 4px sliver can't show a blurred inset, so the groove is a tint of
+   the shadow colour. The fills are meaningful proportion graphics, so
+   they use ink (5.4–6:1) rather than the 1.9–3.2:1 vivid accents. */
+.qty-bar {
+  position: relative;
+  height: 0.25rem;
+  border-radius: var(--neu-radius-full);
+  background: color-mix(in srgb, var(--neu-shadow-dark) 55%, transparent);
+  overflow: hidden;
+}
+.qty-bar-fill {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  border-radius: var(--neu-radius-full);
+  transition: width 400ms var(--ease-smooth);
+}
+.qty-bar-ok { background: var(--neu-ink-green); }
+.qty-bar-low { background: var(--neu-ink-amber); }
+.qty-bar-out { background: var(--neu-ink-red); }
+
+/* ─── Inventory Filter Chip (low-stock toggle) ───
+   Raised at rest, recessed when toggled on. The amber "low stock"
+   meaning is carried by the ink and the count, not by a pale fill. */
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  flex-shrink: 0;
+  border: none;
+  border-radius: var(--neu-radius-full);
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+  color: var(--neu-text-muted);
+  background: var(--neu-bg);
+  box-shadow: var(--neu-shadow-raised-sm);
+  cursor: pointer;
+  user-select: none;
+  transition: box-shadow var(--neu-transition), color var(--neu-transition);
+}
+.filter-chip:hover {
+  color: var(--neu-text-primary);
+}
+.filter-chip:focus-visible {
+  outline: var(--neu-border-w) solid var(--neu-focus-ring);
+  outline-offset: 2px;
+}
+.filter-chip-active {
+  color: var(--neu-ink-amber);
+  font-weight: 600;
+  box-shadow: var(--neu-shadow-inset-sm);
+}
+.filter-chip-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.125rem;
+  height: 1.125rem;
+  padding: 0 0.3125rem;
+  border-radius: var(--neu-radius-full);
+  background: var(--neu-bg);
+  box-shadow: var(--neu-shadow-inset-sm);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--neu-ink-amber);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── Chip Button (swap / compact actions) ─── */
+.chip-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.25rem;
+  min-width: 2.25rem;
+  border: none;
+  border-radius: var(--neu-radius-full);
+  background: var(--neu-bg);
+  color: var(--neu-text-muted);
+  box-shadow: var(--neu-shadow-raised-sm);
+  cursor: pointer;
+  transition: box-shadow var(--neu-transition), color var(--neu-transition);
+}
+.chip-btn:hover:not(:disabled) {
+  color: var(--neu-text-primary);
+}
+.chip-btn:active:not(:disabled) {
+  box-shadow: var(--neu-shadow-inset-sm);
+}
+.chip-btn:focus-visible {
+  outline: var(--neu-border-w) solid var(--neu-focus-ring);
+  outline-offset: 2px;
+}
+.chip-btn:disabled { cursor: not-allowed; opacity: 0.5; }
+
+/* ─── Select Field (inventory dialogs) ───
+   A thin alias over `.neu-select` so the one hand-rolled select in the
+   app wears the same emboss as every other input. */
+.inv-select {
+  width: 100%;
+  height: var(--neu-input-h);
+  padding-inline: 16px 44px;
+  border: var(--neu-border-w) solid transparent;
+  border-radius: var(--neu-radius-md);
+  background-color: var(--neu-bg);
+  box-shadow: var(--neu-shadow-inset);
+  color: var(--neu-text-primary);
+  font-size: 16px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  outline: none;
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  background-size: 16px 16px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23475569' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+  transition: box-shadow var(--neu-transition), border-color var(--neu-transition);
+}
+html[dir="rtl"] .inv-select {
+  background-position: left 16px center;
+  padding-inline: 44px 16px;
+}
+.dark .inv-select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+}
+.inv-select:focus,
+.inv-select:focus-visible {
+  outline: none;
+  /* same AA-safe ring + glow as `.neu-input` / `.neu-select` */
+  border-color: var(--neu-focus-ring);
+  box-shadow: var(--neu-shadow-focus);
+}
+.inv-select:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+  box-shadow: var(--neu-shadow-raised-sm);
+  color: var(--neu-text-muted);
+}
+
+/* ─── Inventory Route Node (transfer from → to) ───
+   A small recessed well, matching `.inventory-stat-icon` / the tab
+   count pill. The tokens carry both modes. */
+.inv-route-node {
+  display: inline-flex;
+  align-items: center;
+  max-width: 12rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: var(--neu-radius-full);
+  background: var(--neu-bg);
+  box-shadow: var(--neu-shadow-inset-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--neu-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ─── Inventory Empty State ───
+   The compact abbreviation of the empty-state recipe (a 56px recessed
+   chip rather than the 64px circle). Kept as a design-system surface —
+   audit-neu-theme.mjs asserts its computed values — but app pages now
+   render the shared `<EmptyState>` component, so nothing on screen uses
+   these classes directly any more. */
+.inventory-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  text-align: center;
+}
+.inventory-empty-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: var(--neu-radius-md);
+  background: var(--neu-bg);
+  box-shadow: var(--neu-shadow-inset-sm);
+  color: var(--neu-text-muted);
+  margin-bottom: 0.75rem;
+}
+.inventory-empty-icon svg {
+  color: var(--neu-text-muted);
+}
+.inventory-empty-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--neu-text-primary);
+}
+.inventory-empty-desc {
+  font-size: 0.75rem;
+  color: var(--neu-text-muted);
+  margin-top: 0.25rem;
+}
+
+/* ─── Inventory Transfer Card ───
+   Raised at rest, lifts one step on hover. Replaces the old
+   white/surface-100 fill + hairline border + shadow-sm trio with the
+   emboss pair, so the card needs no dark variant. */
+.inventory-transfer-card {
+  background: var(--neu-bg);
+  border-radius: var(--neu-radius-md);
+  box-shadow: var(--neu-shadow-raised-sm);
+  transition: box-shadow var(--neu-transition);
+}
+.inventory-transfer-card:hover {
+  box-shadow: var(--neu-shadow-raised);
+}
+
+/* ─── Barcode Label: cleanup + thermal/desktop print ─── */
+.barcode-label-card svg {
+  display: block;
+  margin: 0.25rem auto;
+}
+@media print {
+  .barcode-label-card {
+    width: 4in !important;
+    max-width: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    padding: 0.25in !important;
+  }
+  /* Do NOT force black text in print — the SKU line stays gray by design,
+     but make sure everything is at least fully opaque for scanners. */
+  .barcode-label-card * {
+    color: #000 !important;
+    opacity: 1 !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SMART IMAGE — shared renderer for every product image surface.
+   The wrapper OWNS the size ( callers pass h-/w- classes); the img
+   fills it with object-fit and can never overflow or distort.
+   ═══════════════════════════════════════════════════════════════ */
+.smart-image {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+  /* The checkerboard is a tint of the shadow colour over --neu-bg, so
+     both modes derive from the same two tokens. */
+  background:
+    linear-gradient(45deg, color-mix(in srgb, var(--neu-shadow-dark) 45%, transparent) 25%, transparent 25%, transparent 75%, color-mix(in srgb, var(--neu-shadow-dark) 45%, transparent) 75%),
+    linear-gradient(45deg, color-mix(in srgb, var(--neu-shadow-dark) 45%, transparent) 25%, transparent 25%, transparent 75%, color-mix(in srgb, var(--neu-shadow-dark) 45%, transparent) 75%);
+  background-color: var(--neu-bg);
+  background-size: 12px 12px;
+  background-position: 0 0, 6px 6px;
+}
+/* Subtle checkerboard only matters for transparent PNGs/WebPs; for
+   opaque photos it's fully covered by the image itself. */
+.smart-image img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.smart-image-icon {
+  color: var(--neu-text-muted);
+}
+/* Loading shimmer (removed once onLoad fires). */
+.smart-image-loading::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 30%, rgb(255 255 255 / 0.35) 50%, transparent 70%);
+  animation: smartImgShimmer 1.4s ease-in-out infinite;
+}
+.dark .smart-image-loading::after {
+  background: linear-gradient(100deg, transparent 30%, rgb(255 255 255 / 0.06) 50%, transparent 70%);
+}
+@keyframes smartImgShimmer {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(100%); }
+}
+html[dir="rtl"] .smart-image-loading::after { animation-direction: reverse; }
+/* Zoom hover — opt-out via zoomOnHover={false}. */
+.smart-image-zoom img {
+  transition: transform 300ms var(--ease-smooth);
+}
+@media (hover: hover) {
+  .smart-image-zoom:hover img { transform: scale(1.05); }
+}
+
+/* ═══ LIGHTBOX — full-screen image preview ═══ */
+.lightbox-frame {
+  /* the neu image frame, capped to the viewport per the lightbox spec */
+  max-width: 90vw;
+  max-height: 90vh;
+}
+.lightbox-root {
+  position: fixed;
+  inset: 0;
+  z-index: 70; /* above modals (50) + toasts (60) */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgb(var(--neu-scrim-rgb) / 0.5);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  animation: lightboxIn 180ms var(--ease-smooth) both;
+}
+@keyframes lightboxIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.lightbox-img {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  max-height: calc(90vh - 16px); /* frame cap minus the 8px padding */
+  height: auto;
+  object-fit: contain;
+  /* frame radius (--neu-radius-md) minus the 8px frame padding */
+  border-radius: 8px;
+  /* no box-shadow on the <img> itself — the frame owns it */
+  animation: lightboxImgIn 200ms var(--ease-smooth) both;
+}
+@keyframes lightboxImgIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+/* ⚠ DELIBERATE EXCEPTION — lightbox chrome.
+   The close button, arrows and counter sit ON the scrimmed backdrop,
+   not on the page surface, so they are the one place in the system
+   where an emboss would be wrong: a neu shadow needs a mid-tone
+   surface to read as depth, and there is none here. They therefore
+   stay bold white on a translucent-white fill (white on the 50%
+   --neu-scrim backdrop clears 4.5:1 comfortably), and they consume
+   the neu radius scale so they still belong to the system. */
+.lightbox-img-cursor { cursor: zoom-in; }
+.lightbox-close {
+  position: absolute;
+  top: 1rem;
+  inset-inline-end: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--neu-radius-full);
+  background: rgb(255 255 255 / 0.12);
+  color: #fff;
+  transition: background-color 150ms ease;
+}
+.lightbox-close:hover { background: rgb(255 255 255 / 0.24); }
+.lightbox-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: var(--neu-radius-full);
+  background: rgb(255 255 255 / 0.12);
+  color: #fff;
+  transition: background-color 150ms ease;
+}
+.lightbox-arrow:hover { background: rgb(255 255 255 / 0.24); }
+.lightbox-arrow-start { inset-inline-start: 1rem; }
+.lightbox-arrow-end { inset-inline-end: 1rem; }
+.lightbox-counter {
+  position: absolute;
+  bottom: 1.25rem;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.25rem 0.875rem;
+  border-radius: var(--neu-radius-full);
+  background: rgb(255 255 255 / 0.14);
+  color: #fff;
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 640px) {
+  .lightbox-arrow { width: 2.5rem; height: 2.5rem; }
+  .lightbox-arrow-start { inset-inline-start: 0.5rem; }
+  .lightbox-arrow-end { inset-inline-end: 0.5rem; }
+}
+
+/* ═══ GALLERY (ProductForm manager) — any-ratio thumbnails ═══ */
+.gallery-item {
+  aspect-ratio: 1;
+}
+.gallery-item .smart-image {
+  width: 100%;
+  height: 100%;
+}
+.gallery-item:hover .smart-image img {
+  transform: scale(1.04);
+}
+

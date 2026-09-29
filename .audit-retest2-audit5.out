@@ -1,0 +1,49 @@
+PASS  browser login succeeds
+PASS  node API session ready
+
+── PHASE: partial refund via Orders UI ──
+created sale: POS-20260928-0002 total: 260 line qty: 2
+PASS  orders page renders
+FAIL  detail modal opens
+FAIL  refund dialog shows items-to-refund editor
+FAIL  quantity input present
+refund preview shown: null
+FAIL  refund preview visible
+FAIL  preview reflects partial qty — preview=null want~65
+FAIL  order status is partially_refunded — completed
+FAIL  refundedAmount matches proportional line value — got 0, want 65
+FAIL  item refundedQuantity recorded — 0
+FAIL  stock restored by partial qty — before=43 now=41
+FAIL  'Refund remaining' button on partial order
+FAIL  order now fully refunded — completed
+FAIL  refundedAmount equals full total — got 0, want 260
+FAIL  stock fully restored — before=43 now=41
+PASS  disposable order cleaned up — deleted 1
+
+── PHASE: refunds ledger shows partial refunds ──
+PASS  API partial refund ok — 200 partially_refunded
+FAIL  ledger lists the partial order
+FAIL  ledger shows 'Partially refunded' badge
+FAIL  partial refund detail modal opens
+FAIL  detail shows refunded-qty indicator
+FAIL  print receipt button opens print window — openCalls=0
+FAIL  receipt contains order number
+FAIL  receipt contains refunded amount
+
+── PHASE: POS keyboard shortcuts ──
+FAIL  shortcut hints show F2/F3/F4
+FAIL  F3 toggles product view — n/a → n/a
+PASS  search input present
+HARNESS ERROR: POS is not defined
+ReferenceError: POS is not defined
+    at phasePOSShortcuts (file:///D:/New%20folder%20(2)/Najjar%20Supper%20Mart/audit5.mjs:436:92)
+    at async file:///D:/New%20folder%20(2)/Najjar%20Supper%20Mart/audit5.mjs:559:43
+
+═══ 6 PASS / 22 FAIL ═══
+console errors: [
+  'Failed to load resource: the server responded with a status of 404 (Not Found)',
+  "Refused to execute script from 'http://localhost:3000/_next/static/chunks/app/(dashboard)/orders/page.js' because its MIME type ('text/plain') is not executable, and strict MIME type checking is enabled.",
+  'Failed to load resource: the server responded with a status of 404 (Not Found)',
+  "Refused to execute script from 'http://localhost:3000/_next/static/chunks/app/(dashboard)/orders/page.js' because its MIME type ('text/plain') is not executable, and strict MIME type checking is enabled.",
+  'Failed to load resource: the server responded with a status of 404 (Not Found)'
+]

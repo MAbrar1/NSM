@@ -1,0 +1,572 @@
+// ═══════════════════════════════════════════════════════════════
+// ELITE POS — DATABASE SCHEMA
+// Production-grade data model for Inventory & POS management.
+// ═══════════════════════════════════════════════════════════════
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite" // Switch to "postgresql" or "mysql" for production
+  url      = env("DATABASE_URL")
+}
+
+// ─── Users & Auth ────────────────────────────────────────────
+
+model User {
+  id          String    @id @default(cuid())
+  email       String    @unique
+  name        String
+  password    String    // Hashed
+  role        String    @default("cashier") // super_admin, admin, manager, cashier, inventory_clerk, viewer
+  avatarUrl   String?
+  isActive    Boolean   @default(true)
+  lastLoginAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  orders      Order[]
+  refundedOrders Order[] @relation("OrderRefundedBy")
+  inventoryMovements InventoryMovement[]
+  stockTransfersCreated StockTransfer[]
+  purchaseOrders PurchaseOrder[]
+  auditLogs      AuditLog[]
+
+  @@index([email])
+  @@index([role])
+}
+
+// ─── Products ────────────────────────────────────────────────
+
+model Category {
+  id          String     @id @default(cuid())
+  name        String
+  slug        String     @unique
+  description String?
+  parentId    String?
+  parent      Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryTree")
+  imageUrl    String?
+  sortOrder   Int        @default(0)
+  isActive    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  products    Product[]
+
+  @@index([slug])
+  @@index([parentId])
+}
+
+model Brand {
+  id        String    @id @default(cuid())
+  name      String
+  slug      String    @unique
+  logoUrl   String?
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  products  Product[]
+
+  @@index([slug])
+}
+
+model Product {
+  id              String    @id @default(cuid())
+  name            String
+  slug            String    @unique
+  sku             String    @unique
+  barcode         String?
+  description     String?
+  categoryId      String
+  category        Category  @relation(fields: [categoryId], references: [id])
+  brandId         String?
+  brand           Brand?    @relation(fields: [brandId], references: [id])
+  supplierId      String?
+  supplier        Supplier? @relation(fields: [supplierId], references: [id])
+  unitPrice       Int       // In cents
+  costPrice       Int       // In cents
+  compareAtPrice  Int?      // In cents
+  taxRate         Float     @default(0)
+  imageUrl        String?
+  images          String?   // JSON array of image URLs
+  status          String    @default("active") // active, inactive, discontinued
+  tags            String?   // JSON array of tags
+  trackInventory  Boolean   @default(true)
+  allowDiscount   Boolean   @default(true)
+  minStockLevel   Int       @default(5)
+  maxStockLevel   Int?
+  // Multi-unit support: the unit stock & prices are expressed in.
+  unit            String    @default("pcs") // pcs, kg, g, L, ml, dozen, box...
+  allowFractional Boolean   @default(false) // weight/volume products accept decimal quantity
+  sellByValue     Boolean   @default(false) // "Rs 50 worth" mode (compute quantity from amount)
+  unitConversions String?   // JSON: [{ unit: "g", factor: 0.001 }] — 1 sub-unit = factor base-units
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime?
+
+  variants        ProductVariant[]
+  stockLevels     StockLevel[]
+  inventoryMovements InventoryMovement[]
+  orderItems      OrderItem[]
+  cartItems       CartItem[]
+  purchaseOrderItems PurchaseOrderItem[]
+
+  @@index([sku])
+  @@index([barcode])
+  @@index([categoryId])
+  @@index([brandId])
+  @@index([status])
+  @@index([supplierId])
+}
+
+model ProductVariant {
+  id          String    @id @default(cuid())
+  productId   String
+  product     Product   @relation(fields: [productId], references: [id])
+  name        String
+  sku         String    @unique
+  barcode     String?
+  unitPrice   Int       // In cents
+  costPrice   Int       // In cents
+  imageUrl    String?
+  options     String    @default("{}") // JSON: { color: "Red", size: "XL" }
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  stockLevels StockLevel[]
+  orderItems  OrderItem[]
+
+  @@index([productId])
+  @@index([sku])
+}
+
+// ─── Suppliers ───────────────────────────────────────────────
+
+model Supplier {
+  id            String    @id @default(cuid())
+  name          String
+  slug          String    @unique
+  email         String?
+  phone         String?
+  address       String?
+  city          String?
+  country       String?
+  taxId         String?
+  paymentTerms  Int       @default(30) // Days
+  rating        Float     @default(0)  // 1-5
+  notes         String?
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+
+  products      Product[]
+  purchaseOrders PurchaseOrder[]
+
+  @@index([slug])
+  @@index([email])
+}
+
+// ─── Purchase Orders ─────────────────────────────────────────
+
+model PurchaseOrder {
+  id              String    @id @default(cuid())
+  orderNumber     String    @unique
+  supplierId      String
+  supplier        Supplier  @relation(fields: [supplierId], references: [id])
+  warehouseId     String
+  warehouse       Warehouse @relation(fields: [warehouseId], references: [id])
+  status          String    @default("draft") // draft, pending, ordered, partial, received, cancelled
+  subtotal        Int       @default(0) // In cents
+  taxAmount       Int       @default(0)
+  shippingCost    Int       @default(0)
+  total           Int       @default(0)
+  notes           String?
+  expectedDate    DateTime?
+  receivedAt      DateTime?
+  createdById     String
+  createdBy       User      @relation(fields: [createdById], references: [id])
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  items           PurchaseOrderItem[]
+  payments        PurchaseOrderPayment[]
+
+  @@index([orderNumber])
+  @@index([supplierId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model PurchaseOrderItem {
+  id             String           @id @default(cuid())
+  purchaseOrderId String
+  purchaseOrder  PurchaseOrder    @relation(fields: [purchaseOrderId], references: [id])
+  productId      String
+  product        Product          @relation(fields: [productId], references: [id])
+  productName    String
+  sku            String
+  quantity       Float            // Fractional allowed for weight/volume products
+  receivedQty    Float            @default(0)
+  unitCost       Int              // In cents (per base unit)
+  taxRate        Float            @default(0)
+  total          Int              // In cents
+}
+
+model PurchaseOrderPayment {
+  id             String           @id @default(cuid())
+  purchaseOrderId String
+  purchaseOrder  PurchaseOrder    @relation(fields: [purchaseOrderId], references: [id])
+  method         String           // cash, bank_transfer, check
+  amount         Int              // In cents
+  reference      String?
+  status         String           @default("completed")
+  createdAt      DateTime         @default(now())
+}
+
+// ─── Inventory ───────────────────────────────────────────────
+
+model Warehouse {
+  id         String    @id @default(cuid())
+  name       String
+  code       String    @unique
+  address    String?
+  isActive   Boolean   @default(true)
+  isDefault  Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  stockLevels     StockLevel[]
+  inventoryMovements InventoryMovement[]
+  stockTransfersFrom StockTransfer[] @relation("TransferFrom")
+  stockTransfersTo   StockTransfer[] @relation("TransferTo")
+  orders        Order[]
+  purchaseOrders PurchaseOrder[]
+
+  @@index([code])
+}
+
+model StockLevel {
+  id               String    @id @default(cuid())
+  productId        String
+  product          Product   @relation(fields: [productId], references: [id])
+  variantId        String?
+  variant          ProductVariant? @relation(fields: [variantId], references: [id])
+  warehouseId      String
+  warehouse        Warehouse @relation(fields: [warehouseId], references: [id])
+  quantity         Float     @default(0) // Fractional allowed for weight/volume products
+  reservedQuantity Int       @default(0)
+  // When the most recent reservation was placed — the reservation
+  // cleanup job releases rows whose last reservation is older than the
+  // stale window instead of wiping every reservation blindly.
+  reservedAt       DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@unique([productId, variantId, warehouseId])
+  @@index([warehouseId])
+}
+
+model InventoryMovement {
+  id            String    @id @default(cuid())
+  productId     String
+  product       Product   @relation(fields: [productId], references: [id])
+  variantId     String?
+  warehouseId   String
+  warehouse     Warehouse @relation(fields: [warehouseId], references: [id])
+  type          String    // purchase, sale, return, adjustment, transfer, damaged, expired, count, po_receive
+  quantity      Float     // Positive = incoming, Negative = outgoing; fractional allowed
+  referenceId   String?   // Links to orderId, transferId, or purchaseOrderId
+  referenceType String?
+  notes         String?
+  performedById String
+  performedBy   User      @relation(fields: [performedById], references: [id])
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([productId])
+  @@index([warehouseId])
+  @@index([type])
+  @@index([createdAt])
+  @@index([productId, createdAt]) // per-product movement timeline (Inventory history drawer)
+}
+
+model StockTransfer {
+  id               String    @id @default(cuid())
+  fromWarehouseId  String
+  fromWarehouse    Warehouse @relation("TransferFrom", fields: [fromWarehouseId], references: [id])
+  toWarehouseId    String
+  toWarehouse      Warehouse @relation("TransferTo", fields: [toWarehouseId], references: [id])
+  status           String    @default("pending") // pending, in_transit, received, cancelled
+  notes            String?
+  createdById      String
+  createdBy        User      @relation(fields: [createdById], references: [id])
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  receivedAt       DateTime?
+
+  items            StockTransferItem[]
+}
+
+model StockTransferItem {
+  id               String         @id @default(cuid())
+  transferId       String
+  transfer         StockTransfer  @relation(fields: [transferId], references: [id])
+  productId        String
+  variantId        String?
+  quantity         Float          // Fractional allowed for weight/volume products
+  receivedQuantity Float?
+}
+
+// ─── Customers ───────────────────────────────────────────────
+
+model Customer {
+  id            String    @id @default(cuid())
+  name          String
+  email         String?
+  phone         String?
+  address       String?
+  taxId         String?
+  notes         String?
+  loyaltyPoints Int       @default(0)
+  totalSpent    Int       @default(0) // In cents
+  orderCount    Int       @default(0)
+  // Running credit (khata) balance: cents the customer still owes the
+  // store across all orders. Incremented when a sale is taken with
+  // partial payment, decremented by Receive-Payment settle-ups.
+  outstandingBalance Int  @default(0) // In cents
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  orders        Order[]
+  cart          CartItem[]
+
+  @@index([email])
+  @@index([phone])
+}
+
+// ─── Orders & POS ────────────────────────────────────────────
+
+model Order {
+  id              String    @id @default(cuid())
+  orderNumber     String    @unique
+  customerId      String?
+  customer        Customer? @relation(fields: [customerId], references: [id])
+  userId          String
+  user            User      @relation(fields: [userId], references: [id])
+  warehouseId     String
+  warehouse       Warehouse @relation(fields: [warehouseId], references: [id])
+  status          String    @default("pending") // pending, confirmed, processing, completed, cancelled, refunded, partially_refunded
+  type            String    @default("sale") // sale, return, refund, exchange, adjustment
+  subtotal        Int       @default(0) // In cents
+  taxAmount       Int       @default(0)
+  discountAmount  Int       @default(0)
+  total           Int       @default(0)
+  paidAmount      Int       @default(0)
+  changeAmount    Int       @default(0)
+  // Partial-payment (credit sale) bookkeeping: dueAmount = total − paid
+  // when the customer didn't cover the full bill. paymentStatus drives
+  // the Customers-page due list: paid | partial | unpaid.
+  dueAmount       Int       @default(0) // In cents
+  paymentStatus   String    @default("paid") // paid | partial | unpaid
+  // Loyalty redemption on this order: cents discounted and points burned.
+  loyaltyRedeemed Int       @default(0) // cents
+  loyaltyPointsRedeemed Int @default(0) // points
+  notes           String?
+  refundReason    String?
+  refundedAt      DateTime?
+  refundedById    String?
+  refundedBy      User?     @relation("OrderRefundedBy", fields: [refundedById], references: [id])
+  refundedAmount  Int       @default(0) // cumulative refunded value in cents (partial + full refunds)
+  receiptPrinted  Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  items           OrderItem[]
+  payments        Payment[]
+
+  @@index([orderNumber])
+  @@index([customerId])
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([paymentStatus, dueAmount]) // credit (khata) worklist + FIFO settlement lookups
+}
+
+model OrderItem {
+  id             String    @id @default(cuid())
+  orderId        String
+  order          Order     @relation(fields: [orderId], references: [id])
+  productId      String
+  product        Product   @relation(fields: [productId], references: [id])
+  variantId      String?
+  variant        ProductVariant? @relation(fields: [variantId], references: [id])
+  productName    String
+  sku            String
+  quantity       Float     // Fractional allowed for weight/volume products
+  refundedQuantity Float   @default(0) // cumulative base-unit quantity already refunded (partial refunds)
+  unit           String    @default("pcs")
+  unitPrice      Int       // In cents
+  costPrice      Int       // In cents
+  discountAmount Int       @default(0)
+  taxRate        Float     @default(0)
+  taxAmount      Int       @default(0)
+  total          Int       @default(0)
+}
+
+model Payment {
+  id        String    @id @default(cuid())
+  orderId   String
+  order     Order     @relation(fields: [orderId], references: [id])
+  method    String    // cash, credit_card, debit_card, digital_wallet, bank_transfer, store_credit
+  amount    Int       // In cents
+  reference String?
+  status    String    @default("completed") // pending, completed, failed, refunded
+  createdAt DateTime  @default(now())
+
+  @@index([orderId]) // settlement lookups join payments to their order
+  @@index([createdAt])
+}
+
+// ─── Cart (Server-side persistence for held transactions) ────
+
+model CartItem {
+  id             String    @id @default(cuid())
+  sessionId      String    // Anonymous session or user ID
+  customerId     String?
+  customer       Customer? @relation(fields: [customerId], references: [id])
+  productId      String
+  product        Product   @relation(fields: [productId], references: [id])
+  variantId      String?
+  productName    String
+  sku            String
+  imageUrl       String?
+  quantity       Float     @default(1) // Fractional allowed for weight/volume products
+  unit           String    @default("pcs")
+  unitPrice      Int       // In cents
+  costPrice      Int       // In cents
+  discountType   String    @default("none") // none, percentage, fixed
+  discountValue  Int       @default(0)
+  taxRate        Float     @default(0)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([sessionId])
+}
+
+// ─── Settings ────────────────────────────────────────────────
+
+// ─── Auth rate limiting ─────────────────────────────────────
+// One row per login/registration attempt. The auth routes use these
+// to lock out an email after repeated failures and to throttle
+// brute-force traffic by IP. Rows older than 24h are pruned while
+// recording new attempts.
+
+model LoginAttempt {
+  id        String   @id @default(cuid())
+  email     String
+  ip        String?
+  kind      String   @default("login") // login | register
+  success   Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([email, kind, createdAt])
+  @@index([ip, kind, createdAt])
+  @@index([createdAt])
+}
+
+// ─── Audit Log ─────────────────────────────────────────────
+
+model AuditLog {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  action      String    // create, update, delete, login, logout, refund, stock_adjust, etc.
+  entity      String    // product, order, customer, supplier, warehouse, user, settings, etc.
+  entityId    String?
+  entityName  String?   // Human-readable name of the entity (e.g. product name, order number)
+  oldValues   String?   // JSON: previous state (before change)
+  newValues   String?   // JSON: new state (after change)
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime  @default(now())
+
+  @@index([userId])
+  @@index([entity, entityId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+// ─── Stock-alert notification log ────────────────────────────
+// One row per (product, warehouse) with the timestamp of the last
+// low-stock notification actually sent. The scheduler uses it to
+// throttle repeated notifications (cooldownHours) and to detect a
+// genuine "restocked, then dipped again" cycle.
+
+model StockAlertLog {
+  id            String   @id @default(cuid())
+  productId     String
+  warehouseId   String
+  lastAlertedAt DateTime @default(now())
+  lastQuantity  Float    @default(0)
+  lastSeverity  String?  // critical | warning | info
+  lastKind      String?  // out_of_stock | critical | below_min | running_low
+  attempts      Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([productId, warehouseId])
+  @@index([lastAlertedAt])
+}
+
+model StoreSettings {
+  id                String  @id @default("singleton")
+  storeName         String  @default("My Store")
+  storeAddress      String?
+  storePhone        String?
+  storeEmail        String?
+  taxRate           Float   @default(0)
+  taxInclusive       Boolean @default(false)
+  currency          String  @default("USD")
+  // Last-known USD-based FX snapshot from /api/fx/rates (JSON:
+  // { rates: Record<code, perUSD>, savedAt }). Kept so conversions stay
+  // correct through provider outages; display-only, never accounting.
+  fxRates           String?
+  receiptHeader     String?
+  receiptFooter     String?
+  receiptQrPayment  String? // QR payload printed at the foot of POS receipts (empty => QR off)
+  lowStockThreshold Int     @default(5)
+  allowPublicRegistration Boolean @default(false) // Admin toggle; new signups open only when enabled (or when zero users exist)
+  refundReasonPresets String? // JSON array of custom refund-reason strings (empty => built-in localized presets)
+  // Webhook notification config for low-stock alerts
+  webhookUrl         String?  // POST low-stock alerts to this URL
+  webhookSecret      String?  // HMAC-SHA256 signing secret for webhook payload
+  // SMTP email notification config for low-stock alerts
+  smtpHost           String?
+  smtpPort           Int      @default(587)
+  smtpUser           String?
+  smtpPassword       String?
+  smtpFromEmail      String?
+  smtpFromName       String?
+  smtpUseTls         Boolean  @default(true)
+  // Notification preferences
+  lowStockNotifyWebhook Boolean @default(false)
+  lowStockNotifyEmail   Boolean @default(false)
+  lowStockNotifyAdmins  Boolean @default(true) // In-app notification to admin users
+  // Scheduled low-stock scanning
+  lowStockSchedulerEnabled Boolean @default(true) // Master switch for the periodic scan
+  lowStockCooldownHours    Float   @default(6)    // Min hours between notifications for the same product+warehouse
+  lowStockMinQuantity      Float?  // Optional hard floor; null => use per-product minStockLevel
+  // Opt-in early-warning channel: also flag products that are ABOVE their
+  // minimum but under 30% of maxStockLevel as "restock soon". Deliberately kept
+  // out of the low-stock counts so a store's Needs Restock number means exactly
+  // the same thing whether this is on or off.
+  lowStockRunningLowAlerts Boolean @default(false)
+  updatedAt         DateTime @updatedAt
+}

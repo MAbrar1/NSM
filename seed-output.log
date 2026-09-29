@@ -1,0 +1,105 @@
+
+> elite-pos@0.1.0 db:seed
+> tsx prisma/seed.ts
+
+🌱 Seeding database with COMPREHENSIVE mock data (SEED=1)...
+
+  Cleaning existing data...
+  ✓ Data cleaned
+
+  Creating users (all roles)...
+  ✓ 7 users created (super_admin, admin, manager, 2 cashiers, inventory_clerk, viewer)
+
+  Creating warehouses...
+  ✓ 3 warehouses created (main, store room, cold storage)
+
+  Creating brands...
+  ✓ 22 brands created
+
+  Creating categories...
+  ✓ 12 categories created
+
+  Creating products...
+  ✓ 58 products created
+
+  Creating stock levels with varied statuses...
+  ✓ 141 stock levels created
+
+  Creating inventory movements (diverse types)...
+  ✓ 80 inventory movements created
+
+  Creating stock transfers (various statuses)...
+  ✓ 5 stock transfers created (received, in_transit, pending, cancelled)
+
+  Creating customers...
+  ✓ 20 customers created
+
+  Creating orders (diverse statuses)...
+  ✓ 248 orders created (completed, confirmed, processing, pending, cancelled, refunded, partially_refunded)
+
+  Recomputing customer stats from orders...
+  ✓ 11 customers' stats reconciled with orders (4 with open khata dues)
+
+  Creating suppliers...
+  ✓ 8 suppliers created
+
+  Creating purchase orders (various statuses)...
+  ✓ 15 purchase orders created (received, ordered, pending, draft)
+
+  Creating store settings...
+  ✓ Store settings created
+
+  Creating stock alert logs (for low stock products)...
+  ✓ 10 stock alert logs created
+
+═══════════════════════════════════════════════════════════
+  ✅ Database seeded with COMPREHENSIVE mock data!
+═══════════════════════════════════════════════════════════
+
+  📊 DATA SUMMARY:
+  ─────────────────
+  Users:              7 (super_admin, admin, manager, 2 cashiers, inventory_clerk, viewer)
+  Warehouses:         3 (main, store room, cold storage)
+  Brands:             22
+  Categories:         12
+  Products:           58
+  Stock Levels:       141
+  Inventory Movements: 80
+  Stock Transfers:    5 (received, in_transit, pending, cancelled)
+  Customers:          20
+  Orders:             248 (mixed statuses)
+  Suppliers:          8
+  Purchase Orders:    15 (mixed statuses)
+  Stock Alerts:       10 pre-logged
+
+  📈 STOCK STATUS BREAKDOWN:
+  ─────────────────
+  In Stock:           34 products
+  Low Stock:          13 products (triggers warnings)
+  Out of Stock:       7 products (triggers critical alerts)
+  Overstocked:        4 products
+
+  🛒 ORDER STATUS BREAKDOWN:
+  ─────────────────
+  Completed:          167 orders
+  Cancelled:          11 orders
+  Refunded/Partial:   11 orders
+
+  🔐 LOGIN CREDENTIALS:
+  ─────────────────
+  Super Admin:  admin@elitepos.com     / Admin@123
+  Admin:        admin2@elitepos.com    / Admin@123
+  Manager:      manager@elitepos.com   / Admin@123
+  Cashier 1:    ahmed@elitepos.com     / Cashier@123
+  Cashier 2:    lisa@elitepos.com      / Cashier@123
+  Inventory:    mike@elitepos.com      / Cashier@123
+  Viewer:       viewer@elitepos.com    / Cashier@123
+
+
+  ✓ Default-warehouse stock rows: 58 tracked products all stocked
+  ✓ No ghost stock rows: soft-deleted products own no stock
+  ✓ Reserved ≤ on-hand: 11 reserved rows all valid
+  ✓ Order totals vs items: 248 orders reconcile
+  ✓ Customer stats (shared earn rule): 20 customers reconcile
+  ✓ No orphan variants: all variants attached to live products
+  ✓ Khata balances vs open credit orders: 20 customers reconcile
