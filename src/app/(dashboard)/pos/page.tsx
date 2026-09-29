@@ -39,6 +39,7 @@ import {
 import { BarcodeScanner } from "@/components/pos/barcode-scanner";
 import { parseScan, barcodeCandidates } from "@/lib/barcode";
 import { useHardwareScanner } from "@/hooks/use-hardware-scanner";
+import { SortableTh } from "@/components/ui/sortable-th";
 import { useModalFocus } from "@/hooks/use-modal-focus";
 import { CustomerPicker, type PickedCustomer } from "@/components/pos/customer-picker";
 import { useStockSync, broadcastStockChange } from "@/hooks/use-stock-sync";
@@ -1051,6 +1052,49 @@ export default function POSPage() {
   const [categories, setCategories] = React.useState<Array<{ id: string; name: string }>>([]);
   const [activeCategory, setActiveCategory] = React.useState("");
   const [browseProducts, setBrowseProducts] = React.useState<POSProduct[]>([]);
+
+  // Margin panel table sort (client-side over the loaded rows; the panel
+  // never pages, so the whole dataset is in memory). The default name/asc
+  // keeps the list stable while the cashier scans the margin spread.
+  const [marginSort, setMarginSort] = React.useState("name.asc");
+  const sortedBrowseProducts = React.useMemo(() => {
+    const [field, order] = marginSort.split(".");
+    const sign = order === "asc" ? 1 : -1;
+    const rows = [...browseProducts];
+    rows.sort((a, b) => {
+      switch (field) {
+        case "stock":
+          return sign * ((a.available ?? 0) - (b.available ?? 0));
+        case "cost":
+          return sign * ((a.costPrice ?? 0) - (b.costPrice ?? 0));
+        case "price":
+          return sign * ((a.unitPrice ?? 0) - (b.unitPrice ?? 0));
+        case "margin": {
+          const ma =
+            a.unitPrice > 0 ? (a.unitPrice - a.costPrice) / a.unitPrice : 0;
+          const mb =
+            b.unitPrice > 0 ? (b.unitPrice - b.costPrice) / b.unitPrice : 0;
+          return sign * (ma - mb);
+        }
+        case "category":
+          return (
+            sign *
+            (a.categoryName ?? "").localeCompare(b.categoryName ?? "")
+          );
+        default:
+          return sign * (a.name ?? "").localeCompare(b.name ?? "");
+      }
+    });
+    return rows;
+  }, [browseProducts, marginSort]);
+  function toggleMarginSort(field: string) {
+    setMarginSort((s) => {
+      if (s.startsWith(`${field}.`)) {
+        return `${field}.${s.endsWith(".asc") ? "desc" : "asc"}`;
+      }
+      return `${field}.${field === "name" || field === "category" ? "asc" : "desc"}`;
+    });
+  }
   const [browseLoading, setBrowseLoading] = React.useState(true);
   const [browseError, setBrowseError] = React.useState(false);
 
@@ -2068,17 +2112,17 @@ export default function POSPage() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-neu-hairline bg-neu-sunken text-[11px] uppercase tracking-wider text-neu-faint">
-                        <th className="px-3 py-2.5 text-start font-semibold">{t("products.name")}</th>
-                        <th className="px-3 py-2.5 text-start font-semibold">{t("products.category")}</th>
-                        <th className="px-3 py-2.5 text-end font-semibold">{t("pos.stockColumn")}</th>
-                        <th className="px-3 py-2.5 text-end font-semibold">{t("products.cost")}</th>
-                        <th className="px-3 py-2.5 text-end font-semibold">{t("products.price")}</th>
-                        <th className="px-3 py-2.5 text-end font-semibold">{t("pos.marginColumn")}</th>
+                        <SortableTh label={t("products.name")} className="px-3 py-2.5" active={marginSort.startsWith("name.")} order={marginSort.endsWith(".asc") ? "asc" : "desc"} onClick={() => toggleMarginSort("name")} />
+                        <SortableTh label={t("products.category")} className="px-3 py-2.5" active={marginSort.startsWith("category.")} order={marginSort.endsWith(".asc") ? "asc" : "desc"} onClick={() => toggleMarginSort("category")} />
+                        <SortableTh label={t("pos.stockColumn")} align="end" className="px-3 py-2.5" active={marginSort.startsWith("stock.")} order={marginSort.endsWith(".asc") ? "asc" : "desc"} onClick={() => toggleMarginSort("stock")} />
+                        <SortableTh label={t("products.cost")} align="end" className="px-3 py-2.5" active={marginSort.startsWith("cost.")} order={marginSort.endsWith(".asc") ? "asc" : "desc"} onClick={() => toggleMarginSort("cost")} />
+                        <SortableTh label={t("products.price")} align="end" className="px-3 py-2.5" active={marginSort.startsWith("price.")} order={marginSort.endsWith(".asc") ? "asc" : "desc"} onClick={() => toggleMarginSort("price")} />
+                        <SortableTh label={t("pos.marginColumn")} align="end" className="px-3 py-2.5" active={marginSort.startsWith("margin.")} order={marginSort.endsWith(".asc") ? "asc" : "desc"} onClick={() => toggleMarginSort("margin")} />
                         <th className="px-3 py-2.5 text-end font-semibold">{t("products.actions")}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-neu-hairline">
-                      {browseProducts.map((product) => {
+                      {sortedBrowseProducts.map((product) => {
                         // Shared stockStatus from the API (lib/stock-status
                         // rule); fallback recomputes for cached rows.
                         const out = product.available <= 0;

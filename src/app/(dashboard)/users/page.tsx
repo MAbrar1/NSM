@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { SortableTh } from "@/components/ui/sortable-th";
 import { toast } from "@/stores/toast-store";
 import { ROLE_LABELS, ROLE_COLORS, type Role } from "@/lib/rbac";
 
@@ -61,6 +62,21 @@ export default function UsersPage() {
   const [page, setPage] = React.useState(1);
   const [totalPages, setTotalPages] = React.useState(1);
 
+  // Server-side sort in the shared "field.order" wire format (the API
+  // clamps it to its allow-list). Names read best A→Z; dates open
+  // high→low. `status` sorts on the Boolean column (active first, then
+  // inactive) rather than a meaningless string compare.
+  const [sort, setSort] = React.useState("createdAt.desc");
+  function toggleSort(field: string) {
+    setSort((s) => {
+      if (field === "status") return s === "isActive.asc" ? "isActive.desc" : "isActive.asc";
+      if (s.startsWith(`${field}.`)) {
+        return `${field}.${s.endsWith(".asc") ? "desc" : "asc"}`;
+      }
+      return `${field}.${field === "name" ? "asc" : "desc"}`;
+    });
+  }
+
   const [showForm, setShowForm] = React.useState(false);
   const [editing, setEditing] = React.useState<UserItem | null>(null);
   const [form, setForm] = React.useState<UserForm>(EMPTY_FORM);
@@ -84,16 +100,18 @@ export default function UsersPage() {
       const params = new URLSearchParams({ page: String(page), limit: "20" });
       if (search) params.set("search", search);
       if (roleFilter) params.set("role", roleFilter);
+      params.set("sort", sort);
       const res = await fetch(`/api/users?${params}`);
       const data = await res.json();
       setUsers(data.users ?? []);
       setTotalPages(data.pagination?.totalPages ?? 1);
     } catch { setLoadError(true); }
     setLoading(false);
-  }, [page, search, roleFilter]);
+  }, [page, search, roleFilter, sort]);
 
   React.useEffect(() => { fetchUsers(); }, [fetchUsers]);
   React.useEffect(() => { const t = setTimeout(() => setPage(1), 300); return () => clearTimeout(t); }, [search, roleFilter]);
+  React.useEffect(() => { setPage(1); }, [sort]);
 
   function openCreate() { setEditing(null); setForm(EMPTY_FORM); setFieldErrors({}); setShowForm(true); }
   function openEdit(u: UserItem) {
@@ -192,11 +210,11 @@ export default function UsersPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-neu-hairline bg-neu-sunken">
-                <th className="text-start px-4 py-3 font-medium text-neu-muted">{t("users.name")}</th>
+                <SortableTh label={t("users.name")} active={sort.startsWith("name.")} order={sort.endsWith(".asc") ? "asc" : "desc"} onClick={() => toggleSort("name")} />
                 <th className="text-start px-4 py-3 font-medium text-neu-muted hidden md:table-cell">{t("users.email")}</th>
                 <th className="text-center px-4 py-3 font-medium text-neu-muted">{t("users.role")}</th>
-                <th className="text-center px-4 py-3 font-medium text-neu-muted">{t("users.status")}</th>
-                <th className="text-start px-4 py-3 font-medium text-neu-muted hidden lg:table-cell">{t("users.lastLogin")}</th>
+                <SortableTh label={t("users.status")} align="center" active={sort.startsWith("isActive.")} order={sort.endsWith(".asc") ? "asc" : "desc"} onClick={() => toggleSort("status")} />
+                <SortableTh label={t("users.lastLogin")} className="hidden lg:table-cell" active={sort.startsWith("lastLoginAt.")} order={sort.endsWith(".asc") ? "asc" : "desc"} onClick={() => toggleSort("lastLoginAt")} />
                 <th className="text-end px-4 py-3 font-medium text-neu-muted">{t("products.actions")}</th>
               </tr>
             </thead>
@@ -235,7 +253,7 @@ export default function UsersPage() {
                         </svg>
                       }
                       title={t("users.noUsers")}
-                      description={t("users.noUsersHint")}
+                      description={search || roleFilter ? t("users.noUsersHintFilter") : t("users.noUsersHint")}
                     />
                   </td>
                 </tr>
@@ -346,10 +364,15 @@ export default function UsersPage() {
                 <label className="text-sm font-medium text-neu-primary">{t("users.status")}</label>
                 <button
                   type="button"
+                  role="switch"
+                  aria-checked={form.isActive}
                   onClick={() => setForm({ ...form, isActive: !form.isActive })}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${form.isActive ? "bg-neu-green" : "bg-neu-sunken"}`}
+                  className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${form.isActive ? "bg-neu-solid-green" : "bg-neu-sunken"}`}
                 >
-                  <span className={`inline-block h-4 w-4 transform rounded-full bg-neu-solid-ink transition-transform ${form.isActive ? "translate-x-6" : "translate-x-1"}`} />
+                  {/* logical knob: rtl:-translate mirrors with the layout, and
+                      the MODE-STABLE solid tokens keep contrast in both themes
+                      (bg-neu-green/solid-ink knob was dark-mode broken). */}
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-neu-bg shadow transition-transform ${form.isActive ? "translate-x-6 rtl:-translate-x-6" : "translate-x-1 rtl:-translate-x-1"}`} />
                 </button>
                 <span className="text-sm text-neu-muted">{form.isActive ? t("products.active") : t("products.inactive")}</span>
               </div>

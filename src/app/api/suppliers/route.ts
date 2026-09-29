@@ -4,6 +4,7 @@ import { apiError, fieldError } from "@/lib/api-errors";
 import { db } from "@/lib/db";
 import { requirePermission } from "@/lib/api-auth";
 import { parsePagination } from "@/lib/pagination";
+import { parseSortParam } from "@/lib/table-sort";
 import { supplierPurchaseStats } from "@/lib/supplier-stats";
 
 /* ═══════════════════════════════════════════════════════════════
@@ -33,6 +34,31 @@ export async function GET(request: NextRequest) {
       ];
     }
 
+    // Allow-listed sort — a hand-edited query falls back to name.asc
+    // instead of reaching Prisma's orderBy and throwing. The count
+    // columns sort on real relation counts via Prisma's _count syntax.
+    const sort = parseSortParam(
+      searchParams.get("sort"),
+      ["name", "email", "phone", "city", "country", "paymentTerms", "rating", "createdAt", "products", "purchaseOrders"],
+      { field: "name", order: "asc" }
+    );
+    const sortField =
+      sort.field === "products"
+        ? "products"
+        : sort.field === "purchaseOrders"
+          ? "purchaseOrders"
+          : sort.field;
+
+    // Count columns sort on real relation counts (Prisma's _count syntax);
+    // everything else is a plain column, with nulls last so "—" rows don't
+    // bunch at the top of an ascending sort.
+    const orderBy: Prisma.SupplierOrderByWithRelationInput =
+      sortField === "products"
+        ? { products: { _count: sort.order } }
+        : sortField === "purchaseOrders"
+          ? { purchaseOrders: { _count: sort.order } }
+          : { [sortField]: { sort: sort.order, nulls: "last" } };
+
     const [suppliers, total] = await Promise.all([
       db.supplier.findMany({
         where,
@@ -42,7 +68,7 @@ export async function GET(request: NextRequest) {
             select: { total: true, status: true },
           },
         },
-        orderBy: { name: "asc" },
+        orderBy,
         skip,
         take,
       }),

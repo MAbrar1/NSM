@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { EmptyState } from "@/components/ui/empty-state";
 import { readApiError } from "@/lib/api-error";
+import { useUnsavedGuard } from "@/hooks/use-unsaved-guard";
 import { toast } from "@/stores/toast-store";
 import { useI18n } from "@/components/providers/i18n-provider";
 import { cn } from "@/lib/utils";
@@ -25,6 +26,9 @@ export default function ReceiptSettingsPage() {
   const [saving, setSaving] = React.useState(false);
   const [fieldErrors, setFieldErrors] = React.useState<Record<string, string>>({});
   const [dirty, setDirty] = React.useState(false);
+  // Shield the unsaved edits: beforeunload + in-app leave confirmation
+  // (the DirtyNavGuard in the dashboard layout does the actual blocking).
+  useUnsavedGuard({ when: dirty });
   const [storeName, setStoreName] = React.useState("");
   const [storeAddress, setStoreAddress] = React.useState("");
   const [storePhone, setStorePhone] = React.useState("");

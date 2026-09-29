@@ -25,6 +25,7 @@ import { downloadCsv } from "@/lib/csv";
 import { ExportMenu, type ExportColumn } from "@/components/export/export-menu";
 import { ImportResultDialog, type ImportSummary } from "@/components/import/import-result-dialog";
 import { fetchReportSettings, printReport } from "@/lib/print-report";
+import { SortableTh } from "@/components/ui/sortable-th";
 
 /* ═══════════════════════════════════════════════════════════════
    SUPPLIERS PAGE
@@ -93,6 +94,20 @@ export default function SuppliersPage() {
   const [search, setSearch] = React.useState("");
   const [page, setPage] = React.useState(1);
   const [totalPages, setTotalPages] = React.useState(1);
+
+  // Server-side sort in the shared "field.order" wire format — the API
+  // clamps it to its allow-list, so a hand-edited query can never throw
+  // inside Prisma's orderBy. Names read best A→Z; numeric columns open
+  // high→low.
+  const [sort, setSort] = React.useState("name.asc");
+  function toggleSort(field: string) {
+    setSort((s) => {
+      if (s.startsWith(`${field}.`)) {
+        return `${field}.${s.endsWith(".asc") ? "desc" : "asc"}`;
+      }
+      return `${field}.${field === "name" ? "asc" : "desc"}`;
+    });
+  }
 
   // CSV export/import (export state lives inside ExportMenu)
 
@@ -238,13 +253,14 @@ export default function SuppliersPage() {
     try {
       const params = new URLSearchParams({ page: String(page), limit: "20" });
       if (search) params.set("search", search);
+      params.set("sort", sort);
       const res = await fetch(`/api/suppliers?${params}`);
       const data = await res.json();
       setSuppliers(data.suppliers ?? []);
       setTotalPages(data.pagination?.totalPages ?? 1);
     } catch { setLoadError(true); }
     setLoading(false);
-  }, [page, search]);
+  }, [page, search, sort]);
 
   React.useEffect(() => { fetchSuppliers(); }, [fetchSuppliers]);
 
@@ -252,6 +268,9 @@ export default function SuppliersPage() {
     const timer = setTimeout(() => setPage(1), 300);
     return () => clearTimeout(timer);
   }, [search]);
+
+  // A new sort goes back to page 1.
+  React.useEffect(() => { setPage(1); }, [sort]);
 
   function openCreate() { setEditing(null); setForm(EMPTY_FORM); setFieldErrors({}); setShowForm(true); }
   function openEdit(s: Supplier) {
@@ -379,12 +398,12 @@ export default function SuppliersPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-neu-hairline bg-neu-sunken">
-                <th className="text-start px-4 py-3 font-medium text-neu-muted">{t("suppliers.name")}</th>
+                <SortableTh label={t("suppliers.name")} active={sort.startsWith("name.")} order={sort.endsWith(".asc") ? "asc" : "desc"} onClick={() => toggleSort("name")} />
                 <th className="text-start px-4 py-3 font-medium text-neu-muted hidden md:table-cell">{t("suppliers.email")}</th>
                 <th className="text-start px-4 py-3 font-medium text-neu-muted hidden lg:table-cell">{t("suppliers.phone")}</th>
-                <th className="text-center px-4 py-3 font-medium text-neu-muted">{t("suppliers.rating")}</th>
-                <th className="text-center px-4 py-3 font-medium text-neu-muted hidden sm:table-cell">{t("suppliers.products")}</th>
-                <th className="text-center px-4 py-3 font-medium text-neu-muted hidden md:table-cell">{t("suppliers.purchaseOrders")}</th>
+                <SortableTh label={t("suppliers.rating")} align="center" active={sort.startsWith("rating.")} order={sort.endsWith(".asc") ? "asc" : "desc"} onClick={() => toggleSort("rating")} />
+                <SortableTh label={t("suppliers.products")} align="center" className="hidden sm:table-cell" active={sort.startsWith("products.")} order={sort.endsWith(".asc") ? "asc" : "desc"} onClick={() => toggleSort("products")} />
+                <SortableTh label={t("suppliers.purchaseOrders")} align="center" className="hidden md:table-cell" active={sort.startsWith("purchaseOrders.")} order={sort.endsWith(".asc") ? "asc" : "desc"} onClick={() => toggleSort("purchaseOrders")} />
                 <th className="text-end px-4 py-3 font-medium text-neu-muted">{t("products.actions")}</th>
               </tr>
             </thead>

@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { apiError } from "@/lib/api-errors";
 import { db } from "@/lib/db";
 import { requirePermission } from "@/lib/api-auth";
 import { parsePagination } from "@/lib/pagination";
+import { parseSortParam } from "@/lib/table-sort";
 
 /* ═══════════════════════════════════════════════════════════════
    AUDIT LOG API
@@ -27,13 +29,26 @@ export async function GET(request: NextRequest) {
     if (action) where["action"] = action;
     if (userId) where["userId"] = userId;
 
+    // Allow-listed sort — a hand-edited query falls back to createdAt.desc
+    // instead of reaching Prisma's orderBy and throwing. `user` sorts on
+    // the related user's name.
+    const auditSort = parseSortParam(
+      searchParams.get("sort"),
+      ["createdAt", "user", "action", "entity"],
+      { field: "createdAt", order: "desc" }
+    );
+    const orderBy: Prisma.AuditLogOrderByWithRelationInput =
+      auditSort.field === "user"
+        ? { user: { name: auditSort.order } }
+        : { [auditSort.field]: auditSort.order };
+
     const [logs, total] = await Promise.all([
       db.auditLog.findMany({
         where,
         include: {
           user: { select: { id: true, name: true, email: true, role: true } },
         },
-        orderBy: { createdAt: "desc" },
+        orderBy,
         skip,
         take,
       }),

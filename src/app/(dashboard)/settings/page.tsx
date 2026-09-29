@@ -12,6 +12,7 @@ import { toast } from "@/stores/toast-store";
 import { useI18n } from "@/components/providers/i18n-provider";
 import { cn, setCurrencyDefaults } from "@/lib/utils";
 import { useSettingsStore } from "@/stores/settings-store";
+import { useUnsavedGuard } from "@/hooks/use-unsaved-guard";
 
 /* ═══════════════════════════════════════════════════════════════
    SETTINGS PAGE
@@ -93,6 +94,9 @@ export default function SettingsPage() {
   const [exporting, setExporting] = React.useState(false);
   const [running, setRunning] = React.useState(false);
   const [dirty, setDirty] = React.useState(false);
+  // Shield the unsaved edits: beforeunload + in-app leave confirmation
+  // (the DirtyNavGuard in the dashboard layout does the actual blocking).
+  useUnsavedGuard({ when: dirty });
   const [refundPresets, setRefundPresets] = React.useState<string[]>([]);
   const [newPreset, setNewPreset] = React.useState("");
 

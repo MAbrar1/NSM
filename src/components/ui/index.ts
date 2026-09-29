@@ -7,6 +7,7 @@ export { Separator } from "./separator";
 export { Label } from "./label";
 export { Skeleton } from "./skeleton";
 export { TableSkeleton } from "./table-skeleton";
+export { SortableTh, type SortableThProps } from "./sortable-th";
 export { EmptyState } from "./empty-state";
 export { Spinner, type SpinnerSize } from "./spinner";
 export { StatCard, StatIcon, type StatIconName, type StatTone } from "./stat-card";

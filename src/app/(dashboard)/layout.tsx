@@ -17,6 +17,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { PrintPreviewProvider } from "@/components/print/print-preview";
 import { LiveClock } from "@/components/layout/live-clock";
 import { SyncIndicator } from "@/components/layout/sync-indicator";
+import { DirtyNavGuard } from "@/components/layout/dirty-nav-guard";
 import { WelcomeModal } from "@/components/layout/welcome-modal";
 import { NAVIGATION, APP_NAME, APP_VERSION, type NavItem } from "@/lib/constants";
 import { ROLE_LABELS, canAccessRoute, type Role } from "@/lib/rbac";
@@ -1088,6 +1089,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* ═══ STORE CURRENCY (formatCurrency defaults) ═══ */}
       <CurrencySync />
+
+      {/* ═══ UNSAVED-CHANGES PROTECTION ═══
+          Pages opt in with useUnsavedGuard({ when: dirty }); this shell
+          turns the registry into a beforeunload prompt plus a leave
+          confirmation on in-app link navigation. */}
+      <DirtyNavGuard />
 
       {/* ═══ GLOBAL TOASTS ═══ */}
       <Toaster />

@@ -3,6 +3,7 @@ import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { requirePermission } from "@/lib/api-auth";
 import { parsePagination } from "@/lib/pagination";
+import { parseSortParam } from "@/lib/table-sort";
 import { apiError, fieldError } from "@/lib/api-errors";
 import { poLineTotals, poTotals } from "@/lib/purchase-order-math";
 
@@ -25,6 +26,12 @@ export async function GET(request: NextRequest) {
       defaultPageSize: 20,
       pageSizeParam: "limit",
     });
+
+    const poSort = parseSortParam(
+      searchParams.get("sort"),
+      ["orderNumber", "supplier", "createdAt", "expectedDate", "total", "status"],
+      { field: "createdAt", order: "desc" }
+    );
 
     const where: Prisma.PurchaseOrderWhereInput = {};
     if (status) where.status = status;
@@ -50,7 +57,9 @@ export async function GET(request: NextRequest) {
           },
           _count: { select: { items: true } },
         },
-        orderBy: { createdAt: "desc" },
+        // Allow-listed sort — a hand-edited query falls back to
+        // createdAt.desc instead of reaching Prisma's orderBy and throwing.
+        orderBy: { [poSort.field]: poSort.order },
         skip,
         take,
       }),

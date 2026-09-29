@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { SortableTh } from "@/components/ui/sortable-th";
 import { toast } from "@/stores/toast-store";
 import { formatCurrency } from "@/lib/utils";
 import { readApiError } from "@/lib/api-error";
@@ -110,6 +111,19 @@ export default function PurchaseOrdersPage() {
   const [statusFilter, setStatusFilter] = React.useState("");
   const [page, setPage] = React.useState(1);
   const [totalPages, setTotalPages] = React.useState(1);
+
+  // Server-side sort in the shared "field.order" wire format (the API
+  // clamps it to its allow-list). Numbers/dates open high→low, the PO
+  // number opens A→Z.
+  const [sort, setSort] = React.useState("createdAt.desc");
+  function toggleSort(field: string) {
+    setSort((s) => {
+      if (s.startsWith(`${field}.`)) {
+        return `${field}.${s.endsWith(".asc") ? "desc" : "asc"}`;
+      }
+      return `${field}.${field === "orderNumber" || field === "supplier" ? "asc" : "desc"}`;
+    });
+  }
 
   // Create PO state
   const [showCreate, setShowCreate] = React.useState(false);
@@ -252,13 +266,14 @@ export default function PurchaseOrdersPage() {
       const params = new URLSearchParams({ page: String(page), limit: "20" });
       if (search) params.set("search", search);
       if (statusFilter) params.set("status", statusFilter);
+      params.set("sort", sort);
       const res = await fetch(`/api/purchase-orders?${params}`);
       const data = await res.json();
       setOrders(data.orders ?? []);
       setTotalPages(data.pagination?.totalPages ?? 1);
     } catch { setLoadError(true); }
     setLoading(false);
-  }, [page, search, statusFilter]);
+  }, [page, search, statusFilter, sort]);
 
   React.useEffect(() => { fetchOrders(); }, [fetchOrders]);
   React.useEffect(() => { const t = setTimeout(() => setPage(1), 300); return () => clearTimeout(t); }, [search, statusFilter]);
@@ -581,11 +596,11 @@ export default function PurchaseOrdersPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-neu-hairline bg-neu-sunken">
-                <th className="text-start px-4 py-3 font-medium text-neu-muted">{t("purchaseOrders.orderNumber")}</th>
-                <th className="text-start px-4 py-3 font-medium text-neu-muted">{t("purchaseOrders.supplier")}</th>
-                <th className="text-start px-4 py-3 font-medium text-neu-muted hidden md:table-cell">{t("purchaseOrders.date")}</th>
-                <th className="text-start px-4 py-3 font-medium text-neu-muted hidden lg:table-cell">{t("purchaseOrders.expectedDate")}</th>
-                <th className="text-end px-4 py-3 font-medium text-neu-muted">{t("purchaseOrders.total")}</th>
+                <SortableTh label={t("purchaseOrders.orderNumber")} active={sort.startsWith("orderNumber.")} order={sort.endsWith(".asc") ? "asc" : "desc"} onClick={() => toggleSort("orderNumber")} />
+                <SortableTh label={t("purchaseOrders.supplier")} active={sort.startsWith("supplier.")} order={sort.endsWith(".asc") ? "asc" : "desc"} onClick={() => toggleSort("supplier")} />
+                <SortableTh label={t("purchaseOrders.date")} className="hidden md:table-cell" active={sort.startsWith("createdAt.")} order={sort.endsWith(".asc") ? "asc" : "desc"} onClick={() => toggleSort("createdAt")} />
+                <SortableTh label={t("purchaseOrders.expectedDate")} className="hidden lg:table-cell" active={sort.startsWith("expectedDate.")} order={sort.endsWith(".asc") ? "asc" : "desc"} onClick={() => toggleSort("expectedDate")} />
+                <SortableTh label={t("purchaseOrders.total")} align="end" active={sort.startsWith("total.")} order={sort.endsWith(".asc") ? "asc" : "desc"} onClick={() => toggleSort("total")} />
                 <th className="text-center px-4 py-3 font-medium text-neu-muted">{t("purchaseOrders.status")}</th>
                 <th className="text-end px-4 py-3 font-medium text-neu-muted">{t("products.actions")}</th>
               </tr>

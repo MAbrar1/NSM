@@ -16,6 +16,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
+import { SortableTh } from "@/components/ui/sortable-th";
 import { StatCard } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "@/stores/toast-store";
@@ -73,53 +74,6 @@ interface CustomerDetail extends Customer {
     createdAt: string;
     items: Array<{ productName: string; quantity: number; total: number }>;
   }>;
-}
-
-/** Sortable column header — the whole th stays clickable with a hover affordance. */
-function SortableTh({
-  label,
-  active,
-  order,
-  align = "start",
-  onClick,
-}: {
-  label: string;
-  active: boolean;
-  order: "asc" | "desc";
-  align?: "start" | "end";
-  onClick: () => void;
-}) {
-  return (
-    <th
-      aria-sort={active ? (order === "asc" ? "ascending" : "descending") : "none"}
-      className={cn("whitespace-nowrap px-4 py-3", align === "end" ? "text-end" : "text-start")}
-    >
-      <button
-        type="button"
-        onClick={onClick}
-        className={cn(
-          "group inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wider transition-colors",
-          active ? "text-neu-accent-ink" : "text-neu-faint hover:text-neu-primary",
-          align === "end" && "flex-row-reverse"
-        )}
-      >
-        {label}
-        <svg
-          className={cn("h-3 w-3 transition-opacity", active ? "opacity-100" : "opacity-0 group-hover:opacity-60")}
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2.5}
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d={order === "asc" ? "M4.5 15.75l7.5-7.5 7.5 7.5" : "M19.5 8.25l-7.5 7.5-7.5-7.5"}
-          />
-        </svg>
-      </button>
-    </th>
-  );
 }
 
 /** Compact loyalty chip used in the table + mobile cards. */
