@@ -13,6 +13,7 @@
    ═══════════════════════════════════════════════════════════════ */
 
 import { execFileSync } from "child_process";
+import { readFileSync } from "fs";
 import { rm, readFile, writeFile, mkdtemp } from "fs/promises";
 import os from "os";
 import path from "path";
@@ -58,7 +59,53 @@ export async function setupTestDb(): Promise<{ dbFile: string }> {
     }
   );
 
+  // `db push` syncs tables but NOT the raw-SQL triggers our migration
+  // adds (print-log immutability). Apply any trigger statements from
+  // the repo's migrations so the test DB matches production behavior.
+  await applyMigrationsTriggers();
+
   return { dbFile: TEST_DB_FILE };
+}
+
+/** Execute the trigger statements from prisma/migrations in order. */
+async function applyMigrationsTriggers(): Promise<void> {
+  const migrationsDir = path.resolve("prisma/migrations");
+  let entries: string[] = [];
+  try {
+    entries = (await import("fs")).readdirSync(migrationsDir).sort();
+  } catch {
+    return; // no migrations dir — nothing to apply
+  }
+  for (const dir of entries) {
+    const sqlPath = path.join(migrationsDir, dir, "migration.sql");
+    try {
+      const sql = readFileSync(sqlPath, "utf8");
+      for (const trigger of extractTriggerStatements(sql)) {
+        await db.$executeRawUnsafe(trigger);
+      }
+    } catch {
+      // missing file / already applied / dialect issue — skip
+    }
+  }
+}
+
+/** Pull complete CREATE TRIGGER …END; blocks out of a migration file. */
+function extractTriggerStatements(sql: string): string[] {
+  const out: string[] = [];
+  const lines = sql.split("\n");
+  let buf: string[] | null = null;
+  for (const line of lines) {
+    if (buf === null && /CREATE\s+TRIGGER/i.test(line)) {
+      buf = [line];
+    } else if (buf !== null) {
+      buf.push(line);
+      if (/^END;\s*$/i.test(line.trim())) {
+        out.push(buf.join("\n"));
+        buf = null;
+      }
+    }
+  }
+  return out;
 }
 
 /** Delete the temp database directory. Safe to call twice.
@@ -93,6 +140,10 @@ async function assertTestDatabase(): Promise<void> {
  */
 export async function cleanTables(): Promise<void> {
   await assertTestDatabase();
+  // The append-only print-log trigger would block its own cleanup;
+  // drop, wipe, re-apply — mirroring an admin-only maintenance path.
+  await db.$executeRawUnsafe(`DROP TRIGGER IF EXISTS "ReceiptPrintLog_no_update"`);
+  await db.$executeRawUnsafe(`DROP TRIGGER IF EXISTS "ReceiptPrintLog_no_delete"`);
   await db.cartItem.deleteMany();
   await db.payment.deleteMany();
   await db.orderItem.deleteMany();
@@ -114,6 +165,8 @@ export async function cleanTables(): Promise<void> {
   await db.auditLog.deleteMany();
   await db.warehouse.deleteMany();
   await db.user.deleteMany();
+  // Re-apply the immutability triggers for the next test.
+  await applyMigrationsTriggers();
 }
 
 export { db };

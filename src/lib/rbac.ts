@@ -29,6 +29,9 @@ export type Permission =
   | "orders:view"
   | "orders:manage"
   | "orders:refund"
+  | "receipts:print"       // print (or retry) the receipt of a sale just made
+  | "receipts:reprint_own" // reprint own receipts from the current/last shift
+  | "receipts:reprint_any" // reprint any receipt (manager+)
   | "customers:view"
   | "customers:create"
   | "customers:edit"
@@ -57,6 +60,7 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   super_admin: [
     "dashboard:view",
     "pos:view", "pos:create_order", "pos:apply_discount", "pos:refund",
+    "receipts:print", "receipts:reprint_own", "receipts:reprint_any",
     "products:view", "products:create", "products:edit", "products:delete",
     "categories:view", "categories:create", "categories:edit", "categories:delete",
     "brands:view", "brands:create", "brands:edit", "brands:delete",
@@ -72,6 +76,7 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   admin: [
     "dashboard:view",
     "pos:view", "pos:create_order", "pos:apply_discount", "pos:refund",
+    "receipts:print", "receipts:reprint_own", "receipts:reprint_any",
     "products:view", "products:create", "products:edit", "products:delete",
     "categories:view", "categories:create", "categories:edit", "categories:delete",
     "brands:view", "brands:create", "brands:edit", "brands:delete",
@@ -87,6 +92,7 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   manager: [
     "dashboard:view",
     "pos:view", "pos:create_order", "pos:apply_discount",
+    "receipts:print", "receipts:reprint_own", "receipts:reprint_any",
     "products:view", "products:create", "products:edit",
     "categories:view", "categories:create", "categories:edit",
     "brands:view", "brands:create", "brands:edit",
@@ -102,6 +108,7 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   cashier: [
     "dashboard:view",
     "pos:view", "pos:create_order",
+    "receipts:print", "receipts:reprint_own",
     "products:view",
     "categories:view",
     "brands:view",
