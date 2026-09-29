@@ -249,6 +249,9 @@
     "delete": "Delete",
     "edit": "Edit",
     "create": "Create",
+    "active": "Active",
+    "disabled": "Disabled",
+    "invalidInput": "Please check the form",
     "search": "Search",
     "filter": "Filter",
     "export": "Export",
@@ -286,6 +289,7 @@
     "created": "Created",
     "saved": "Saved",
     "deleted": "Deleted",
+    "deleteFailed": "Could not delete",
     "activate": "Activate",
     "deactivate": "Deactivate",
     "import": "Import",
@@ -1213,6 +1217,18 @@
       "aed": "AED — UAE Dirham",
       "sar": "SAR — Saudi Riyal"
     }
+  },
+  "printerProfiles": {
+    "title": "Printer Profiles",
+    "description": "Configure thermal printers: paper width, dots, band size, feed and cut — all data, no code changes for new widths.",
+    "breadcrumb": "Printer Profiles",
+    "none": "No printer profiles yet",
+    "noneDesc": "Add a profile from a preset or enter custom values for your printer.",
+    "addTitle": "Add printer profile",
+    "editTitle": "Edit printer profile",
+    "name": "Profile name",
+    "presetsHint": "Start from a preset (58/80/112 mm) or type custom values (e.g. 88 mm). Run a calibration print after saving.",
+    "calibrate": "Calibration print"
   },
   "receiptSettings": {
     "title": "Receipt Settings",

@@ -94,7 +94,7 @@ export default function PrinterProfilesPage() {
 
   async function remove(id: string) {
     const res = await fetch(`/api/printer-profiles/${id}`, { method: "DELETE" });
-    if (!res.ok) toast.error(t("settings.deleteFailed"));
+    if (!res.ok) toast.error(t("common.deleteFailed"));
     else toast.success(t("settings.saved"));
     load();
   }
