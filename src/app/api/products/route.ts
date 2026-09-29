@@ -141,6 +141,16 @@ export async function POST(request: NextRequest) {
       return fieldError({ sku: ["A product with this SKU already exists"] }, 409);
     }
 
+    // Barcodes are globally unique across products and extra-barcode
+    // rows — a duplicate would make scan resolution ambiguous.
+    if (data.barcode) {
+      const dupeProduct = await db.product.findFirst({ where: { barcode: data.barcode, deletedAt: null } });
+      const dupeExtra = await db.productBarcode.findUnique({ where: { barcode: data.barcode } });
+      if (dupeProduct || dupeExtra) {
+        return fieldError({ barcode: ["This barcode is already assigned to another product"] }, 409);
+      }
+    }
+
     // Generate slug from name (append SKU suffix to avoid collisions)
     let slug = data.name
       .toLowerCase()

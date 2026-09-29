@@ -139,6 +139,77 @@ export function barcodeCandidates(code: string): string[] {
   return [...new Set(out.filter(Boolean))];
 }
 
+/* ─── Embedded weight/price barcodes (GS1 local AIs) ────────────
+   Prefix-based in-store codes that carry quantity or price inside
+   the barcode: 28/29 = weight (kg), 31/32 = weight variants,
+   22 = price in some regions. Configuration (prefix, item-code
+   length, value length, decimals, value type) lives in Settings;
+   parsing here is pure integer math — no floats. */
+
+export interface EmbeddedBarcodeConfig {
+  /** Barcode prefix, e.g. "28" for in-store weight labels. */
+  prefix: string;
+  /** Digits of the embedded item code after the prefix. */
+  itemCodeLength: number;
+  /** Digits of the embedded value field (before the check digit). */
+  valueLength: number;
+  /** Decimal places of the value (2 → value/100). */
+  decimals: number;
+  /** What the embedded value means. */
+  valueType: "weight" | "price";
+}
+
+export interface EmbeddedBarcodeData {
+  /** The embedded item/product code to look up. */
+  itemCode: string;
+  /** Value in smallest units, exactly as encoded (grams for weight
+   *  per the configured decimals, cents for price). "00150" @ 3
+   *  decimals → 150; "01250" @ 2 decimals → 1250. */
+  value: number;
+  valueType: "weight" | "price";
+  /** The remaining barcode (prefix + item code) for lookup. */
+  lookupCode: string;
+}
+
+/**
+ * Parse an embedded weight/price barcode against a config.
+ * Expected layout: PREFIX + ITEM_CODE + VALUE + CHECK_DIGIT.
+ * Validates the GTIN check digit when the total length is a GTIN
+ * length; integer parsing throughout ("00150" @2 decimals → 150).
+ * Returns null when the code does not match the config shape.
+ */
+export function parseEmbeddedBarcode(
+  code: string,
+  config: EmbeddedBarcodeConfig
+): EmbeddedBarcodeData | null {
+  const d = (code ?? "").replace(/\D/g, "");
+  if (!config.prefix || !d.startsWith(config.prefix)) return null;
+  const itemStart = config.prefix.length;
+  const valueStart = itemStart + config.itemCodeLength;
+  const checkIndex = valueStart + config.valueLength;
+  // Must be exactly prefix+item+value (+ optional check digit).
+  if (d.length !== checkIndex && d.length !== checkIndex + 1) return null;
+
+  // The store-generated EAN-13s pass through gtinCheckDigit; labels
+  // without a GTIN length (e.g. 8-digit local codes) skip the check.
+  if ([8, 12, 13, 14].includes(d.length) && !isValidGtin(d)) return null;
+
+  const itemCode = d.slice(itemStart, valueStart);
+  const rawValue = d.slice(valueStart, checkIndex);
+  if (!itemCode || !rawValue) return null;
+  // The raw field IS the value in smallest units: "00150" @ 3 decimals
+  // means 150 g, "01250" @ 2 decimals means 1250 cents. Integer parse
+  // of the whole field — no float arithmetic anywhere.
+  const value = Number(rawValue);
+  if (!Number.isFinite(value)) return null;
+  return {
+    itemCode,
+    value,
+    valueType: config.valueType,
+    lookupCode: config.prefix + itemCode,
+  };
+}
+
 /* ─── GTIN-13 (EAN-13) generation ───────────────────────────── */
 
 /**
