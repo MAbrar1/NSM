@@ -12,7 +12,14 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { enqueuePrint, registerDriver, resetPrintQueues } from "@/lib/print/print-service";
+import { resetHealth, resetDuplicateWindow } from "@/lib/print/print-intelligence";
 import { PrintDriver, PrintError, PrintJob, DriverProfile } from "@/lib/print/driver";
+
+function resetIntelligence(): void {
+  resetPrintQueues();
+  resetHealth();
+  resetDuplicateWindow();
+}
 
 /** Scripted driver: records calls, resolves/rejects as configured. */
 class ScriptedDriver implements PrintDriver {
@@ -57,7 +64,7 @@ function job(id: string): PrintJob {
 }
 
 test("same profile serializes strictly in enqueue order", async () => {
-  resetPrintQueues();
+  resetIntelligence();
   const driver = new ScriptedDriver();
   const order: string[] = [];
   driver.script(async () => {
@@ -81,7 +88,7 @@ test("same profile serializes strictly in enqueue order", async () => {
 });
 
 test("different profiles do not block each other", async () => {
-  resetPrintQueues();
+  resetIntelligence();
   const driver = new ScriptedDriver();
   let inFlight = 0;
   let maxInFlight = 0;
@@ -104,7 +111,7 @@ test("different profiles do not block each other", async () => {
 });
 
 test("timeout surfaces as PrintError TIMEOUT", async () => {
-  resetPrintQueues();
+  resetIntelligence();
   const driver = new ScriptedDriver();
   driver.script(() => new Promise(() => undefined)); // never resolves
   registerDriver(driver);
@@ -116,7 +123,7 @@ test("timeout surfaces as PrintError TIMEOUT", async () => {
 });
 
 test("raw driver failures are wrapped into typed PrintError", async () => {
-  resetPrintQueues();
+  resetIntelligence();
   const driver = new ScriptedDriver();
   driver.script(async () => {
     throw new DOMException("blocked", "NotAllowedError");
@@ -130,7 +137,7 @@ test("raw driver failures are wrapped into typed PrintError", async () => {
 });
 
 test("retry-from-record: the same saved job can be re-enqueued after failure", async () => {
-  resetPrintQueues();
+  resetIntelligence();
   const driver = new ScriptedDriver();
   let attempts = 0;
   driver.script(async () => {

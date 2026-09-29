@@ -1218,6 +1218,39 @@
       "sar": "SAR — Saudi Riyal"
     }
   },
+  "printCenter": {
+    "title": "Print Center",
+    "description": "Live health, analytics and paper economy for every printer in the store.",
+    "breadcrumb": "Print Center",
+    "refresh": "Refresh queues",
+    "successRate": "24h success rate",
+    "totalPrints": "24h print jobs",
+    "failed": "Failures",
+    "rollDays": "Roll forecast",
+    "days": "days",
+    "fleetHealth": "Printer fleet health",
+    "fleetHealthDesc": "Rolling success rate per profile — unhealthy printers are auto-demoted to fallback and recover on probe.",
+    "topErrors": "Top errors",
+    "topErrorsDesc": "Most frequent print failures in the last 24 hours.",
+    "noErrors": "No failures recorded — clean run.",
+    "paperEconomy": "Paper economy",
+    "paperEconomyDesc": "Content-aware density and roll-life forecasting for thermal rolls.",
+    "dailyReceipts": "Receipts per day",
+    "avgItems": "Avg items per receipt",
+    "densitySuggestion": "Suggested mode",
+    "rollForecast": "Roll lasts",
+    "density": {
+      "compact": "Compact",
+      "normal": "Normal",
+      "roomy": "Roomy"
+    },
+    "state": {
+      "healthy": "Healthy",
+      "degraded": "Degraded",
+      "down": "Down",
+      "disabled": "Disabled"
+    }
+  },
   "printerProfiles": {
     "title": "Printer Profiles",
     "description": "Configure thermal printers: paper width, dots, band size, feed and cut — all data, no code changes for new widths.",

@@ -18,6 +18,14 @@
 
 import { PrintDriver, PrintError, PrintJob, DriverProfile } from "./driver";
 import { EscPosRasterDriver, EscPosTextDriver, BrowserPrintDriver, PdfDriver } from "./drivers";
+import {
+  recordPrintSuccess,
+  recordPrintFailure,
+  isDuplicateRequest,
+  markJobFailed,
+  clearJobFailure,
+  recordEvent,
+} from "./print-intelligence";
 
 /** Default per-job timeout. Generous: thermal rendering of a 500-line
  *  receipt can take seconds before the first byte moves. */
@@ -97,6 +105,14 @@ export function enqueuePrint(
   const driver = driverFor(job.kind);
   const timeoutMs = opts.timeoutMs ?? DEFAULT_TIMEOUT_MS;
 
+  const jobKey = `${profile.id}:${job.id}`;
+
+  // Duplicate collapse: the same receipt requested twice within the
+  // window (double-click, Enter spam) resolves silently as success —
+  // the paper never comes out twice for one intent. A job whose last
+  // attempt FAILED is never suppressed: retries go straight through.
+  if (isDuplicateRequest(jobKey)) return Promise.resolve();
+
   return queueFor(profile.id).push(async () => {
     const controller = new AbortController();
     const onOuterAbort = () => controller.abort(new PrintError("CANCELLED", "Job aborted"));
@@ -106,6 +122,7 @@ export function enqueuePrint(
       controller.abort();
     }, timeoutMs);
 
+    const startedAt = Date.now();
     try {
       await Promise.race([
         driver.print(job, profile, controller.signal),
@@ -122,7 +139,14 @@ export function enqueuePrint(
           );
         }),
       ]);
+      recordPrintSuccess(profile.id);
+      clearJobFailure(jobKey);
+      recordEvent({ profileId: profile.id, kind: job.kind as string, ok: true, at: startedAt });
     } catch (err) {
+      const code = err instanceof PrintError ? err.code : "TRANSPORT";
+      recordPrintFailure(profile.id, code, (err as Error).message);
+      markJobFailed(jobKey);
+      recordEvent({ profileId: profile.id, kind: job.kind as string, ok: false, at: startedAt, errorCode: code });
       if (err instanceof PrintError) throw err;
       // Drivers wrap their own errors; this is a safety net.
       throw new PrintError("TRANSPORT", `Print failed: ${(err as Error).message}`, err);
