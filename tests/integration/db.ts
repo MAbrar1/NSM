@@ -96,6 +96,13 @@ export async function cleanTables(): Promise<void> {
   await db.cartItem.deleteMany();
   await db.payment.deleteMany();
   await db.orderItem.deleteMany();
+  // Receipt rows reference orders — children first.
+  await db.receiptPrintLog.deleteMany();
+  await db.receiptFiscalRecord.deleteMany();
+  await db.receipt.deleteMany();
+  await db.printerProfile.deleteMany();
+  await db.productBarcode.deleteMany();
+  await db.scanSettings.deleteMany();
   await db.order.deleteMany();
   await db.inventoryMovement.deleteMany();
   await db.stockLevel.deleteMany();

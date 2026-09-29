@@ -17,6 +17,15 @@ import {
 import { applySaleToCustomer } from "@/lib/customer-balance";
 import { deductForSale } from "@/lib/inventory-service";
 import { revenueStatuses } from "@/lib/report-math";
+import {
+  allocateReceiptNo,
+  resolveTerminalId,
+} from "@/lib/receipt-number";
+import {
+  buildReceiptSnapshot,
+  computeReceiptContentHash,
+  RECEIPT_TEMPLATE_VERSION,
+} from "@/lib/receipt-snapshot";
 
 /* ═══════════════════════════════════════════════════════════════
    CHECKOUT SERVICE
@@ -91,6 +100,8 @@ export const checkoutSchema = z.object({
   // same transaction. Server-clamped: never more than the customer owes
   // and never more than the cash tendered beyond the current bill.
   settleOutstanding: z.number().int().min(0).optional(),
+  // Which register issued this sale (drives the per-terminal receipt series).
+  terminalId: z.string().max(40).optional(),
   notes: z.string().max(500).optional(),
 });
 
@@ -150,6 +161,14 @@ export async function processCheckout(
     );
   }
   const input = { ...data, warehouseId };
+
+  // The cashier's name is frozen into the receipt snapshot at issue
+  // time (a later rename must not rewrite old receipts).
+  const cashierUser = await db.user.findUnique({
+    where: { id: actor.userId },
+    select: { name: true },
+  });
+  const cashierName = cashierUser?.name ?? null;
 
   // Generate the order number inside a retry loop: the count-based
   // sequence can collide when two registers check out concurrently.
@@ -547,6 +566,76 @@ export async function processCheckout(
         applied: settleApplied,
         orders: settleOrders,
       };
+
+      // ── 5. Issue the receipt inside the SAME transaction ─────────
+      // Order + items + stock + payments + receipt number + frozen
+      // snapshot + content hash commit atomically: any failure rolls
+      // back everything, and the gap-free series never burns a number.
+      const terminalId = resolveTerminalId(input.terminalId);
+      const receiptNo = await allocateReceiptNo(tx, terminalId);
+
+      const settingsRow = await tx.storeSettings.findUnique({ where: { id: "singleton" } });
+      const snapshot = buildReceiptSnapshot({
+        receiptNo,
+        terminalId,
+        issuedAt: now,
+        language: "en",
+        order: {
+          subtotal: orderSubtotal,
+          taxAmount: orderTax,
+          discountAmount: orderDiscount,
+          total: orderTotal,
+          paidAmount: amountCollected,
+          changeAmount: changeDue,
+          dueAmount,
+          paymentStatus: payment.paymentStatus,
+          loyaltyRedeemed: loyaltyRedeemedCents,
+          loyaltyPointsRedeemed,
+          items: resolvedItems.map((it) => ({
+            productName: it.productName,
+            sku: it.sku,
+            quantity: it.quantity,
+            unit: it.unit,
+            unitPrice: it.unitPrice,
+            discountAmount: it.discountAmount,
+            taxRate: it.taxRate,
+            taxAmount: it.taxAmount,
+            total: it.total,
+          })),
+        },
+        cashierName: cashierName ?? "",
+        customerName: customerRow?.id
+          ? (await tx.customer.findUnique({ where: { id: customerRow.id }, select: { name: true } }))?.name ?? null
+          : null,
+        customerLoyaltyBalance: await (async () => {
+          if (!customerRow) return 0;
+          const c = await tx.customer.findUnique({ where: { id: customerRow.id }, select: { loyaltyPoints: true } });
+          return c?.loyaltyPoints ?? 0;
+        })(),
+        settings: {
+          storeName: settingsRow?.storeName ?? "Store",
+          storeAddress: settingsRow?.storeAddress ?? null,
+          storePhone: settingsRow?.storePhone ?? null,
+          receiptHeader: settingsRow?.receiptHeader ?? null,
+          receiptFooter: settingsRow?.receiptFooter ?? null,
+          receiptQrPayment: settingsRow?.receiptQrPayment ?? null,
+        },
+      });
+
+      const receipt = await tx.receipt.create({
+        data: {
+          receiptNo,
+          terminalId,
+          orderId: newOrder.id,
+          issuedAt: now,
+          templateVersion: RECEIPT_TEMPLATE_VERSION,
+          language: "en",
+          contentHash: computeReceiptContentHash(snapshot, RECEIPT_TEMPLATE_VERSION),
+          snapshotJson: JSON.stringify(snapshot),
+          status: "ISSUED",
+        },
+      });
+
       return newOrder;
     });
 
