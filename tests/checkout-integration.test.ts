@@ -17,7 +17,7 @@ import {
   cleanTables,
   db,
 } from "./integration/db";
-import { processCheckout, CheckoutError, type CheckoutInput } from "@/lib/checkout-service";
+import { processCheckout, CheckoutError, type CheckoutInput } from "@/lib/checkout/checkout-service";
 import { db as prisma } from "@/lib/db";
 
 let harness: Awaited<ReturnType<typeof setupTestDb>> | null = null;

@@ -12,7 +12,7 @@ import {
   lineTotals,
   refreshLineTotals,
   calculateCartTotals,
-} from "@/lib/cart-math";
+} from "@/lib/checkout/cart-math";
 import type { CartItem } from "@/types";
 
 function cartItem(overrides: Partial<CartItem>): CartItem {

@@ -13,7 +13,7 @@ import {
   reconcileCheckoutLine,
   reconcileCartTotals,
   resolveLoyaltyRedemption,
-} from "@/lib/checkout-math";
+} from "@/lib/checkout/checkout-math";
 import { applySaleToCustomer } from "@/lib/customers/customer-balance";
 import { deductForSale } from "@/lib/inventory/inventory-service";
 import { revenueStatuses } from "@/lib/reports/report-math";

@@ -5,7 +5,7 @@ import {
   processCheckout,
   CheckoutError,
   checkoutSchema,
-} from "@/lib/checkout-service";
+} from "@/lib/checkout/checkout-service";
 
 /* ═══════════════════════════════════════════════════════════════
    POS CHECKOUT API
