@@ -17,7 +17,7 @@
    then rasterized — never as text-mode bytes).
    ═══════════════════════════════════════════════════════════════ */
 
-import type { ReceiptSnapshot } from "@/lib/receipt-snapshot";
+import type { ReceiptSnapshot } from "@/lib/receipts/receipt-snapshot";
 import { formatCurrencyBase } from "@/lib/utils";
 import { lineQtyLabel } from "@/lib/products/units";
 

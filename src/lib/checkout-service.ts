@@ -16,16 +16,16 @@ import {
 } from "@/lib/checkout-math";
 import { applySaleToCustomer } from "@/lib/customers/customer-balance";
 import { deductForSale } from "@/lib/inventory/inventory-service";
-import { revenueStatuses } from "@/lib/report-math";
+import { revenueStatuses } from "@/lib/reports/report-math";
 import {
   allocateReceiptNo,
   resolveTerminalId,
-} from "@/lib/receipt-number";
+} from "@/lib/receipts/receipt-number";
 import {
   buildReceiptSnapshot,
   computeReceiptContentHash,
   RECEIPT_TEMPLATE_VERSION,
-} from "@/lib/receipt-snapshot";
+} from "@/lib/receipts/receipt-snapshot";
 
 /* ═══════════════════════════════════════════════════════════════
    CHECKOUT SERVICE

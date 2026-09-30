@@ -9,7 +9,7 @@ import {
   netOf,
   marginPercent,
   revenueStatuses,
-} from "@/lib/report-math";
+} from "@/lib/reports/report-math";
 
 /* ═══════════════════════════════════════════════════════════════
    INVENTORY REPORT API

@@ -3,7 +3,7 @@ import { apiError } from "@/lib/api/api-errors";
 import { db } from "@/lib/db";
 import { requirePermission } from "@/lib/api/api-auth";
 import { parseQueryDateStart, parseQueryDateEnd } from "@/lib/api/query-date";
-import { netOf, revenueStatuses } from "@/lib/report-math";
+import { netOf, revenueStatuses } from "@/lib/reports/report-math";
 
 /* ═══════════════════════════════════════════════════════════════
    SALES REPORT API

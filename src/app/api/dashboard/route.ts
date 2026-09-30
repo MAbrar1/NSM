@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requirePermission } from "@/lib/api/api-auth";
 import { summarizeLowStock } from "@/lib/inventory/stock-status";
-import { revenueStatuses, openCreditOrderWhere, sumRevenue } from "@/lib/report-math";
+import { revenueStatuses, openCreditOrderWhere, sumRevenue } from "@/lib/reports/report-math";
 
 /* ═══════════════════════════════════════════════════════════════
    DASHBOARD API

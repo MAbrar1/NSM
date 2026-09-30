@@ -25,7 +25,7 @@ import {
   applySettlementToCustomer,
   releaseOrderCredit,
 } from "@/lib/customers/customer-balance";
-import { openCreditOrderWhere } from "@/lib/report-math";
+import { openCreditOrderWhere } from "@/lib/reports/report-math";
 
 let harness: Awaited<ReturnType<typeof setupTestDb>> | null = null;
 

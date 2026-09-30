@@ -24,7 +24,7 @@ import { PrismaClient } from "@prisma/client";
 import { loyaltyPointsForSpend } from "@/lib/customers/earn-rate";
 import { ROLLUP_PAID_STATUSES } from "@/lib/customers/customer-rollups";
 import { summarizeLowStock } from "@/lib/inventory/stock-status";
-import { openCreditOrderWhere } from "@/lib/report-math";
+import { openCreditOrderWhere } from "@/lib/reports/report-math";
 import { scanLowStock } from "@/lib/inventory/low-stock";
 
 export interface VerifyRow {

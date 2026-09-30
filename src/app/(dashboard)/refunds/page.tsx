@@ -21,7 +21,7 @@ import { SmartImage } from "@/components/ui/smart-image";
 import { BarChart, monthRange } from "@/components/ui/chart";
 import { toast } from "@/stores/toast-store";
 import { useResellFromOrder } from "@/hooks/use-resell-from-order";
-import { printRefundReceiptsForOrders } from "@/lib/print-receipt";
+import { printRefundReceiptsForOrders } from "@/lib/receipts/print-receipt";
 import {
   Dialog,
   DialogBody,

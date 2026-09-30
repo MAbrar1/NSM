@@ -21,7 +21,7 @@
 
 import type { PrismaClient } from "@prisma/client";
 import { loyaltyPointsForSpend } from "@/lib/customers/earn-rate";
-import { REVENUE_STATUSES, openCreditOrderWhere } from "@/lib/report-math";
+import { REVENUE_STATUSES, openCreditOrderWhere } from "@/lib/reports/report-math";
 
 /**
  * Order statuses that count as revenue.

@@ -18,7 +18,7 @@ import { toast } from "@/stores/toast-store";
 import { SmartImage } from "@/components/ui/smart-image";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Spinner } from "@/components/ui/spinner";
-import { printPOSReceipt } from "@/lib/print-pos-receipt";
+import { printPOSReceipt } from "@/lib/receipts/print-pos-receipt";
 import {
   getSaleUnits,
   lineQtyLabel,

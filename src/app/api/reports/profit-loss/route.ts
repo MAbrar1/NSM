@@ -10,7 +10,7 @@ import {
   averageOrderValue,
   revenueStatuses,
   revenueOf,
-} from "@/lib/report-math";
+} from "@/lib/reports/report-math";
 
 /* ═══════════════════════════════════════════════════════════════
    PROFIT & LOSS API

@@ -20,8 +20,8 @@ import { StatCard } from "@/components/ui/stat-card";
 import { SmartImage } from "@/components/ui/smart-image";
 import { toast } from "@/stores/toast-store";
 import { useResellFromOrder } from "@/hooks/use-resell-from-order";
-import { printRefundReceiptsForOrders } from "@/lib/print-receipt";
-import { printPOSReceipt, POSReceiptOrder, POSReceiptSettings } from "@/lib/print-pos-receipt";
+import { printRefundReceiptsForOrders } from "@/lib/receipts/print-receipt";
+import { printPOSReceipt, POSReceiptOrder, POSReceiptSettings } from "@/lib/receipts/print-pos-receipt";
 import {
   Dialog,
   DialogContent,

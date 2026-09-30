@@ -23,7 +23,7 @@ import { logAudit } from "@/lib/audit-log";
 import {
   verifyReceiptContentHash,
   type ReceiptSnapshot,
-} from "@/lib/receipt-snapshot";
+} from "@/lib/receipts/receipt-snapshot";
 import { hasPermission, type Role } from "@/lib/auth/rbac";
 
 /** Reprint window for own-receipt reprints (hours). Configurable via

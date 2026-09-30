@@ -8,7 +8,7 @@ import {
   reprintCount,
   writePrintLog,
   verifyBeforeReprint,
-} from "@/lib/receipt-print";
+} from "@/lib/receipts/receipt-print";
 
 /* ═══════════════════════════════════════════════════════════════
    RECEIPT REPRINT API
