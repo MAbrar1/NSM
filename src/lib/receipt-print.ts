@@ -24,7 +24,7 @@ import {
   verifyReceiptContentHash,
   type ReceiptSnapshot,
 } from "@/lib/receipt-snapshot";
-import { hasPermission, type Role } from "@/lib/rbac";
+import { hasPermission, type Role } from "@/lib/auth/rbac";
 
 /** Reprint window for own-receipt reprints (hours). Configurable via
  *  ScanSettings-style singleton later; the default is one shift. */

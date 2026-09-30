@@ -20,7 +20,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { SortableTh } from "@/components/ui/sortable-th";
 import { useTableRowNav } from "@/hooks/use-table-row-nav";
 import { toast } from "@/stores/toast-store";
-import { ROLE_LABELS, ROLE_COLORS, type Role } from "@/lib/rbac";
+import { ROLE_LABELS, ROLE_COLORS, type Role } from "@/lib/auth/rbac";
 
 /* ═══════════════════════════════════════════════════════════════
    USERS MANAGEMENT PAGE

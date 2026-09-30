@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { hasPermission, type Role, type Permission } from "@/lib/rbac";
+import { auth } from "@/lib/auth/auth";
+import { hasPermission, type Role, type Permission } from "@/lib/auth/rbac";
 
 /* ═══════════════════════════════════════════════════════════════
    API AUTH HELPER

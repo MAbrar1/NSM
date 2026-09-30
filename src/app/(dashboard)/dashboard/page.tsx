@@ -26,7 +26,7 @@ import { TotalProductsCard } from "@/components/ui/total-products-card";
 import { EMPTY_ALERT_SUMMARY, auditAlertForEntry } from "@/lib/notifications/alert-utils";
 import { AlertTileInline } from "@/components/ui/alert-tile";
 import { useAlerts } from "@/hooks/use-alerts";
-import { canAccessRoute, type Role } from "@/lib/rbac";
+import { canAccessRoute, type Role } from "@/lib/auth/rbac";
 
 /* ═══════════════════════════════════════════════════════════════
    DASHBOARD PAGE

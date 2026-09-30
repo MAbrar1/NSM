@@ -108,22 +108,22 @@ export const {
           id: user.id,
           email: user.email,
           name: user.name,
-          role: user.role as import("@/lib/rbac").Role,
-        } as typeof user & { role: import("@/lib/rbac").Role };
+          role: user.role as import("@/lib/auth/rbac").Role,
+        } as typeof user & { role: import("@/lib/auth/rbac").Role };
       },
     }),
   ],
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token["role"] = (user as Record<string, unknown>)["role"] as import("@/lib/rbac").Role;
+        token["role"] = (user as Record<string, unknown>)["role"] as import("@/lib/auth/rbac").Role;
         token["id"] = user.id;
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
-        session.user["role"] = token["role"] as import("@/lib/rbac").Role;
+        session.user["role"] = token["role"] as import("@/lib/auth/rbac").Role;
         session.user["id"] = token["id"] as string;
       }
       return session;

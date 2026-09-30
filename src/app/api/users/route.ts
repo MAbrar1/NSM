@@ -3,7 +3,7 @@ import { apiError, fieldError } from "@/lib/api-errors";
 import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import bcrypt from "bcryptjs";
-import type { Role } from "@/lib/rbac";
+import type { Role } from "@/lib/auth/rbac";
 import { requirePermission, canGrantRole } from "@/lib/api-auth";
 import { logAudit } from "@/lib/audit-log";
 import { parsePagination } from "@/lib/pagination";

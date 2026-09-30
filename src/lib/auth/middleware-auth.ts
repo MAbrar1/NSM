@@ -18,7 +18,7 @@ export const { auth } = NextAuth({
     },
     async session({ session, token }) {
       if (session.user) {
-        session.user["role"] = token["role"] as import("@/lib/rbac").Role;
+        session.user["role"] = token["role"] as import("@/lib/auth/rbac").Role;
         session.user["id"] = token["id"] as string;
       }
       return session;
