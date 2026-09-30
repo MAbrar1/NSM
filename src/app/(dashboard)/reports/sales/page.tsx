@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { formatCurrency, cn, percentDelta } from "@/lib/utils";
-import { lineQtyLabel } from "@/lib/units";
+import { lineQtyLabel } from "@/lib/products/units";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

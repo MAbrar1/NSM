@@ -1,5 +1,5 @@
 import { formatCurrencyBase } from "@/lib/utils";
-import { lineQtyLabel } from "@/lib/units";
+import { lineQtyLabel } from "@/lib/products/units";
 import QRCode from "qrcode";
 
 /* ═══════════════════════════════════════════════════════════════

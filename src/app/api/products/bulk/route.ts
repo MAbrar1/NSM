@@ -5,7 +5,7 @@ import {
   bulkUpdateProducts,
   validateBulkUpdateInput,
   BulkUpdateError,
-} from "@/lib/products-bulk";
+} from "@/lib/products/products-bulk";
 
 /* ═══════════════════════════════════════════════════════════════
    PRODUCTS BULK API

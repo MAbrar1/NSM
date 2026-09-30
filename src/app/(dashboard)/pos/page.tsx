@@ -27,7 +27,7 @@ import {
   toBaseQty,
   trimNumber,
   WHOLE_UNITS,
-} from "@/lib/units";
+} from "@/lib/products/units";
 import {
   Dialog,
   DialogBody,
@@ -37,7 +37,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { BarcodeScanner } from "@/components/pos/barcode-scanner";
-import { parseScan, barcodeCandidates } from "@/lib/barcode";
+import { parseScan, barcodeCandidates } from "@/lib/products/barcode";
 import { useHardwareScanner } from "@/hooks/use-hardware-scanner";
 import { SortableTh } from "@/components/ui/sortable-th";
 import { useModalFocus } from "@/hooks/use-modal-focus";

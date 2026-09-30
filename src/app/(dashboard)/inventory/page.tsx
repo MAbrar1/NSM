@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { cn, formatCurrency } from "@/lib/utils";
-import { lineQtyLabel, trimNumber, WHOLE_UNITS } from "@/lib/units";
+import { lineQtyLabel, trimNumber, WHOLE_UNITS } from "@/lib/products/units";
 import { PageHeader } from "@/components/layout/page-header";
 import { useI18n } from "@/components/providers/i18n-provider";
 import { useStoreCurrency } from "@/components/providers/currency-provider";

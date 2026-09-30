@@ -18,7 +18,7 @@ import {
   parseEmbeddedBarcode,
   type EmbeddedBarcodeConfig,
   type EmbeddedBarcodeData,
-} from "@/lib/barcode";
+} from "@/lib/products/barcode";
 
 export interface BarcodeMatch {
   productId: string;

@@ -1,5 +1,5 @@
 import { formatCurrencyBase, formatDate } from "@/lib/utils";
-import { lineQtyLabel } from "@/lib/units";
+import { lineQtyLabel } from "@/lib/products/units";
 
 /* ═══════════════════════════════════════════════════════════════
    PRINT REFUND RECEIPTS

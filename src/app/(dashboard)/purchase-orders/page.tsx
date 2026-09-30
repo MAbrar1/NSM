@@ -15,7 +15,7 @@ import { formatCurrency } from "@/lib/utils";
 import { readApiError } from "@/lib/api/api-error";
 import { displayMajorToBaseCents, baseCentsToDisplayMajorStr } from "@/lib/money/currency-core";
 import { ensureRates, peekRates } from "@/lib/money/currency";
-import { WHOLE_UNITS } from "@/lib/units";
+import { WHOLE_UNITS } from "@/lib/products/units";
 import { downloadCsv } from "@/lib/files/csv";
 import { ExportMenu, type ExportColumn } from "@/components/export/export-menu";
 import { ImportResultDialog, type ImportSummary } from "@/components/import/import-result-dialog";

@@ -19,7 +19,7 @@
 
 import type { ReceiptSnapshot } from "@/lib/receipt-snapshot";
 import { formatCurrencyBase } from "@/lib/utils";
-import { lineQtyLabel } from "@/lib/units";
+import { lineQtyLabel } from "@/lib/products/units";
 
 /** Current layout version — bump when the template changes. */
 export const RECEIPT_TEMPLATE_VERSION = 1;

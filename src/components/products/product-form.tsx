@@ -16,8 +16,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { BarcodeScanner } from "@/components/pos/barcode-scanner";
-import { barcodeCandidates, generateEan13 } from "@/lib/barcode";
-import { COMMON_UNITS } from "@/lib/units";
+import { barcodeCandidates, generateEan13 } from "@/lib/products/barcode";
+import { COMMON_UNITS } from "@/lib/products/units";
 import { useI18n } from "@/components/providers/i18n-provider";
 import { useStoreCurrency } from "@/components/providers/currency-provider";
 import { ProductVariants } from "@/components/products/product-variants";

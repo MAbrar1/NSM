@@ -18,7 +18,7 @@ import {
   barcodeCandidates,
   extractProductCode,
   parseScan,
-} from "@/lib/barcode";
+} from "@/lib/products/barcode";
 
 /* ─── GTIN check digit ─────────────────────────────────────── */
 

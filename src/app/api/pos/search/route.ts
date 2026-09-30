@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { requirePermission } from "@/lib/api/api-auth";
 import { parsePagination } from "@/lib/api/pagination";
 import { sumBaseStock, sumStockRows, stockStatus } from "@/lib/inventory/stock-status";
-import { barcodeCandidates } from "@/lib/barcode";
+import { barcodeCandidates } from "@/lib/products/barcode";
 
 /* ═══════════════════════════════════════════════════════════════
    POS PRODUCT SEARCH API
