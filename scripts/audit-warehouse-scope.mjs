@@ -9,7 +9,7 @@
    the Chrome profile lives outside the project and why a 5xx fails the run.
 
    Usage: node audit-warehouse-scope.mjs  (dev server on localhost:3000) */
-import { createHarness, sleep } from "./scripts/audit-harness.mjs";
+import { createHarness, sleep } from "./audit-harness.mjs";
 
 const h = await createHarness({
   name: "warehouse-scope",

@@ -12,7 +12,7 @@
    outside the project and why a 5xx now fails the run.
 
    Usage: node audit-pos.mjs   (server on localhost:3000) */
-import { createHarness, sleep, POS } from "./scripts/audit-harness.mjs";
+import { createHarness, sleep, POS } from "./audit-harness.mjs";
 
 const h = await createHarness({
   name: "pos",

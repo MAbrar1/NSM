@@ -11,7 +11,7 @@
 import { spawn } from "node:child_process";
 import { writeFileSync, mkdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { assertNoServerErrors } from "./scripts/audit-harness.mjs";
+import { assertNoServerErrors } from "./audit-harness.mjs";
 
 const CHROME = process.env.CHROME || "C:/Program Files/Google/Chrome/Application/chrome.exe";
 const BASE = process.env.BASE || "http://localhost:3000";

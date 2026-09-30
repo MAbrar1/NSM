@@ -3,7 +3,7 @@
 import { spawn } from "node:child_process";
 import { writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { assertNoServerErrors } from "./scripts/audit-harness.mjs";
+import { assertNoServerErrors } from "./audit-harness.mjs";
 
 const CHROME = "C:/Program Files/Google/Chrome/Application/chrome.exe";
 /* `localhost`, not 127.0.0.1: the middleware's CSRF guard validates the Origin

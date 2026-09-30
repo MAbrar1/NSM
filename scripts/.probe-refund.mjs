@@ -1,6 +1,6 @@
 /* One-off probe: why doesn't the refund dialog open from the Orders detail modal?
    Mirrors audit5 phasePartialRefundUI with verbose dumps. */
-import { createHarness, sleep } from "./scripts/audit-harness.mjs";
+import { createHarness, sleep } from "./audit-harness.mjs";
 import { PrismaClient } from "@prisma/client";
 
 const h = await createHarness({ name: "probe-refund", loginPath: "/orders" });

@@ -22,7 +22,7 @@
 import { spawn } from "node:child_process";
 import { writeFileSync, mkdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { assertNoServerErrors } from "./scripts/audit-harness.mjs";
+import { assertNoServerErrors } from "./audit-harness.mjs";
 
 const BASE = process.argv[2] || "http://127.0.0.1:3000";
 const CHROME = "C:/Program Files/Google/Chrome/Application/chrome.exe";

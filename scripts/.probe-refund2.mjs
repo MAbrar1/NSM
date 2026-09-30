@@ -1,4 +1,4 @@
-import { createHarness, sleep } from "./scripts/audit-harness.mjs";
+import { createHarness, sleep } from "./audit-harness.mjs";
 const h = await createHarness({ name: "probe2", loginPath: "/orders" });
 const { evalJs, waitFor, nav, send, pos } = h;
 const p = await import("@prisma/client");

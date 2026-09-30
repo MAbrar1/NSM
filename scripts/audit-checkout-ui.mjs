@@ -17,7 +17,7 @@
 
    Usage: node audit-checkout-ui.mjs [baseUrl]   (default: harness default, http://localhost:3000)
 */
-import { createHarness, sleep, POS } from "./scripts/audit-harness.mjs";
+import { createHarness, sleep, POS } from "./audit-harness.mjs";
 
 const h = await createHarness({
   name: "checkout",

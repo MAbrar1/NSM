@@ -6,7 +6,7 @@
    header the CSRF-protected settings PUT is required to send.
 
    Usage: node audit-dashboard.mjs   (expects dev server on localhost:3000) */
-import { createHarness, sleep } from "./scripts/audit-harness.mjs";
+import { createHarness, sleep } from "./audit-harness.mjs";
 
 const h = await createHarness({
   name: "dashboard",
