@@ -26,7 +26,7 @@ import {
   LATIN_FONT_URL,
   type TemplateRenderOptions,
 } from "./receipt-template";
-import type { ReceiptSnapshot } from "@/lib/receipt-snapshot";
+import type { ReceiptSnapshot } from "@/lib/receipts/receipt-snapshot";
 import { formatCurrencyBase } from "@/lib/utils";
 
 const nextFrame = (): Promise<number> =>

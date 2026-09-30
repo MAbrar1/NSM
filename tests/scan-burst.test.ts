@@ -13,8 +13,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { charFromEventCode } from "@/hooks/use-scan-input";
-import { parseEmbeddedBarcode } from "@/lib/barcode";
-import { gtinCheckDigit } from "@/lib/barcode";
+import { parseEmbeddedBarcode } from "@/lib/products/barcode";
+import { gtinCheckDigit } from "@/lib/products/barcode";
 
 /* ─── event.code fallback (Urdu keyboard layouts) ─────────────── */
 

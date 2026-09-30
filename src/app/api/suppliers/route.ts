@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
-import { apiError, fieldError } from "@/lib/api-errors";
+import { apiError, fieldError } from "@/lib/api/api-errors";
 import { db } from "@/lib/db";
-import { requirePermission } from "@/lib/api-auth";
-import { parsePagination } from "@/lib/pagination";
+import { requirePermission } from "@/lib/api/api-auth";
+import { parsePagination } from "@/lib/api/pagination";
 import { parseSortParam } from "@/lib/table-sort";
-import { supplierPurchaseStats } from "@/lib/supplier-stats";
+import { supplierPurchaseStats } from "@/lib/suppliers/supplier-stats";
 
 /* ═══════════════════════════════════════════════════════════════
    SUPPLIERS API

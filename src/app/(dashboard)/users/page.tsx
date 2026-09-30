@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { readApiError } from "@/lib/api-error";
+import { readApiError } from "@/lib/api/api-error";
 import {
   Dialog,
   DialogBody,
@@ -20,7 +20,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { SortableTh } from "@/components/ui/sortable-th";
 import { useTableRowNav } from "@/hooks/use-table-row-nav";
 import { toast } from "@/stores/toast-store";
-import { ROLE_LABELS, ROLE_COLORS, type Role } from "@/lib/rbac";
+import { ROLE_LABELS, ROLE_COLORS, type Role } from "@/lib/auth/rbac";
 
 /* ═══════════════════════════════════════════════════════════════
    USERS MANAGEMENT PAGE

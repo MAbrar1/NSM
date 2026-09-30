@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { apiError } from "@/lib/api-errors";
+import { apiError } from "@/lib/api/api-errors";
 import { db } from "@/lib/db";
-import { requirePermission } from "@/lib/api-auth";
-import { stockStatusForRow, sumStockRows } from "@/lib/stock-status";
+import { requirePermission } from "@/lib/api/api-auth";
+import { stockStatusForRow, sumStockRows } from "@/lib/inventory/stock-status";
 import {
   stockCostValue,
   stockRetailValue,
   netOf,
   marginPercent,
   revenueStatuses,
-} from "@/lib/report-math";
+} from "@/lib/reports/report-math";
 
 /* ═══════════════════════════════════════════════════════════════
    INVENTORY REPORT API

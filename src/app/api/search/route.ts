@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { requirePermission } from "@/lib/api-auth";
-import { parsePagination } from "@/lib/pagination";
+import { requirePermission } from "@/lib/api/api-auth";
+import { parsePagination } from "@/lib/api/pagination";
 
 /* ═══════════════════════════════════════════════════════════════
    GLOBAL SEARCH API

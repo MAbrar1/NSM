@@ -18,9 +18,9 @@
 
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { buildXlsx, buildStyledSheet, type ExcelSheet } from "@/lib/csv";
-import { buildReportHtml } from "@/lib/print-report";
-import { buildPurchaseOrderHtml } from "@/lib/print-purchase-order";
+import { buildXlsx, buildStyledSheet, type ExcelSheet } from "@/lib/files/csv";
+import { buildReportHtml } from "@/lib/print/print-report";
+import { buildPurchaseOrderHtml } from "@/lib/print/print-purchase-order";
 
 const OUT_DIR = join(process.cwd(), "samples");
 mkdirSync(OUT_DIR, { recursive: true });

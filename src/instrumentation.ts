@@ -15,13 +15,13 @@
 
 export async function register() {
   if (process.env["NEXT_RUNTIME"] === "nodejs" && process.env.NODE_ENV === "production") {
-    const { startLowStockScheduler } = await import("@/lib/low-stock-scheduler");
+    const { startLowStockScheduler } = await import("@/lib/inventory/low-stock-scheduler");
     startLowStockScheduler();
 
     const { startMaintenanceScheduler } = await import("@/lib/maintenance-scheduler");
     startMaintenanceScheduler();
 
-    const { startReservationCleanupScheduler } = await import("@/lib/reservation-scheduler");
+    const { startReservationCleanupScheduler } = await import("@/lib/inventory/reservation-scheduler");
     startReservationCleanupScheduler();
   }
 

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { apiError, fieldError, validationError } from "@/lib/api-errors";
+import { apiError, fieldError, validationError } from "@/lib/api/api-errors";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { registerSchema } from "@/lib/validations";
@@ -7,7 +7,7 @@ import {
   checkRegistrationRateLimit,
   clientIp,
   recordRegistrationAttempt,
-} from "@/lib/rate-limit";
+} from "@/lib/api/rate-limit";
 
 /* ═══════════════════════════════════════════════════════════════
    REGISTER API

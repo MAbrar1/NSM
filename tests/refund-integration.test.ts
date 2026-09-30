@@ -17,7 +17,7 @@ import {
   cleanTables,
   db,
 } from "./integration/db";
-import { processRefund, RefundError } from "@/lib/refund-service";
+import { processRefund, RefundError } from "@/lib/refunds/refund-service";
 
 let harness: Awaited<ReturnType<typeof setupTestDb>> | null = null;
 

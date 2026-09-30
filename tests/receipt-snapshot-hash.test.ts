@@ -14,7 +14,7 @@ import {
   computeReceiptContentHash,
   verifyReceiptContentHash,
   RECEIPT_TEMPLATE_VERSION,
-} from "@/lib/receipt-snapshot";
+} from "@/lib/receipts/receipt-snapshot";
 
 const snapshot = {
   receiptNo: "R-T1-000001",

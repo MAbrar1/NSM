@@ -19,7 +19,7 @@ import {
   type AlertSeverity,
   type StockAlert,
   auditAlertForEntry,
-} from "@/lib/alert-utils";
+} from "@/lib/notifications/alert-utils";
 import { AlertTile } from "@/components/ui/alert-tile";
 
 /* ═══════════════════════════════════════════════════════════════

@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useI18n } from "@/components/providers/i18n-provider";
-import { alertKindLabel, auditAlertForEntry, type DeliveryEntry } from "@/lib/alert-utils";
+import { alertKindLabel, auditAlertForEntry, type DeliveryEntry } from "@/lib/notifications/alert-utils";
 import { AlertTileInline } from "@/components/ui/alert-tile";
 import { cn } from "@/lib/utils";
 

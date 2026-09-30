@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { apiError, validationError } from "@/lib/api-errors";
+import { apiError, validationError } from "@/lib/api/api-errors";
 import { db } from "@/lib/db";
-import { applyStockDelta, ensureStockRow } from "@/lib/inventory-service";
+import { applyStockDelta, ensureStockRow } from "@/lib/inventory/inventory-service";
 import { z } from "zod";
-import { requirePermission } from "@/lib/api-auth";
-import { triggerLowStockScan } from "@/lib/low-stock-scheduler";
+import { requirePermission } from "@/lib/api/api-auth";
+import { triggerLowStockScan } from "@/lib/inventory/low-stock-scheduler";
 import { logAudit } from "@/lib/audit-log";
 
 /* ═══════════════════════════════════════════════════════════════

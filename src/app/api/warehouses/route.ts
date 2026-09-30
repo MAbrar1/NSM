@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { apiError, fieldError, validationError } from "@/lib/api-errors";
+import { apiError, fieldError, validationError } from "@/lib/api/api-errors";
 import { db } from "@/lib/db";
 import { warehouseSchema } from "@/lib/validations";
-import { requirePermission } from "@/lib/api-auth";
+import { requirePermission } from "@/lib/api/api-auth";
 
 /* ═══════════════════════════════════════════════════════════════
    WAREHOUSES API

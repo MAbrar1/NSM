@@ -26,7 +26,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { buildCalibrationHtml } from "@/lib/print/calibration";
 import { renderReceiptDocument } from "@/lib/print/receipt-template";
-import { buildReceiptSnapshot, type ReceiptSnapshot } from "@/lib/receipt-snapshot";
+import { buildReceiptSnapshot, type ReceiptSnapshot } from "@/lib/receipts/receipt-snapshot";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";

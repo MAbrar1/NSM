@@ -1,8 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { setCurrencyDefaults, setDisplayCurrency, getDisplayCurrency } from "@/lib/currency-core";
-import { ensureRates, peekRates } from "@/lib/currency";
+import { setCurrencyDefaults, setDisplayCurrency, getDisplayCurrency } from "@/lib/money/currency-core";
+import { ensureRates, peekRates } from "@/lib/money/currency";
 import { useSettingsStore } from "@/stores/settings-store";
 
 /* ═══════════════════════════════════════════════════════════════

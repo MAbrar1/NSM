@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { EmptyState } from "@/components/ui/empty-state";
-import { readApiError } from "@/lib/api-error";
+import { readApiError } from "@/lib/api/api-error";
 import { useUnsavedGuard } from "@/hooks/use-unsaved-guard";
 import { toast } from "@/stores/toast-store";
 import { useI18n } from "@/components/providers/i18n-provider";

@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { apiError, fieldError, validationError } from "@/lib/api-errors";
+import { apiError, fieldError, validationError } from "@/lib/api/api-errors";
 import { db } from "@/lib/db";
 import { customerSchema } from "@/lib/validations";
-import { requirePermission } from "@/lib/api-auth";
-import { parsePagination } from "@/lib/pagination";
+import { requirePermission } from "@/lib/api/api-auth";
+import { parsePagination } from "@/lib/api/pagination";
 
 /* ═══════════════════════════════════════════════════════════════
    CUSTOMERS API

@@ -32,7 +32,7 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useI18n } from "@/components/providers/i18n-provider";
-import { PRINT_SCHEME_STORAGE_KEY, PRINT_SCHEME_COOKIE, type PrintScheme } from "@/lib/print-brand";
+import { PRINT_SCHEME_STORAGE_KEY, PRINT_SCHEME_COOKIE, type PrintScheme } from "@/lib/print/print-brand";
 
 type Scheme = PrintScheme;
 

@@ -20,7 +20,7 @@ import { SyncIndicator } from "@/components/layout/sync-indicator";
 import { DirtyNavGuard } from "@/components/layout/dirty-nav-guard";
 import { WelcomeModal } from "@/components/layout/welcome-modal";
 import { NAVIGATION, APP_NAME, APP_VERSION, type NavItem } from "@/lib/constants";
-import { ROLE_LABELS, canAccessRoute, type Role } from "@/lib/rbac";
+import { ROLE_LABELS, canAccessRoute, type Role } from "@/lib/auth/rbac";
 import { NotificationBell } from "@/components/layout/notification-bell";
 import {
   usePaletteRecentsStore,

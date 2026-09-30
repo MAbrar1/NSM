@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
-import { apiError } from "@/lib/api-errors";
+import { apiError } from "@/lib/api/api-errors";
 import { db } from "@/lib/db";
-import { requirePermission } from "@/lib/api-auth";
-import { parsePagination } from "@/lib/pagination";
+import { requirePermission } from "@/lib/api/api-auth";
+import { parsePagination } from "@/lib/api/pagination";
 import { parseSortParam } from "@/lib/table-sort";
-import { parseQueryDateStart, parseQueryDateEnd } from "@/lib/query-date";
+import { parseQueryDateStart, parseQueryDateEnd } from "@/lib/api/query-date";
 
 /* ═══════════════════════════════════════════════════════════════
    ORDERS API

@@ -1,4 +1,4 @@
-import { auth } from "@/lib/middleware-auth";
+import { auth } from "@/lib/auth/middleware-auth";
 import { NextResponse } from "next/server";
 
 /* ═══════════════════════════════════════════════════════════════

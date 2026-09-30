@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { apiError } from "@/lib/api-errors";
+import { apiError } from "@/lib/api/api-errors";
 import { db } from "@/lib/db";
-import { requirePermission } from "@/lib/api-auth";
-import { openCreditOrderWhere } from "@/lib/report-math";
+import { requirePermission } from "@/lib/api/api-auth";
+import { openCreditOrderWhere } from "@/lib/reports/report-math";
 
 /* ═══════════════════════════════════════════════════════════════
    RECEIVABLES AGING API

@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { apiError, fieldError } from "@/lib/api-errors";
+import { apiError, fieldError } from "@/lib/api/api-errors";
 import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import bcrypt from "bcryptjs";
-import type { Role } from "@/lib/rbac";
-import { requirePermission, canGrantRole } from "@/lib/api-auth";
+import type { Role } from "@/lib/auth/rbac";
+import { requirePermission, canGrantRole } from "@/lib/api/api-auth";
 import { logAudit } from "@/lib/audit-log";
-import { parsePagination } from "@/lib/pagination";
+import { parsePagination } from "@/lib/api/pagination";
 import { parseSortParam } from "@/lib/table-sort";
 
 /* ═══════════════════════════════════════════════════════════════

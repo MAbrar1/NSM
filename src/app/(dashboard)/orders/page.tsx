@@ -3,8 +3,8 @@
 import * as React from "react";
 import { formatCurrency, formatDate, formatTime, cn } from "@/lib/utils";
 import { ExportMenu, type ExportColumn } from "@/components/export/export-menu";
-import { printReport, fetchReportSettings } from "@/lib/print-report";
-import { lineQtyLabel, trimNumber, WHOLE_UNITS } from "@/lib/units";
+import { printReport, fetchReportSettings } from "@/lib/print/print-report";
+import { lineQtyLabel, trimNumber, WHOLE_UNITS } from "@/lib/products/units";
 import { useI18n } from "@/components/providers/i18n-provider";
 import { useStoreCurrency } from "@/components/providers/currency-provider";
 import { PageHeader } from "@/components/layout/page-header";
@@ -20,8 +20,8 @@ import { StatCard } from "@/components/ui/stat-card";
 import { SmartImage } from "@/components/ui/smart-image";
 import { toast } from "@/stores/toast-store";
 import { useResellFromOrder } from "@/hooks/use-resell-from-order";
-import { printRefundReceiptsForOrders } from "@/lib/print-receipt";
-import { printPOSReceipt, POSReceiptOrder, POSReceiptSettings } from "@/lib/print-pos-receipt";
+import { printRefundReceiptsForOrders } from "@/lib/receipts/print-receipt";
+import { printPOSReceipt, POSReceiptOrder, POSReceiptSettings } from "@/lib/receipts/print-pos-receipt";
 import {
   Dialog,
   DialogContent,

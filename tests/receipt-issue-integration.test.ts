@@ -16,8 +16,8 @@ import {
   cleanTables,
   db,
 } from "./integration/db";
-import { processCheckout, CheckoutError, type CheckoutInput } from "@/lib/checkout-service";
-import { computeReceiptContentHash, RECEIPT_TEMPLATE_VERSION } from "@/lib/receipt-snapshot";
+import { processCheckout, CheckoutError, type CheckoutInput } from "@/lib/checkout/checkout-service";
+import { computeReceiptContentHash, RECEIPT_TEMPLATE_VERSION } from "@/lib/receipts/receipt-snapshot";
 
 let harness: Awaited<ReturnType<typeof setupTestDb>> | null = null;
 

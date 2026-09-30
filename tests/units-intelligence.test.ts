@@ -15,7 +15,7 @@ import {
   reorderAdvice,
   snapQuantity,
   type PriceTier,
-} from "@/lib/units-intelligence";
+} from "@/lib/products/units-intelligence";
 
 /* Sugar: base kg @ Rs 130; bulk tiers in kg and g units. The half-kg
    tier is expressed as a 1500 g minimum so it only applies above the

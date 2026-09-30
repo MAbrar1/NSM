@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { apiError } from "@/lib/api-errors";
+import { apiError } from "@/lib/api/api-errors";
 import { db } from "@/lib/db";
-import { requirePermission } from "@/lib/api-auth";
-import { parsePagination } from "@/lib/pagination";
-import { needsRestock, stockStatusForRow } from "@/lib/stock-status";
+import { requirePermission } from "@/lib/api/api-auth";
+import { parsePagination } from "@/lib/api/pagination";
+import { needsRestock, stockStatusForRow } from "@/lib/inventory/stock-status";
 
 /* ═══════════════════════════════════════════════════════════════
    INVENTORY API

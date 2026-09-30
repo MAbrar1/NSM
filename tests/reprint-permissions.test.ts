@@ -19,8 +19,8 @@ import {
   reprintCount,
   writePrintLog,
   verifyBeforeReprint,
-} from "@/lib/receipt-print";
-import { buildReceiptSnapshot, computeReceiptContentHash, RECEIPT_TEMPLATE_VERSION } from "@/lib/receipt-snapshot";
+} from "@/lib/receipts/receipt-print";
+import { buildReceiptSnapshot, computeReceiptContentHash, RECEIPT_TEMPLATE_VERSION } from "@/lib/receipts/receipt-snapshot";
 
 let harness: Awaited<ReturnType<typeof setupTestDb>> | null = null;
 before(async () => {

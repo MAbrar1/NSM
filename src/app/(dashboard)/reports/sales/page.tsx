@@ -2,16 +2,16 @@
 
 import * as React from "react";
 import { formatCurrency, cn, percentDelta } from "@/lib/utils";
-import { lineQtyLabel } from "@/lib/units";
+import { lineQtyLabel } from "@/lib/products/units";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useI18n } from "@/components/providers/i18n-provider";
-import { downloadCsv, downloadExcel, sumFormulaCell, type ExcelSheet } from "@/lib/csv";
+import { downloadCsv, downloadExcel, sumFormulaCell, type ExcelSheet } from "@/lib/files/csv";
 import { ExportMenu, type ExportColumn } from "@/components/export/export-menu";
-import { fetchReportSettings, printReport } from "@/lib/print-report";
+import { fetchReportSettings, printReport } from "@/lib/print/print-report";
 import { useStoreCurrency } from "@/components/providers/currency-provider";
 import { StatCard, type StatIconName, type StatTone } from "@/components/ui/stat-card";
 import { toast } from "@/stores/toast-store";

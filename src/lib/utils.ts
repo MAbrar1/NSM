@@ -32,7 +32,7 @@ export {
   registerRateLookup,
   formatCurrency,
   formatAmount,
-} from "@/lib/currency-core";
+} from "@/lib/money/currency-core";
 
 /**
  * Format a number with locale-aware thousand separators.

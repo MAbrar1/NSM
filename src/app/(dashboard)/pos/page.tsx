@@ -4,8 +4,8 @@ import { useSession } from "next-auth/react";
 
 import * as React from "react";
 import { cn, formatCurrency } from "@/lib/utils";
-import { displayMajorToBaseCents, baseCentsToDisplayMajorStr, isDisplayConverted, getDisplayCurrency } from "@/lib/currency-core";
-import { ensureRates, peekRates } from "@/lib/currency";
+import { displayMajorToBaseCents, baseCentsToDisplayMajorStr, isDisplayConverted, getDisplayCurrency } from "@/lib/money/currency-core";
+import { ensureRates, peekRates } from "@/lib/money/currency";
 import type { CartItem } from "@/types";
 import { useCartStore } from "@/stores/cart-store";
 import { useWarehouseStore } from "@/stores/warehouse-store";
@@ -18,7 +18,7 @@ import { toast } from "@/stores/toast-store";
 import { SmartImage } from "@/components/ui/smart-image";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Spinner } from "@/components/ui/spinner";
-import { printPOSReceipt } from "@/lib/print-pos-receipt";
+import { printPOSReceipt } from "@/lib/receipts/print-pos-receipt";
 import {
   getSaleUnits,
   lineQtyLabel,
@@ -27,7 +27,7 @@ import {
   toBaseQty,
   trimNumber,
   WHOLE_UNITS,
-} from "@/lib/units";
+} from "@/lib/products/units";
 import {
   Dialog,
   DialogBody,
@@ -37,13 +37,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { BarcodeScanner } from "@/components/pos/barcode-scanner";
-import { parseScan, barcodeCandidates } from "@/lib/barcode";
+import { parseScan, barcodeCandidates } from "@/lib/products/barcode";
 import { useHardwareScanner } from "@/hooks/use-hardware-scanner";
 import { SortableTh } from "@/components/ui/sortable-th";
 import { useModalFocus } from "@/hooks/use-modal-focus";
 import { CustomerPicker, type PickedCustomer } from "@/components/pos/customer-picker";
 import { useStockSync, broadcastStockChange } from "@/hooks/use-stock-sync";
-import { resolvePayment, isPartialPaymentAllowed } from "@/lib/payment-math";
+import { resolvePayment, isPartialPaymentAllowed } from "@/lib/money/payment-math";
 
 /* ═══════════════════════════════════════════════════════════════
    POS (POINT OF SALE) PAGE

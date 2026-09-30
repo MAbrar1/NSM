@@ -13,7 +13,7 @@ import { db } from "@/lib/db";
 import {
   releaseStaleReservations,
   STALE_AFTER_MS,
-} from "@/lib/reservation-cleanup";
+} from "@/lib/inventory/reservation-cleanup";
 
 /** Minute-precision helper for readable cutoffs. */
 const MIN = 60 * 1000;

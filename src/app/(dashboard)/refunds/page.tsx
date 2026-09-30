@@ -2,10 +2,10 @@
 
 import * as React from "react";
 import { formatCurrency, formatDate, formatTime, cn } from "@/lib/utils";
-import { downloadCsv } from "@/lib/csv";
+import { downloadCsv } from "@/lib/files/csv";
 import { ExportMenu, type ExportColumn } from "@/components/export/export-menu";
-import { fetchReportSettings, printReport } from "@/lib/print-report";
-import { lineQtyLabel, trimNumber, WHOLE_UNITS } from "@/lib/units";
+import { fetchReportSettings, printReport } from "@/lib/print/print-report";
+import { lineQtyLabel, trimNumber, WHOLE_UNITS } from "@/lib/products/units";
 import { useI18n } from "@/components/providers/i18n-provider";
 import { useStoreCurrency } from "@/components/providers/currency-provider";
 import { PageHeader } from "@/components/layout/page-header";
@@ -21,7 +21,7 @@ import { SmartImage } from "@/components/ui/smart-image";
 import { BarChart, monthRange } from "@/components/ui/chart";
 import { toast } from "@/stores/toast-store";
 import { useResellFromOrder } from "@/hooks/use-resell-from-order";
-import { printRefundReceiptsForOrders } from "@/lib/print-receipt";
+import { printRefundReceiptsForOrders } from "@/lib/receipts/print-receipt";
 import {
   Dialog,
   DialogBody,

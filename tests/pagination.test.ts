@@ -8,7 +8,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { parsePagination } from "@/lib/pagination";
+import { parsePagination } from "@/lib/api/pagination";
 
 function params(entries: Record<string, string>): URLSearchParams {
   const sp = new URLSearchParams();

@@ -14,7 +14,7 @@ import {
   netOf,
   marginPercent,
   averageOrderValue,
-} from "@/lib/report-math";
+} from "@/lib/reports/report-math";
 
 test("lineCogs: cost captured at sale time × quantity", () => {
   assert.equal(lineCogs(250, 3), 750);

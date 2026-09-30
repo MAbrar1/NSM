@@ -3,7 +3,7 @@
 import * as React from "react";
 import JsBarcode from "jsbarcode";
 import { formatCurrencyBase, cn } from "@/lib/utils";
-import { WHOLE_UNITS } from "@/lib/units";
+import { WHOLE_UNITS } from "@/lib/products/units";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/components/providers/i18n-provider";
 

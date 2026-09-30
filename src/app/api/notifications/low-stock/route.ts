@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { apiError } from "@/lib/api-errors";
-import { requirePermission } from "@/lib/api-auth";
+import { apiError } from "@/lib/api/api-errors";
+import { requirePermission } from "@/lib/api/api-auth";
 import {
   scanLowStock,
   deliverLowStockAlerts,
   type StockAlertCandidate,
-} from "@/lib/low-stock";
+} from "@/lib/inventory/low-stock";
 
 /* ═══════════════════════════════════════════════════════════════
    LOW-STOCK NOTIFICATION TRIGGER

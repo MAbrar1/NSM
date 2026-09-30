@@ -14,7 +14,7 @@ import {
   formatReceiptNo,
   parseReceiptSeq,
   resolveTerminalId,
-} from "@/lib/receipt-number";
+} from "@/lib/receipts/receipt-number";
 
 /** Minimal in-memory tx double standing in for the Prisma tx client. */
 function makeTx(rows: Array<{ terminalId: string; receiptNo: string }>) {

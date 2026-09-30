@@ -2,12 +2,12 @@
 
 import * as React from "react";
 import { formatCurrency, formatDate, formatNumber, cn, getInitials } from "@/lib/utils";
-import { downloadCsv } from "@/lib/csv";
+import { downloadCsv } from "@/lib/files/csv";
 import { ExportMenu, type ExportColumn } from "@/components/export/export-menu";
 import { ImportResultDialog, type ImportSummary } from "@/components/import/import-result-dialog";
-import { displayMajorToBaseCents, baseCentsToDisplayMajorStr } from "@/lib/currency-core";
-import { ensureRates, peekRates } from "@/lib/currency";
-import { printCustomerStatement } from "@/lib/print-customer-statement";
+import { displayMajorToBaseCents, baseCentsToDisplayMajorStr } from "@/lib/money/currency-core";
+import { ensureRates, peekRates } from "@/lib/money/currency";
+import { printCustomerStatement } from "@/lib/print/print-customer-statement";
 import { useI18n } from "@/components/providers/i18n-provider";
 import { useStoreCurrency } from "@/components/providers/currency-provider";
 import { PageHeader } from "@/components/layout/page-header";

@@ -4,7 +4,7 @@ import * as React from "react";
 import { useI18n } from "@/components/providers/i18n-provider";
 import { usePopoverMenu } from "@/hooks/use-popover-menu";
 import { useStoreCurrency, useDisplayCurrency, useSetDisplayCurrency } from "@/components/providers/currency-provider";
-import { peekRates } from "@/lib/currency";
+import { peekRates } from "@/lib/money/currency";
 import { cn } from "@/lib/utils";
 
 /* ═══════════════════════════════════════════════════════════════

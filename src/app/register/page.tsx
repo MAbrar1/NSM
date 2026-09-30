@@ -8,7 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { signIn } from "next-auth/react";
 import { registerSchema, type RegisterInput } from "@/lib/validations";
 import { useI18n } from "@/components/providers/i18n-provider";
-import { readApiError } from "@/lib/api-error";
+import { readApiError } from "@/lib/api/api-error";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";

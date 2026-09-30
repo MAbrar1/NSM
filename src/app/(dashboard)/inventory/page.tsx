@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { cn, formatCurrency } from "@/lib/utils";
-import { lineQtyLabel, trimNumber, WHOLE_UNITS } from "@/lib/units";
+import { lineQtyLabel, trimNumber, WHOLE_UNITS } from "@/lib/products/units";
 import { PageHeader } from "@/components/layout/page-header";
 import { useI18n } from "@/components/providers/i18n-provider";
 import { useStoreCurrency } from "@/components/providers/currency-provider";
@@ -17,9 +17,9 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { SortableTh } from "@/components/ui/sortable-th";
 import { StatCard } from "@/components/ui/stat-card";
 import { toast } from "@/stores/toast-store";
-import { downloadCsv, downloadExcel, sumFormulaCell, type ExcelSheet } from "@/lib/csv";
+import { downloadCsv, downloadExcel, sumFormulaCell, type ExcelSheet } from "@/lib/files/csv";
 import { ExportMenu, type ExportColumn } from "@/components/export/export-menu";
-import { fetchReportSettings, printReport } from "@/lib/print-report";
+import { fetchReportSettings, printReport } from "@/lib/print/print-report";
 import { useHardwareScanner } from "@/hooks/use-hardware-scanner";
 import {
   Dialog,

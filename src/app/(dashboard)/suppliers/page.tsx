@@ -7,7 +7,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { readApiError } from "@/lib/api-error";
+import { readApiError } from "@/lib/api/api-error";
 import {
   Dialog,
   DialogBody,
@@ -20,10 +20,10 @@ import { TableSkeleton } from "@/components/ui/table-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "@/stores/toast-store";
 import { cn, formatCurrency } from "@/lib/utils";
-import { downloadCsv } from "@/lib/csv";
+import { downloadCsv } from "@/lib/files/csv";
 import { ExportMenu, type ExportColumn } from "@/components/export/export-menu";
 import { ImportResultDialog, type ImportSummary } from "@/components/import/import-result-dialog";
-import { fetchReportSettings, printReport } from "@/lib/print-report";
+import { fetchReportSettings, printReport } from "@/lib/print/print-report";
 import { SortableTh } from "@/components/ui/sortable-th";
 import { useTableRowNav } from "@/hooks/use-table-row-nav";
 

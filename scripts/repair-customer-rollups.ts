@@ -15,7 +15,7 @@
    ═══════════════════════════════════════════════════════════════ */
 
 import { PrismaClient } from "@prisma/client";
-import { recomputeCustomerRollups } from "../src/lib/customer-rollups";
+import { recomputeCustomerRollups } from "../src/lib/customers/customer-rollups";
 
 async function main() {
   const prisma = new PrismaClient();

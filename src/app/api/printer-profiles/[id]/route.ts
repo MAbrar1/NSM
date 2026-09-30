@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { apiError, fieldError, validationError } from "@/lib/api-errors";
-import { requirePermission } from "@/lib/api-auth";
+import { apiError, fieldError, validationError } from "@/lib/api/api-errors";
+import { requirePermission } from "@/lib/api/api-auth";
 import { db } from "@/lib/db";
 import { printerProfileSchema } from "@/lib/validations/print";
 import { logAudit } from "@/lib/audit-log";

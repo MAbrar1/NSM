@@ -23,7 +23,7 @@ import {
   listImageFiles,
   parseImageGallery,
   saveImageFile,
-} from "@/lib/uploads";
+} from "@/lib/files/uploads";
 
 /** Make a File-like object without the full DOM File in Node. */
 function makeFile(bytes: Uint8Array, type: string, name = "test"): File {

@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { apiError } from "@/lib/api-errors";
+import { apiError } from "@/lib/api/api-errors";
 import { db } from "@/lib/db";
-import { requirePermission } from "@/lib/api-auth";
-import { stockStatusForRow } from "@/lib/stock-status";
+import { requirePermission } from "@/lib/api/api-auth";
+import { stockStatusForRow } from "@/lib/inventory/stock-status";
 
 /* ═══════════════════════════════════════════════════════════════
    WAREHOUSE STOCK SUMMARY API

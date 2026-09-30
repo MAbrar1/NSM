@@ -54,9 +54,6 @@
       "@/types/*": [
         "./src/types/*"
       ],
-      "@/styles/*": [
-        "./src/styles/*"
-      ],
       "@/app/*": [
         "./src/app/*"
       ],
@@ -65,9 +62,6 @@
       ],
       "@/validations/*": [
         "./src/lib/validations/*"
-      ],
-      "@/server/*": [
-        "./src/server/*"
       ]
     },
     "plugins": [

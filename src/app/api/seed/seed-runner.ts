@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
-import { recomputeCustomerRollups } from "@/lib/customer-rollups";
+import { recomputeCustomerRollups } from "@/lib/customers/customer-rollups";
 
 /* ═══════════════════════════════════════════════
    SHARED SEED RUNNER - COMPREHENSIVE MOCK DATA
