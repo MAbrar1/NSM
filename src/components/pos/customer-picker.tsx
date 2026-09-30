@@ -260,7 +260,7 @@ export function CustomerPicker({ value, onSelect, compact }: CustomerPickerProps
       </div>
 
       {open && (
-        <div className="absolute start-0 end-0 top-full z-40 mt-1 max-h-64 overflow-y-auto rounded-xl border border-neu-hairline bg-neu-bg shadow-xl animate-scale-in pos-scroll">
+        <div className="neu-popover absolute start-0 end-0 top-full z-40 mt-1 max-h-64 overflow-y-auto rounded-xl border border-neu-hairline bg-neu-bg animate-scale-in pos-scroll">
           {results.length === 0 && !loading && (
             <p className="px-3 py-2.5 text-xs text-neu-faint">
               {trimmed.length >= 2 ? t("pos.customerNoResults") : t("pos.customerSearchPlaceholder")}

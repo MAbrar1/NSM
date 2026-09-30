@@ -105,6 +105,15 @@ export interface ReceiptSnapshot {
   receiptHeader: string | null;
   receiptFooter: string | null;
   qrPaymentPayload: string | null;
+
+  /**
+   * Store-wide receipt typography preference, frozen at issue: render
+   * digits as Urdu-Indic numerals (۰-۹) instead of Western (0-9).
+   * Default (undefined/false) = Western numerals, matching standard
+   * Pakistani retail convention. Optional so existing snapshots and
+   * tests stay valid.
+   */
+  urduDigits?: boolean;
 }
 
 /**
@@ -150,6 +159,8 @@ export function buildReceiptSnapshot(args: {
     receiptHeader: string | null;
     receiptFooter: string | null;
     receiptQrPayment: string | null;
+    /** Store-wide receipt digit style, frozen at issue. */
+    receiptUrduDigits: boolean;
   };
 }): ReceiptSnapshot {
   return {
@@ -187,5 +198,6 @@ export function buildReceiptSnapshot(args: {
     receiptHeader: args.settings.receiptHeader,
     receiptFooter: args.settings.receiptFooter,
     qrPaymentPayload: args.settings.receiptQrPayment,
+    urduDigits: args.settings.receiptUrduDigits,
   };
 }

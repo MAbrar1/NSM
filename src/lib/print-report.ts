@@ -286,10 +286,58 @@ ${PRINT_SCHEME_SCRIPT}
       --zebra: ${PRINT_DARK.zebra};
     }
   }
+  /* Report faces — bundled, OFL-1.1, same origin as the app. The report
+     opens in a DETACHED window that inherits nothing from fonts.css, so
+     the faces are declared here. Naskh carries Urdu body text; Nastaliq
+     is available for the letterhead masthead only (large sizes). */
+  @font-face {
+    font-family: "IBM Plex Sans";
+    src: url("/fonts/ibm-plex-sans-latin-400-normal.woff2") format("woff2");
+    font-weight: 400;
+    font-display: block;
+  }
+  @font-face {
+    font-family: "IBM Plex Sans";
+    src: url("/fonts/ibm-plex-sans-latin-700-normal.woff2") format("woff2");
+    font-weight: 700;
+    font-display: block;
+  }
+  @font-face {
+    font-family: "IBM Plex Sans Arabic";
+    src: url("/fonts/ibm-plex-sans-arabic-arabic-400-normal.woff2") format("woff2");
+    font-weight: 400;
+    font-display: block;
+  }
+  @font-face {
+    font-family: "IBM Plex Sans Arabic";
+    src: url("/fonts/ibm-plex-sans-arabic-arabic-700-normal.woff2") format("woff2");
+    font-weight: 700;
+    font-display: block;
+  }
+  @font-face {
+    font-family: "Noto Naskh Arabic";
+    src: url("/fonts/noto-naskh-arabic-arabic-400-normal.woff2") format("woff2");
+    font-weight: 400;
+    font-display: block;
+  }
+  @font-face {
+    font-family: "Noto Naskh Arabic";
+    src: url("/fonts/noto-naskh-arabic-arabic-700-normal.woff2") format("woff2");
+    font-weight: 700;
+    font-display: block;
+  }
+  @font-face {
+    font-family: "Noto Nastaliq Urdu";
+    src: url("/fonts/noto-nastaliq-urdu-arabic-400-normal.woff2") format("woff2");
+    font-weight: 400;
+    font-display: block;
+  }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { background: var(--sheet); }
   body {
-    font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", Arial, "Noto Nastaliq Urdu", sans-serif;
+    font-family: ${rtl
+      ? `"IBM Plex Sans Arabic", "Noto Naskh Arabic", `
+      : ""}"IBM Plex Sans", -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     color: var(--ink);
     font-size: 11px;
     line-height: 1.45;
@@ -309,6 +357,14 @@ ${PRINT_SCHEME_SCRIPT}
     display: flex; align-items: center; justify-content: center;
   }
   .brand-name { font-size: 16px; font-weight: 700; letter-spacing: 0.2px; }
+  /* RTL letterheads set the store name in Nastaliq — display accent at
+     large size, per the typography spec. Never body/table text. */
+  .brand-name.rtl-masthead {
+    font-family: "Noto Nastaliq Urdu", "Noto Naskh Arabic", "IBM Plex Sans Arabic", sans-serif;
+    font-weight: 400;
+    font-size: 18px;
+    line-height: 1.9;
+  }
   .brand-contact { font-size: 9px; color: var(--muted); margin-top: 1px; }
   .brand-contact .dot { margin: 0 5px; color: var(--muted); }
   .doc-ref { text-align: right; font-size: 9px; color: var(--muted); }
@@ -421,7 +477,7 @@ ${PRINT_SCHEME_SCRIPT}
       <div class="brand${rtl ? " rtl" : ""}">
         <div class="brand-mark">${esc(initial)}</div>
         <div>
-          <div class="brand-name">${esc(settings.storeName)}</div>
+          <div class="brand-name${rtl ? " rtl-masthead" : ""}">${esc(settings.storeName)}</div>
           ${contactBits ? `<div class="brand-contact">${contactBits}</div>` : ""}
         </div>
       </div>

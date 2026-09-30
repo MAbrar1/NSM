@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { apiError } from "@/lib/api-errors";
 import { db } from "@/lib/db";
 import { requirePermission } from "@/lib/api-auth";
 import { parsePagination } from "@/lib/pagination";
+import { parseSortParam } from "@/lib/table-sort";
 import { parseQueryDateStart, parseQueryDateEnd } from "@/lib/query-date";
 
 /* ═══════════════════════════════════════════════════════════════
@@ -84,6 +86,25 @@ export async function GET(request: NextRequest) {
       };
     }
 
+    // Allow-listed sort — a hand-edited query falls back to createdAt.desc
+    // instead of reaching Prisma's orderBy and throwing. Relation fields
+    // (customer, cashier, refundedBy) sort on the related user/customer
+    // name. The refunds ledger reuses this endpoint, so its columns
+    // (refundedBy, refundedAt, refundReason) are in the same allow-list.
+    const orderSort = parseSortParam(
+      searchParams.get("sort"),
+      ["orderNumber", "customer", "cashier", "refundedBy", "createdAt", "refundedAt", "total", "status", "refundReason"],
+      { field: "createdAt", order: "desc" }
+    );
+    const orderBy: Prisma.OrderOrderByWithRelationInput =
+      orderSort.field === "customer"
+        ? { customer: { name: orderSort.order } }
+        : orderSort.field === "cashier"
+          ? { user: { name: orderSort.order } }
+          : orderSort.field === "refundedBy"
+            ? { refundedBy: { name: orderSort.order } }
+            : { [orderSort.field]: orderSort.order };
+
     const [orders, agg] = await Promise.all([
       db.order.findMany({
         where,
@@ -94,7 +115,7 @@ export async function GET(request: NextRequest) {
           items: { select: { quantity: true, unit: true, total: true, unitPrice: true, productName: true, sku: true } },
           payments: { select: { method: true, amount: true, status: true } },
         },
-        orderBy: { createdAt: "desc" },
+        orderBy,
         skip,
         take,
       }),

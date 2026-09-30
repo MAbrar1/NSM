@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
 import { SortableTh } from "@/components/ui/sortable-th";
+import { useTableRowNav } from "@/hooks/use-table-row-nav";
 import { StatCard } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "@/stores/toast-store";
@@ -104,6 +105,13 @@ export default function CustomersPage() {
   useStoreCurrency();
   const { t } = useI18n();
   const [customers, setCustomers] = React.useState<Customer[]>([]);
+
+  // Keyboard row navigation — Enter opens the customer detail (same as a
+  // row click); index maps to the rendered (server-sorted) row order.
+  const tbodyRef = useTableRowNav<HTMLTableSectionElement>((i) => {
+    const c = customers[i];
+    if (c) viewDetail(c);
+  });
   const [loading, setLoading] = React.useState(true);
   const [loadError, setLoadError] = React.useState(false);
   const [search, setSearch] = React.useState("");
@@ -778,7 +786,7 @@ export default function CustomersPage() {
                 <th className="whitespace-nowrap px-4 py-3 text-end text-xs font-semibold uppercase tracking-wider text-neu-faint">{t("customers.actions")}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neu-hairline">
+            <tbody ref={tbodyRef} className="divide-y divide-neu-hairline">
               {loading ? (
                 <TableSkeleton rows={6} />
               ) : loadError ? (
@@ -791,7 +799,7 @@ export default function CustomersPage() {
                 </tr>
               ) : (
                 customers.map((c) => (
-                  <tr key={c.id} className="cursor-pointer transition-colors hover:bg-neu-sunken/50" onClick={() => viewDetail(c)}>
+                  <tr key={c.id} data-nav-row data-nav-label={c.name} className="cursor-pointer transition-colors hover:bg-neu-sunken/50" onClick={() => viewDetail(c)}>
                     <td className="max-w-[240px] px-4 py-3">
                       <div className="flex items-center gap-3">
                         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-neu-accent-wash text-xs font-bold text-neu-accent-ink-strong">
@@ -907,7 +915,7 @@ export default function CustomersPage() {
 
       {/* ═══ CUSTOMER DETAIL MODAL ═══ */}
       <Dialog open={Boolean(detailCustomer)} onOpenChange={(o) => !o && setDetailCustomer(null)}>
-        <DialogContent size="lg">
+        <DialogContent size="lg" height="tall">
           <DialogHeader>
             {detailCustomer && !detailLoading ? (
               <div className="flex items-center gap-4 w-full">

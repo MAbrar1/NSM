@@ -89,7 +89,9 @@ export function WelcomeModal() {
     <Dialog open={open} onOpenChange={(o) => { if (!o) dismiss(); }}>
       <DialogContent size="md">
         <DialogHeader>
-          <DialogTitle>{t("welcome.title")}</DialogTitle>
+          {/* urdu-display: in Urdu the welcome headline sets in Nastaliq —
+              the one sanctioned on-screen Nastaliq role (large, decorative). */}
+          <DialogTitle className="urdu-display">{t("welcome.title")}</DialogTitle>
         </DialogHeader>
         <DialogBody className="space-y-4">
           <p className="text-sm text-neu-faint">{t("welcome.subtitle")}</p>

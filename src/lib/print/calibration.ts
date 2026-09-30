@@ -2,14 +2,15 @@
    CALIBRATION PRINT
    One diagnostic page per printer profile that proves the physical
    pipeline: width ruler (are dots mapped to the real paper width?),
-   text block, Urdu sample (Nastaliq ascenders/descenders), QR and
+   text block, Urdu sample (Naskh body + the Urdu-specific glyphs
+   ٹ ڈ ڑ ژ ک گ that generic Arabic fonts miss), QR and
    barcode (integer module scale), a 50-line section (band seams +
    auto-length behavior), then the profile's feed + cut (+ drawer
    kick when enabled). Every dimension comes from the profile — the
    page is identical for 58, 80, 112 mm or a custom 88 mm printer.
    ═══════════════════════════════════════════════════════════════ */
 
-import { URDU_FONT_FAMILY } from "./receipt-template";
+import { URDU_FONT_FAMILY, URDU_FONT_URL, URDU_FONT_BOLD_URL } from "./receipt-template";
 
 export interface CalibrationProfile {
   name: string;
@@ -39,8 +40,14 @@ export function buildCalibrationHtml(profile: CalibrationProfile): string {
 <style>
   @font-face {
     font-family: "${URDU_FONT_FAMILY}";
-    src: url("/fonts/noto-nastaliq-urdu-arabic-400-normal.woff2") format("woff2");
+    src: url("${URDU_FONT_URL}") format("woff2");
     font-weight: 400;
+    font-display: block;
+  }
+  @font-face {
+    font-family: "${URDU_FONT_FAMILY}";
+    src: url("${URDU_FONT_BOLD_URL}") format("woff2");
+    font-weight: 700;
     font-display: block;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -76,8 +83,10 @@ export function buildCalibrationHtml(profile: CalibrationProfile): string {
   </div>
 
   <div class="sec">
-    <div class="label">Urdu sample (Nastaliq — check clipping)</div>
-    <div class="urdu">نئیجار سپر مارٹ · رسید نمبر R-T1-000001 · کل رقم Rs 1,234.56 · ادائیگی نقد — بلند و بازو حروف کی جانچ</div>
+    <div class="label">Urdu sample (Noto Naskh Arabic — verify Urdu-specific glyphs on paper)</div>
+    <div class="urdu">نئیجار سپر مارٹ · رسید نمبر R-T1-000001 · کل رقم Rs 1,234.56 · ادائیگی نقد</div>
+    <div class="urdu">Urdu-specific glyphs: ٹ ڈ ڑ ں ھ ے ژ ک گ — ہر حرف واضح ہونا چاہیے</div>
+    <div class="urdu" style="font-weight:700">Bold pass: کل رقم · ادائیگی · ٹوٹل</div>
   </div>
 
   <div class="sec">

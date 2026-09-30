@@ -371,24 +371,29 @@ export default function InventoryReportPage() {
             <StatCard
               label={t("reports.stockValueCost")}
               value={formatCurrency(data.summary.totalCostValue)}
+              numericValue={data.summary.totalCostValue}
               icon="box"
               tone="brand"
             />
             <StatCard
               label={t("reports.retailValue")}
               value={formatCurrency(data.summary.totalRetailValue)}
+              numericValue={data.summary.totalRetailValue}
               icon="cash"
               tone="info"
             />
             <StatCard
               label={t("reports.potentialProfit")}
               value={formatCurrency(data.summary.totalPotentialProfit)}
+              numericValue={data.summary.totalPotentialProfit}
               icon="trend"
               tone="success"
             />
             <StatCard
               label={t("reports.profitMargin")}
               value={`${data.summary.profitMargin}%`}
+              numericValue={data.summary.profitMargin}
+              formatValue={(v) => `${v.toFixed(1)}%`}
               icon="chart"
               tone="warning"
             />
@@ -400,12 +405,16 @@ export default function InventoryReportPage() {
             <StatCard
               label={t("reports.totalUnits")}
               value={String(data.summary.totalQuantity)}
+              numericValue={data.summary.totalQuantity}
+              formatValue={(v) => String(Math.round(v))}
               icon="bag"
               tone="info"
             />
             <StatCard
               label={t("reports.lowStockItems")}
               value={String(data.summary.lowStockCount)}
+              numericValue={data.summary.lowStockCount}
+              formatValue={(v) => String(Math.round(v))}
               icon="alert"
               tone={data.summary.lowStockCount > 0 ? "warning" : "success"}
               sub={data.summary.outOfStockCount > 0 ? `${data.summary.outOfStockCount} ${t("alerts.outOfStock")}` : undefined}
@@ -413,6 +422,8 @@ export default function InventoryReportPage() {
             <StatCard
               label={t("reports.deadStockItems")}
               value={String(data.summary.deadStockCount)}
+              numericValue={data.summary.deadStockCount}
+              formatValue={(v) => String(Math.round(v))}
               icon="alert"
               tone={data.summary.deadStockCount > 0 ? "danger" : "success"}
             />

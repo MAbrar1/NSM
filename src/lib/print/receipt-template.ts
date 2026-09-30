@@ -13,7 +13,7 @@
    Width comes from the printer profile (printable_dots at 96 dpi ⇒
    px = dots / dpi * 96) — the template itself fixes NO width.
    Urdu reaches thermal printers as raster only (the template is
-   rendered in the DOM with the bundled Noto Nastaliq Urdu font,
+   rendered in the DOM with the bundled Noto Naskh Arabic font,
    then rasterized — never as text-mode bytes).
    ═══════════════════════════════════════════════════════════════ */
 
@@ -24,14 +24,44 @@ import { lineQtyLabel } from "@/lib/units";
 /** Current layout version — bump when the template changes. */
 export const RECEIPT_TEMPLATE_VERSION = 1;
 
-/** Local, licence-checked Urdu font (SIL OFL 1.1). Never network. */
-export const URDU_FONT_FAMILY = "Noto Nastaliq Urdu";
-export const URDU_FONT_URL = "/fonts/noto-nastaliq-urdu-arabic-400-normal.woff2";
+/**
+ * Fonts the receipt template uses (all local, OFL-1.1, zero network).
+ * SPEC RULE: Nastaliq is NEVER on the thermal receipt path (rasterizes
+ * to mud at receipt sizes and its sweeping ligatures smear on 1-bit
+ * band rasterization) — it lives only on A4/A5 report letterheads
+ * (print-report.ts). On receipts:
+ *   • Latin body — IBM Plex Sans (matches the app UI)
+ *   • Urdu body  — Noto Naskh Arabic: the legible workhorse for the
+ *     store name and item lines at receipt sizes, regular + bold
+ */
+export const URDU_FONT_FAMILY = "Noto Naskh Arabic";
+export const URDU_FONT_URL = "/fonts/noto-naskh-arabic-arabic-400-normal.woff2";
+export const URDU_FONT_BOLD_URL = "/fonts/noto-naskh-arabic-arabic-700-normal.woff2";
+export const LATIN_FONT_FAMILY = "IBM Plex Sans";
+export const LATIN_FONT_URL = "/fonts/ibm-plex-sans-latin-400-normal.woff2";
+
+/**
+ * Urdu-Indic digits (۰-۹) on receipts? Default OFF: Western numerals
+ * (0-9) match standard Pakistani retail convention. Read from the
+ * optional snapshot flag so a store can opt in without a code change.
+ */
+export function urduDigitsEnabled(snapshot: { urduDigits?: boolean } | null | undefined): boolean {
+  return snapshot?.urduDigits === true;
+}
+
+/** Convert Western digits to Urdu-Indic when the store opted in. */
+function num(s: string, urduDigits: boolean): string {
+  if (!urduDigits) return s;
+  const d = "۰۱۲۳۴۵۶۷۸۹";
+  return s.replace(/[0-9]/g, (c) => d[Number(c)] ?? c);
+}
 
 /** Families/weights the measurement step must preload before
  *  reading heights (Urdu ascenders/descenders change line boxes). */
 export const RECEIPT_FONT_PRELOADS: Array<{ family: string; weight: string; text: string }> = [
-  { family: URDU_FONT_FAMILY, weight: "400", text: "نئیجار سپر مارٹ رسید کل رقم ادائیگی" },
+  { family: URDU_FONT_FAMILY, weight: "400", text: "نئیجار سپر مارٹ رسید کل رقم ادائیگی ٹ ڈ ڑ ژ ک گ" },
+  { family: URDU_FONT_FAMILY, weight: "700", text: "کل رقم ٹیوب ویل" },
+  { family: LATIN_FONT_FAMILY, weight: "400", text: "Receipt Total 0123456789" },
 ];
 
 /** The money formatting type all template amounts flow through. */
@@ -71,9 +101,13 @@ function esc(s: string): string {
     .replace(/"/g, "&quot;");
 }
 
-/** Row of label/value; direction-safe (values are LTR numerals even in RTL). */
-function row(label: string, value: string, cls = ""): string {
-  return `<div class="r ${cls}"><span class="l">${esc(label)}</span><span class="v">${esc(value)}</span></div>`;
+/**
+ * Row of label/value; direction-safe (values are LTR numerals even in RTL
+ * — tabular figures keep money columns aligned regardless of script).
+ * Digits route through num() so an opt-in store gets Urdu-Indic numerals.
+ */
+function row(label: string, value: string, cls = "", urduDigits = false): string {
+  return `<div class="r ${cls}"><span class="l">${esc(label)}</span><span class="v">${esc(num(value, urduDigits))}</span></div>`;
 }
 
 /**
@@ -129,6 +163,7 @@ export function renderReceiptBody(
   const t = labels(lang);
   const rtl = lang !== "en";
   const dir = rtl ? 'dir="rtl" lang="ur"' : 'dir="ltr" lang="en"';
+  const digits = urduDigitsEnabled(snapshot);
 
   const lines = snapshot.items
     .map(
@@ -136,19 +171,19 @@ export function renderReceiptBody(
   <div class="line">
     <div class="line-name">${esc(it.productName)}</div>
     <div class="line-row">
-      <span class="qty">${esc(lineQtyLabel(it.quantity, it.unit))}</span>
-      <span class="price">× ${esc(fmt(it.unitPrice))}</span>
-      <span class="amt">${esc(fmt(it.total))}</span>
+      <span class="qty">${esc(num(lineQtyLabel(it.quantity, it.unit), digits))}</span>
+      <span class="price">× ${esc(num(fmt(it.unitPrice), digits))}</span>
+      <span class="amt">${esc(num(fmt(it.total), digits))}</span>
     </div>
-    ${it.discountAmount > 0 ? `<div class="line-disc">${esc(t.discount)} ${esc(fmt(it.discountAmount))}</div>` : ""}
+    ${it.discountAmount > 0 ? `<div class="line-disc">${esc(t.discount)} ${esc(num(fmt(it.discountAmount), digits))}</div>` : ""}
   </div>`
     )
     .join("");
 
   const paymentRows = [
-    row(t.paid, fmt(snapshot.paidAmount)),
-    snapshot.dueAmount > 0 ? row(t.due, fmt(snapshot.dueAmount), "due") : "",
-    snapshot.changeAmount > 0 ? row(t.change, fmt(snapshot.changeAmount), "change") : "",
+    row(t.paid, fmt(snapshot.paidAmount), "", digits),
+    snapshot.dueAmount > 0 ? row(t.due, fmt(snapshot.dueAmount), "due", digits) : "",
+    snapshot.changeAmount > 0 ? row(t.change, fmt(snapshot.changeAmount), "change", digits) : "",
   ].join("");
 
   const fiscalBlock = opts.fiscal
@@ -172,22 +207,22 @@ export function renderReceiptBody(
     ${snapshot.receiptHeader ? `<div class="fine">${esc(snapshot.receiptHeader)}</div>` : ""}
   </div>
   <div class="meta">
-    ${row(t.receipt, snapshot.receiptNo)}
-    ${row(t.date, new Date(snapshot.issuedAt).toLocaleString("en-GB", { hour12: false }))}
-    ${row(t.cashier, snapshot.cashierName || "—")}
-    ${row(t.terminal, snapshot.terminalId)}
-    ${snapshot.customerName ? row(t.customer, snapshot.customerName) : ""}
-    ${opts.duplicate ? `<div class="dup">${esc(t.duplicate)} · ${opts.duplicate.count}</div>` : `<div class="dup">${esc(t.original)}</div>`}
+    ${row(t.receipt, snapshot.receiptNo, "", digits)}
+    ${row(t.date, new Date(snapshot.issuedAt).toLocaleString("en-GB", { hour12: false }), "", digits)}
+    ${row(t.cashier, snapshot.cashierName || "—", "", digits)}
+    ${row(t.terminal, snapshot.terminalId, "", digits)}
+    ${snapshot.customerName ? row(t.customer, snapshot.customerName, "", digits) : ""}
+    ${opts.duplicate ? `<div class="dup">${esc(t.duplicate)} · ${num(String(opts.duplicate.count), digits)}</div>` : `<div class="dup">${esc(t.original)}</div>`}
     ${opts.voided ? `<div class="void">${esc(t.void)}</div>` : ""}
   </div>
   <div class="lines">${lines}</div>
   <div class="totals">
-    ${row(t.subtotal, fmt(snapshot.subtotal))}
-    ${snapshot.discountAmount > 0 ? row(t.discount, fmt(snapshot.discountAmount)) : ""}
-    ${snapshot.taxAmount > 0 ? row(t.tax, fmt(snapshot.taxAmount)) : ""}
-    ${snapshot.loyaltyRedeemed > 0 ? row(`${t.loyalty} (${snapshot.loyaltyPointsRedeemed} ${t.points})`, fmt(snapshot.loyaltyRedeemed)) : ""}
-    ${row(t.grandTotal, fmt(snapshot.total), "grand")}
-    ${snapshot.customerName ? row(t.loyaltyBalance, `${snapshot.customerLoyaltyBalance} ${t.points}`) : ""}
+    ${row(t.subtotal, fmt(snapshot.subtotal), "", digits)}
+    ${snapshot.discountAmount > 0 ? row(t.discount, fmt(snapshot.discountAmount), "", digits) : ""}
+    ${snapshot.taxAmount > 0 ? row(t.tax, fmt(snapshot.taxAmount), "", digits) : ""}
+    ${snapshot.loyaltyRedeemed > 0 ? row(`${t.loyalty} (${num(String(snapshot.loyaltyPointsRedeemed), digits)} ${t.points})`, fmt(snapshot.loyaltyRedeemed), "", digits) : ""}
+    ${row(t.grandTotal, fmt(snapshot.total), "grand", digits)}
+    ${snapshot.customerName ? row(t.loyaltyBalance, `${num(String(snapshot.customerLoyaltyBalance), digits)} ${t.points}`, "", digits) : ""}
   </div>
   <div class="payments">${paymentRows}</div>
   ${fiscalBlock}
@@ -216,15 +251,30 @@ export function renderReceiptDocument(
 <meta charset="utf-8" />
 <title>${esc(snapshot.receiptNo)}</title>
 <style>
+  /* Receipt faces — all local woff2 (OFL-1.1), zero network. Naskh
+     carries Urdu body text at receipt sizes; Plex matches the app's
+     Latin UI. */
   @font-face {
     font-family: "${URDU_FONT_FAMILY}";
     src: url("${URDU_FONT_URL}") format("woff2");
     font-weight: 400;
     font-display: block;
   }
+  @font-face {
+    font-family: "${URDU_FONT_FAMILY}";
+    src: url("${URDU_FONT_BOLD_URL}") format("woff2");
+    font-weight: 700;
+    font-display: block;
+  }
+  @font-face {
+    font-family: "${LATIN_FONT_FAMILY}";
+    src: url("${LATIN_FONT_URL}") format("woff2");
+    font-weight: 400;
+    font-display: block;
+  }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    font-family: ${rtl ? `"${URDU_FONT_FAMILY}", ` : ""}-apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    font-family: ${rtl ? `"${URDU_FONT_FAMILY}", ` : ""}"${LATIN_FONT_FAMILY}", -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
     color: #000;
     background: #fff;
     font-size: 12px;
@@ -237,13 +287,16 @@ export function renderReceiptDocument(
   .center { text-align: center; }
   .meta, .totals, .payments { border-bottom: 1px dashed #000; padding: 4px 0; }
   .r { display: flex; justify-content: space-between; gap: 8px; }
-  .r .v { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  /* Every money/qty/total column aligns on tabular figures, whichever
+     face resolves — and Latin digits stay LTR inside RTL rows. */
+  .r .v { font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1; white-space: nowrap; }
   .r.mono .v { font-family: ui-monospace, Menlo, monospace; }
   .dup, .void { text-align: center; font-weight: 700; padding: 3px 0 0; font-size: 11px; }
   .void { border: 1px solid #000; margin: 3px 0; }
   .line { padding: 2px 0; }
   .line-name { font-weight: 600; overflow-wrap: anywhere; }
   .line-row { display: flex; justify-content: space-between; gap: 6px; font-size: 11px; }
+  .line-row .qty, .line-row .price { font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1; }
   .line-row .amt { font-variant-numeric: tabular-nums; white-space: nowrap; }
   .line-disc { font-size: 10px; color: #333; }
   .totals .grand { font-size: 14px; font-weight: 700; }

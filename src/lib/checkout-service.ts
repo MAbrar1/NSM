@@ -619,6 +619,7 @@ export async function processCheckout(
           receiptHeader: settingsRow?.receiptHeader ?? null,
           receiptFooter: settingsRow?.receiptFooter ?? null,
           receiptQrPayment: settingsRow?.receiptQrPayment ?? null,
+          receiptUrduDigits: settingsRow?.receiptUrduDigits ?? false,
         },
       });
 

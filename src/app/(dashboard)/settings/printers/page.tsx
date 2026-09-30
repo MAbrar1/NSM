@@ -12,6 +12,7 @@ import { useI18n } from "@/components/providers/i18n-provider";
 import { printerProfileSchema } from "@/lib/validations/print";
 import { enqueuePrint } from "@/lib/print/print-service";
 import { buildCalibrationHtml } from "@/lib/print/calibration";
+import { Dialog, DialogBody, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { PrinterProfile } from "@prisma/client";
 
 /* ═══════════════════════════════════════════════════════════════
@@ -99,6 +100,26 @@ export default function PrinterProfilesPage() {
     load();
   }
 
+  // ── On-screen calibration inspection ────────────────────────────
+  // The software-verifiable half of calibration: render the EXACT
+  // document the rasterizer consumes inside a sandboxed preview, so
+  // width/Urdu glyphs/seams can be checked before (and after) burning
+  // paper. The hardware half stays the physical print + eyeball.
+  const [inspectProfile, setInspectProfile] = React.useState<PrinterProfile | null>(null);
+
+  function inspectHtml(p: PrinterProfile): string {
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    return buildCalibrationHtml({
+      name: p.name,
+      printableDots: p.printableDots,
+      dpi: p.dpi,
+      bandHeight: p.bandHeight,
+      feedBeforeCutLines: p.feedBeforeCutLines,
+      cutMode: p.cutMode as "full" | "partial" | "none",
+      drawerKick: p.drawerKick,
+    }).replaceAll(/url\(("?)\/fonts\//g, `url($1${origin}/fonts/`);
+  }
+
   async function printCalibration(profile: PrinterProfile) {
     const html = buildCalibrationHtml({
       name: profile.name,
@@ -157,6 +178,9 @@ export default function PrinterProfilesPage() {
               <CardContent className="flex gap-2">
                 <Button size="sm" variant="secondary" onClick={() => printCalibration(p)}>
                   {t("printerProfiles.calibrate")}
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => setInspectProfile(p)}>
+                  {t("printerProfiles.inspect")}
                 </Button>
                 <Button
                   size="sm"
@@ -228,6 +252,50 @@ export default function PrinterProfilesPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* ═══ ON-SCREEN CALIBRATION INSPECTION ═══ */}
+      <Dialog open={Boolean(inspectProfile)} onOpenChange={(o) => !o && setInspectProfile(null)}>
+        <DialogContent size="lg" height="tall">
+          <DialogHeader>
+            <DialogTitle>
+              {t("printerProfiles.inspectTitle")} · {inspectProfile?.name}
+            </DialogTitle>
+          </DialogHeader>
+          <DialogBody className="space-y-4">
+            {/* Eyeball checklist — what to verify on this preview AND on the
+                paper the physical calibration print produces. */}
+            <ul className="space-y-1.5 rounded-xl border border-neu-hairline bg-neu-sunken p-4 text-sm text-neu-muted">
+              {[
+                t("printerProfiles.checkWidth"),
+                t("printerProfiles.checkGlyphs"),
+                t("printerProfiles.checkSeams"),
+                t("printerProfiles.checkQr"),
+              ].map((item) => (
+                <li key={item} className="flex items-start gap-2">
+                  <svg className="mt-0.5 h-4 w-4 shrink-0 text-neu-accent-ink" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                  </svg>
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+            {inspectProfile && (
+              <iframe
+                title={`${t("printerProfiles.inspectTitle")} — ${inspectProfile.name}`}
+                src={`data:text/html;charset=utf-8;base64,${btoa(String.fromCharCode(...new TextEncoder().encode(inspectHtml(inspectProfile))))}`}
+                sandbox=""
+                className="h-[52dvh] w-full rounded-xl border border-neu-hairline bg-white"
+              />
+            )}
+          </DialogBody>
+          <DialogFooter>
+            <Button variant="secondary" onClick={() => setInspectProfile(null)}>{t("common.close")}</Button>
+            {inspectProfile && (
+              <Button onClick={() => printCalibration(inspectProfile)}>{t("printerProfiles.calibrate")}</Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

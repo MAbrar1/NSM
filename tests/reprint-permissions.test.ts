@@ -64,7 +64,7 @@ beforeEach(async () => {
     cashierName: "Cashier",
     customerName: null,
     customerLoyaltyBalance: 0,
-    settings: { storeName: "NSM", storeAddress: null, storePhone: null, receiptHeader: null, receiptFooter: null, receiptQrPayment: null },
+    settings: { storeName: "NSM", storeAddress: null, storePhone: null, receiptHeader: null, receiptFooter: null, receiptQrPayment: null, receiptUrduDigits: false },
   });
   contentHash = computeReceiptContentHash(snapshot, RECEIPT_TEMPLATE_VERSION);
 

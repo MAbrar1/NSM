@@ -107,8 +107,13 @@ export default auth((req) => {
 
 export const config = {
   matcher: [
-    // Match all routes except static files and images
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    // Match all routes except static files, images AND bundled fonts.
+    // Fonts must be auth-free: the receipt/report print windows and the
+    // rasterizer fetch /fonts/*.woff2 as static assets — routing them
+    // through the auth gate 307'd them to /login and Urdu silently
+    // fell back to system fonts on paper (found by the offline-serve
+    // verification of the typography correction).
+    "/((?!_next/static|_next/image|favicon.ico|fonts/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|woff2?|ttf|otf)$).*)",
   ],
 };
 

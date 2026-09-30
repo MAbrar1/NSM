@@ -372,6 +372,7 @@ export default function ProfitLossPage() {
             <StatCard
               label={t("reports.totalRevenue")}
               value={formatCurrency(data.summary.totalRevenue)}
+              numericValue={data.summary.totalRevenue}
               icon="cash"
               tone="brand"
               delta={prevSummary ? percentDelta(data.summary.totalRevenue, prevSummary.totalRevenue) : null}
@@ -380,6 +381,7 @@ export default function ProfitLossPage() {
             <StatCard
               label={t("reports.grossProfit")}
               value={formatCurrency(data.summary.grossProfit)}
+              numericValue={data.summary.grossProfit}
               icon="trend"
               tone={data.summary.grossProfit >= 0 ? "success" : "danger"}
               delta={prevSummary ? percentDelta(data.summary.grossProfit, prevSummary.grossProfit) : null}
@@ -389,6 +391,8 @@ export default function ProfitLossPage() {
             <StatCard
               label={t("reports.totalOrders")}
               value={String(data.summary.totalOrders)}
+              numericValue={data.summary.totalOrders}
+              formatValue={(v) => String(Math.round(v))}
               icon="bag"
               tone="info"
               delta={prevSummary ? percentDelta(data.summary.totalOrders, prevSummary.totalOrders) : null}
@@ -397,6 +401,7 @@ export default function ProfitLossPage() {
             <StatCard
               label={t("reports.avgOrderValue")}
               value={formatCurrency(data.summary.averageOrderValue)}
+              numericValue={data.summary.averageOrderValue}
               icon="chart"
               tone="warning"
               delta={prevSummary ? percentDelta(data.summary.averageOrderValue, prevSummary.averageOrderValue) : null}

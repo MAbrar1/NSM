@@ -2,7 +2,13 @@
 
 import * as React from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { cn, formatPercent } from "@/lib/utils";
+import { cn, formatCurrency, formatPercent } from "@/lib/utils";
+import { useAnimatedNumber } from "@/hooks/use-animated-number";
+
+/** Default tween renderer: base cents → display currency string. */
+function formatCurrencyValue(cents: number): string {
+  return formatCurrency(cents);
+}
 
 /* ═══════════════════════════════════════════════════════════════
    STAT CARD — shared metric card
@@ -83,6 +89,19 @@ interface StatCardProps {
   /** Accessible description of what the bar shows. */
   barLabel?: string;
   className?: string;
+  /**
+   * RAW numeric value behind `value` (base cents for money, a count for
+   * tallies). When provided, the card ticks between refreshes: the
+   * displayed figure eases toward the new number (600ms, ease-out) and
+   * the FORMATTED string re-derives from the tweened value via
+   * `formatValue`, so a 60s KPI refresh reads as movement instead of
+   * a snap. Reduced-motion users skip straight to the target. The
+   * initial render shows the target as-is — the ticker exists for
+   * CHANGES, not for page-load theatrics.
+   */
+  numericValue?: number;
+  /** Render the (possibly mid-tween) numeric value; defaults to currency. */
+  formatValue?: (v: number) => string;
 }
 
 /** One stacked segment of the optional proportion bar. */
@@ -95,8 +114,23 @@ export interface StatBarSegment {
   label: string;
 }
 
-export function StatCard({ label, value, icon, tone, delta, deltaLabel, sub, bar, barLabel, className }: StatCardProps) {
+export function StatCard({
+  label,
+  value,
+  icon,
+  tone,
+  delta,
+  deltaLabel,
+  sub,
+  bar,
+  barLabel,
+  className,
+  numericValue,
+  formatValue = formatCurrencyValue,
+}: StatCardProps) {
   const showDelta = delta !== undefined && delta !== null;
+  const ticking = numericValue !== undefined && Number.isFinite(numericValue);
+  const tweened = useAnimatedNumber(numericValue ?? 0, ticking);
 
   return (
     <Card className={cn("group relative overflow-hidden", className)}>
@@ -140,8 +174,13 @@ export function StatCard({ label, value, icon, tone, delta, deltaLabel, sub, bar
           )}
         </div>
         <p className="mt-4 neu-stat-label font-semibold">{label}</p>
-        <p className="mt-1 truncate neu-stat-value tracking-tight">
-          {value}
+        {/* NEVER truncate a money value: "…Rs 1,2" hides the number the card
+           exists to show. The wrapping is word-safe, and tabular figures keep
+           the digits readable — a stat value may grow the card, not shrink
+           the truth. With a numericValue the card ticks between refreshes;
+           mid-tween it renders the interpolated figure in the same format. */}
+        <p className="mt-1 break-words neu-stat-value tracking-tight">
+          {ticking ? formatValue(tweened) : value}
         </p>
         {sub && <p className="mt-1 text-xs text-neu-muted">{sub}</p>}
         {bar && bar.length > 0 && (

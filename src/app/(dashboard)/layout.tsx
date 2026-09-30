@@ -22,6 +22,11 @@ import { WelcomeModal } from "@/components/layout/welcome-modal";
 import { NAVIGATION, APP_NAME, APP_VERSION, type NavItem } from "@/lib/constants";
 import { ROLE_LABELS, canAccessRoute, type Role } from "@/lib/rbac";
 import { NotificationBell } from "@/components/layout/notification-bell";
+import {
+  usePaletteRecentsStore,
+  pushPaletteRecent,
+  type PaletteRecent,
+} from "@/stores/palette-recents-store";
 
 /* ─── Header helpers ─── */
 
@@ -33,6 +38,38 @@ const ROLE_BADGE: Record<string, string> = {
   inventory_clerk: "bg-neu-wash-amber text-neu-ink-amber border-neu-ink-amber/20",
   viewer: "bg-neu-sunken text-neu-primary border-neu-hairline",
 };
+
+/* ─── Palette sync pill ───
+   Tiny server-sync indicator beside the ⌘K "Recent" heading. Quiet by
+   design: nothing renders for "idle", and "saving" is skipped too —
+   a push resolves in well under a second, so a pill that flashes in
+   and out would be noise, not information. A successful sync shows
+   "Synced" briefly; a FAILED push lingers with "Saved on this
+   device", which tells the truth (the list is safe locally, it will
+   converge on the next successful sync) without demanding action. */
+function PaletteSyncStatus({
+  status,
+}: {
+  status: "idle" | "saving" | "saved" | "error";
+}) {
+  const { t } = useI18n();
+  if (status === "idle" || status === "saving") return null;
+  return (
+    <span
+      role="status"
+      className="flex shrink-0 items-center gap-1.5 text-[10px] font-medium text-neu-faint"
+    >
+      <span
+        aria-hidden
+        className={cn(
+          "h-1.5 w-1.5 rounded-full",
+          status === "saved" ? "bg-neu-solid-green" : "bg-neu-ink-amber"
+        )}
+      />
+      {status === "saved" ? t("palette.syncSaved") : t("palette.syncError")}
+    </span>
+  );
+}
 
 /* ─── Page context ───
    The rail answers "where can I go"; the bar answers "where am I". Both read
@@ -331,6 +368,26 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     setSearchResults({});
   }
 
+  // ── Command palette: per-user recents ────────────────────────────
+  const userId = session?.user?.id ?? null;
+  const paletteRecents = usePaletteRecentsStore((s) => s.recents);
+  const paletteSyncStatus = usePaletteRecentsStore((s) => s.serverSync);
+  const hydratePaletteRecents = usePaletteRecentsStore((s) => s.hydratePaletteRecents);
+
+  // Load this user's saved recents on sign-in (per-user localStorage).
+  React.useEffect(() => {
+    if (userId) hydratePaletteRecents(userId);
+  }, [userId, hydratePaletteRecents]);
+
+  /** Record a palette navigation into the user's recents (label at
+      call time, so re-localized entries refresh on revisit). */
+  const recordRecent = React.useCallback(
+    (entry: PaletteRecent) => {
+      pushPaletteRecent(userId, entry);
+    },
+    [userId]
+  );
+
   const totalResults = Object.values(searchResults).reduce((s, arr) => s + arr.length, 0);
 
   // Only show nav links the signed-in role is allowed to access
@@ -421,6 +478,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         const item = flatResults[activeIndex];
         if (item) {
           e.preventDefault();
+          // Quick actions land in recents; raw search results don't (they
+          // are one-off entities, not destinations).
+          if (item.kind === "action") {
+            recordRecent({ href: item.href, label: item.label, icon: item.icon });
+          }
           navigateToResult(item.href);
         }
       }
@@ -1126,7 +1188,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           >
             <form
               onSubmit={handleSearch}
-              className="flex items-center rounded-xl border border-neu-hairline bg-neu-bg shadow-2xl overflow-hidden"
+              className="neu-popover flex items-center rounded-xl border border-neu-hairline bg-neu-bg overflow-hidden"
             >
               <svg
                 className="ms-4 h-5 w-5 shrink-0 text-neu-faint"
@@ -1162,9 +1224,61 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </kbd>
             </form>
 
+            {/* Recent — THIS user's actual destinations, most recent first.
+                Sits above quick actions: a personal shortcut beats a generic
+                one. Hidden while typing (results take over). */}
+            {searchQuery.length === 0 && paletteRecents.length > 0 && (
+              <div className="neu-popover mt-2 rounded-xl border border-neu-hairline bg-neu-bg">
+                <div className="sticky top-0 flex items-center justify-between gap-2 border-b border-neu-hairline bg-neu-sunken px-4 py-2">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-neu-faint">
+                    {t("palette.recent")}
+                  </p>
+                  <PaletteSyncStatus status={paletteSyncStatus} />
+                </div>
+                <div className="max-h-[20dvh] overflow-y-auto overscroll-contain">
+                  {paletteRecents.map((recent) => (
+                    <button
+                      key={recent.href}
+                      onClick={() => {
+                        recordRecent(recent);
+                        navigateToResult(recent.href);
+                      }}
+                      className="flex w-full items-center gap-3 px-4 py-2.5 text-start transition-colors hover:bg-neu-accent-wash/60 border-b border-neu-hairline last:border-0"
+                    >
+                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-neu-sunken text-neu-muted">
+                        <svg
+                          className="h-4 w-4"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          strokeWidth={1.75}
+                          aria-hidden
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" d={recent.icon} />
+                        </svg>
+                      </div>
+                      <span className="flex-1 truncate text-sm font-medium text-neu-primary">
+                        {recent.label}
+                      </span>
+                      <svg
+                        className="h-3.5 w-3.5 shrink-0 text-neu-faint"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                        aria-hidden
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Quick actions — always visible, role-gated */}
             {quickActions.length > 0 && (
-              <div className="mt-2 rounded-xl border border-neu-hairline bg-neu-bg shadow-2xl">
+              <div className="neu-popover mt-2 rounded-xl border border-neu-hairline bg-neu-bg">
                 <div className="sticky top-0 border-b border-neu-hairline bg-neu-sunken px-4 py-2">
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-neu-faint">
                     {t("palette.quickActions")}
@@ -1174,7 +1288,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   {quickActions.map((action) => (
                     <button
                       key={action.href}
-                      onClick={() => navigateToResult(action.href)}
+                      onClick={() => {
+                        recordRecent({ href: action.href, label: action.label, icon: action.icon });
+                        navigateToResult(action.href);
+                      }}
                       className="flex w-full items-center gap-3 px-4 py-2.5 text-start transition-colors hover:bg-neu-accent-wash/60 border-b border-neu-hairline last:border-0"
                     >
                       <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-neu-accent-wash text-neu-accent-ink-strong">
@@ -1203,7 +1320,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
             {/* Search Results */}
             {searchQuery.length >= 2 && totalResults > 0 && (
-              <div className="mt-2 max-h-[40dvh] overflow-y-auto overscroll-contain rounded-xl border border-neu-hairline bg-neu-bg shadow-2xl">
+              <div className="neu-popover mt-2 max-h-[40dvh] overflow-y-auto overscroll-contain rounded-xl border border-neu-hairline bg-neu-bg">
                 {Object.entries(searchResults).map(([type, items]) => (
                   <div key={type}>
                     <div className="sticky top-0 border-b border-neu-hairline bg-neu-sunken px-4 py-2">
@@ -1215,6 +1332,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       <button
                         key={item.id}
                         onClick={() => navigateToResult(item.href)}
+                        data-nav-item
                         className="flex w-full items-center gap-3 px-4 py-2.5 text-start transition-colors hover:bg-neu-accent-wash/60 border-b border-neu-hairline last:border-0"
                       >
                         <div className="min-w-0 flex-1">
@@ -1246,7 +1364,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </div>
             )}
             {searchQuery.length >= 2 && !searching && totalResults === 0 && (
-              <div className="mt-2 rounded-xl border border-neu-hairline bg-neu-bg p-8 text-center shadow-2xl">
+              <div className="neu-popover mt-2 rounded-xl border border-neu-hairline bg-neu-bg p-8 text-center">
                 <p className="text-sm text-neu-faint">
                   {t("header.noResults")} &quot;{searchQuery}&quot;
                 </p>
@@ -1270,7 +1388,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         >
           <div className="fixed inset-0 neu-dialog-overlay" />
           <div
-            className="relative w-full max-w-md rounded-2xl bg-neu-bg shadow-2xl animate-scale-in overflow-hidden"
+            className="neu-popover relative w-full max-w-md rounded-2xl bg-neu-bg animate-scale-in overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between border-b border-neu-hairline px-6 py-4">

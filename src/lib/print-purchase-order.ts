@@ -126,10 +126,51 @@ ${PRINT_SCHEME_SCRIPT}
       --zebra: ${PRINT_DARK.zebra};
     }
   }
+  /* PO faces — bundled, OFL-1.1, same origin as the app. Same set as the
+     report renderer: Plex for Latin, Plex Arabic + Naskh for Urdu. No
+     unresolved font names, no OS roulette. */
+  @font-face {
+    font-family: "IBM Plex Sans";
+    src: url("/fonts/ibm-plex-sans-latin-400-normal.woff2") format("woff2");
+    font-weight: 400;
+    font-display: block;
+  }
+  @font-face {
+    font-family: "IBM Plex Sans";
+    src: url("/fonts/ibm-plex-sans-latin-700-normal.woff2") format("woff2");
+    font-weight: 700;
+    font-display: block;
+  }
+  @font-face {
+    font-family: "IBM Plex Sans Arabic";
+    src: url("/fonts/ibm-plex-sans-arabic-arabic-400-normal.woff2") format("woff2");
+    font-weight: 400;
+    font-display: block;
+  }
+  @font-face {
+    font-family: "IBM Plex Sans Arabic";
+    src: url("/fonts/ibm-plex-sans-arabic-arabic-700-normal.woff2") format("woff2");
+    font-weight: 700;
+    font-display: block;
+  }
+  @font-face {
+    font-family: "Noto Naskh Arabic";
+    src: url("/fonts/noto-naskh-arabic-arabic-400-normal.woff2") format("woff2");
+    font-weight: 400;
+    font-display: block;
+  }
+  @font-face {
+    font-family: "Noto Naskh Arabic";
+    src: url("/fonts/noto-naskh-arabic-arabic-700-normal.woff2") format("woff2");
+    font-weight: 700;
+    font-display: block;
+  }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { background: var(--sheet); }
   body {
-    font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", Arial, "Noto Nastaliq Urdu", sans-serif;
+    font-family: ${rtl
+      ? `"IBM Plex Sans Arabic", "Noto Naskh Arabic", `
+      : ""}"IBM Plex Sans", -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     color: var(--ink);
     font-size: 11px;
     line-height: 1.45;

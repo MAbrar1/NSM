@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { APP_NAME, APP_DESCRIPTION } from "@/lib/constants";
 import { SessionProvider } from "@/components/providers/session-provider";
@@ -12,19 +11,15 @@ import { ThemeProvider } from "@/components/providers/theme-provider";
    All pages inherit these fonts, metadata, and providers.
    ═══════════════════════════════════════════════════════════════ */
 
-const inter = Inter({
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-sans",
-  weight: ["400", "500", "600", "700", "800"],
-});
-
-const jetbrainsMono = JetBrains_Mono({
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-mono",
-  weight: ["400", "500", "600"],
-});
+/* ─── UI font contract (Typography System Correction) ───
+   Every family the UI names ships as a local woff2 under /fonts and is
+   declared with plain @font-face at the top of globals.css — one
+   mechanism for the screen, the print windows and the receipt
+   rasterizer, all self-hosted from the app origin (no runtime network;
+   verified offline). Plain @font-face is used instead of next/font
+   because next/font registers faces under hashed names, so the literal
+   design-system names in globals.css ("IBM Plex Sans", "JetBrains
+   Mono") would never resolve. */
 
 export const metadata: Metadata = {
   title: {
@@ -86,7 +81,6 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${jetbrainsMono.variable}`}
       suppressHydrationWarning
     >
       <body className="antialiased">

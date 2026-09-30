@@ -405,6 +405,7 @@ export default function SalesReportPage() {
                 {
                   label: t("reports.totalRevenue"),
                   value: formatCurrency(data.summary.totalRevenue),
+                  numericValue: data.summary.totalRevenue,
                   icon: "cash" as StatIconName,
                   tone: "brand" as StatTone,
                   delta: prevSummary ? percentDelta(data.summary.totalRevenue, prevSummary.totalRevenue) : null,
@@ -414,6 +415,7 @@ export default function SalesReportPage() {
                 {
                   label: t("reports.netRevenue"),
                   value: formatCurrency(data.summary.netRevenue),
+                  numericValue: data.summary.netRevenue,
                   icon: "trend" as StatIconName,
                   tone: "success" as StatTone,
                   delta: prevSummary ? percentDelta(data.summary.netRevenue, prevSummary.netRevenue) : null,
@@ -423,6 +425,8 @@ export default function SalesReportPage() {
                 {
                   label: t("reports.totalOrders"),
                   value: String(data.summary.totalOrders),
+                  numericValue: data.summary.totalOrders,
+                  formatValue: (v: number) => String(Math.round(v)),
                   icon: "bag" as StatIconName,
                   tone: "info" as StatTone,
                   delta: prevSummary ? percentDelta(data.summary.totalOrders, prevSummary.totalOrders) : null,
@@ -431,6 +435,7 @@ export default function SalesReportPage() {
                 {
                   label: t("reports.avgOrderValue"),
                   value: formatCurrency(data.summary.averageOrderValue),
+                  numericValue: data.summary.averageOrderValue,
                   icon: "chart" as StatIconName,
                   tone: "warning" as StatTone,
                   delta: prevSummary ? percentDelta(data.summary.averageOrderValue, prevSummary.averageOrderValue) : null,
@@ -439,6 +444,8 @@ export default function SalesReportPage() {
               ] as Array<{
                 label: string;
                 value: string;
+                numericValue?: number;
+                formatValue?: (v: number) => string;
                 icon: StatIconName;
                 tone: StatTone;
                 delta: number | null;
@@ -450,6 +457,8 @@ export default function SalesReportPage() {
                 key={stat.label}
                 label={stat.label}
                 value={stat.value}
+                numericValue={stat.numericValue}
+                formatValue={stat.formatValue}
                 icon={stat.icon}
                 tone={stat.tone}
                 delta={stat.delta}

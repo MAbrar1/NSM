@@ -34,6 +34,7 @@ model User {
   purchaseOrders        PurchaseOrder[]
   auditLogs             AuditLog[]
   receiptPrintLogs      ReceiptPrintLog[]   @relation("ReceiptPrintLogUser")
+  paletteRecents        PaletteRecent[]
 
   @@index([email])
   @@index([role])
@@ -544,6 +545,10 @@ model StoreSettings {
   receiptHeader            String?
   receiptFooter            String?
   receiptQrPayment         String? // QR payload printed at the foot of POS receipts (empty => QR off)
+  // Receipt digit style: false (default) renders Western numerals 0-9 on
+  // receipts; true renders Urdu-Indic ۰-۹. Frozen into each receipt
+  // snapshot at issue time so reprints never change digit style.
+  receiptUrduDigits        Boolean  @default(false)
   lowStockThreshold        Int      @default(5)
   allowPublicRegistration  Boolean  @default(false) // Admin toggle; new signups open only when enabled (or when zero users exist)
   refundReasonPresets      String? // JSON array of custom refund-reason strings (empty => built-in localized presets)
@@ -572,6 +577,25 @@ model StoreSettings {
   // the same thing whether this is on or off.
   lowStockRunningLowAlerts Boolean  @default(false)
   updatedAt                DateTime @updatedAt
+}
+
+// ─── Command-palette recents (roaming) ──────────────────────
+// One row per palette destination a user has visited, kept so the
+// ⌘K "Recent" row follows the user across browsers and devices.
+// href is deduped per user (revisiting bumps, never duplicates) and
+// the server caps the list at MAX_RECENTS (5), mirroring the
+// localStorage store that remains the offline fallback.
+model PaletteRecent {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  href      String
+  label     String
+  icon      String
+  visitedAt DateTime @default(now())
+
+  @@unique([userId, href])
+  @@index([userId, visitedAt])
 }
 
 // ─── Printer profiles ────────────────────────────────────────

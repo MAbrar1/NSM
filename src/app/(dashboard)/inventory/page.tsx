@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { SortableTh } from "@/components/ui/sortable-th";
 import { StatCard } from "@/components/ui/stat-card";
 import { toast } from "@/stores/toast-store";
 import { downloadCsv, downloadExcel, sumFormulaCell, type ExcelSheet } from "@/lib/csv";
@@ -208,6 +209,40 @@ export default function InventoryPage() {
   const { t, dir } = useI18n();
   const [activeTab, setActiveTab] = React.useState<Tab>("stock");
   const [stockItems, setStockItems] = React.useState<StockItem[]>([]);
+
+  // Client-side sort over the loaded rows: this tab fetches the WHOLE
+  // filtered scope (all=true, no pager), so the full dataset is already in
+  // memory — the only correct place to sort it. Money/stock open high→low,
+  // text opens A→Z.
+  const [stockSort, setStockSort] = React.useState("product.asc");
+  const sortedStockItems = React.useMemo(() => {
+    const [field, order] = stockSort.split(".");
+    const sign = order === "asc" ? 1 : -1;
+    const rows = [...stockItems];
+    rows.sort((a, b) => {
+      switch (field) {
+        case "warehouse":
+          return sign * (a.warehouse.name ?? "").localeCompare(b.warehouse.name ?? "");
+        case "stock":
+          return sign * ((a.quantity ?? 0) - (b.quantity ?? 0));
+        case "available":
+          return sign * ((a.available ?? 0) - (b.available ?? 0));
+        case "value":
+          return sign * ((a.stockValue ?? 0) - (b.stockValue ?? 0));
+        default:
+          return sign * (a.product.name ?? "").localeCompare(b.product.name ?? "");
+      }
+    });
+    return rows;
+  }, [stockItems, stockSort]);
+  function toggleStockSort(field: string) {
+    setStockSort((s) => {
+      if (s.startsWith(`${field}.`)) {
+        return `${field}.${s.endsWith(".asc") ? "desc" : "asc"}`;
+      }
+      return `${field}.${field === "product" || field === "warehouse" ? "asc" : "desc"}`;
+    });
+  }
   const [movements, setMovements] = React.useState<Movement[]>([]);
   const [transfers, setTransfers] = React.useState<Transfer[]>([]);
   const [loading, setLoading] = React.useState(true);
@@ -964,11 +999,11 @@ export default function InventoryPage() {
             <table className={cn("inventory-table", "inventory-table-wide")}>
               <thead>
                 <tr>
-                  <th className={TH}>{t("inventory.product")}</th>
-                  <th className={TH}>{t("inventory.warehouse")}</th>
-                  <th className={cn(TH, "inv-th-end")}>{t("inventory.stock")}</th>
-                  <th className={cn(TH, "inv-th-end")}>{t("inventory.available")}</th>
-                  <th className={cn(TH, "inv-th-end")}>{t("inventory.value")}</th>
+                  <SortableTh bare label={t("inventory.product")} className={TH} active={stockSort.startsWith("product.")} order={stockSort.endsWith(".asc") ? "asc" : "desc"} onClick={() => toggleStockSort("product")} />
+                  <SortableTh bare label={t("inventory.warehouse")} className={TH} active={stockSort.startsWith("warehouse.")} order={stockSort.endsWith(".asc") ? "asc" : "desc"} onClick={() => toggleStockSort("warehouse")} />
+                  <SortableTh bare label={t("inventory.stock")} className={cn(TH, "inv-th-end")} align="end" active={stockSort.startsWith("stock.")} order={stockSort.endsWith(".asc") ? "asc" : "desc"} onClick={() => toggleStockSort("stock")} />
+                  <SortableTh bare label={t("inventory.available")} className={cn(TH, "inv-th-end")} align="end" active={stockSort.startsWith("available.")} order={stockSort.endsWith(".asc") ? "asc" : "desc"} onClick={() => toggleStockSort("available")} />
+                  <SortableTh bare label={t("inventory.value")} className={cn(TH, "inv-th-end")} align="end" active={stockSort.startsWith("value.")} order={stockSort.endsWith(".asc") ? "asc" : "desc"} onClick={() => toggleStockSort("value")} />
                   <th className={cn(TH, "inv-th-center")}>{t("inventory.status")}</th>
                   <th className={cn(TH, "inv-th-end")}>{t("inventory.actions")}</th>
                 </tr>
@@ -985,7 +1020,7 @@ export default function InventoryPage() {
                     <td colSpan={7} className="px-4 py-0">{stockEmpty}</td>
                   </tr>
                 ) : (
-                  stockItems.map((item) => {
+                  sortedStockItems.map((item) => {
                     const bar = stockBar(item);
                     const meta = statusMeta(item);
                     return (
@@ -1720,7 +1755,7 @@ export default function InventoryPage() {
               </div>
               {transferSearch.trim() && !selectedTransferProduct && transferResults.length > 0 && (
                 <div
-                  className="absolute inset-x-0 top-full z-10 mt-1 max-h-56 overflow-y-auto rounded-xl border border-neu-hairline bg-neu-bg shadow-lg"
+                  className="neu-popover absolute inset-x-0 top-full z-10 mt-1 max-h-56 overflow-y-auto rounded-xl border border-neu-hairline bg-neu-bg"
                   role="listbox"
                 >
                   {transferResults.map((p) => (

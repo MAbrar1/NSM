@@ -2395,9 +2395,10 @@ export default function POSPage() {
                     onInc={() => cart.updateItemQuantity(item.id, item.quantity + 1)}
                   />
 
-                  {/* Line total + actions */}
-                  <div className="w-20 shrink-0 text-end sm:w-24">
-                    <p className="pos-line-total text-sm font-bold text-neu-primary">{formatCurrency(item.total)}</p>
+                  {/* Line total + actions. min-w, not w-: a fixed 80/96px box
+                      elided large line totals into "…" in the cart. */}
+                  <div className="min-w-20 shrink-0 text-end sm:min-w-24">
+                    <p className="pos-line-total whitespace-nowrap text-sm font-bold text-neu-primary">{formatCurrency(item.total)}</p>
                     <div className="mt-0.5 flex items-center justify-end gap-1">
                       <button
                         onClick={() => openDiscount(item.id)}
@@ -2600,7 +2601,7 @@ export default function POSPage() {
                         onDec={() => cart.updateItemQuantity(item.id, Math.max(0, item.quantity - 1))}
                         onInc={() => cart.updateItemQuantity(item.id, item.quantity + 1)}
                       />
-                      <span className="pos-line-total w-16 shrink-0 text-end text-sm font-bold text-neu-primary">
+                      <span className="pos-line-total min-w-16 shrink-0 text-end text-sm font-bold text-neu-primary">
                         {formatCurrency(item.total)}
                       </span>
                       <button
@@ -2661,7 +2662,7 @@ export default function POSPage() {
       {/* ═══ PAYMENT MODAL ═══ */}
       {/* ═══ PROCESS PAYMENT ═══ */}
       <Dialog open={paymentOpen} onOpenChange={setPaymentOpen}>
-        <DialogContent size="md">
+        <DialogContent size="md" height="tall">
           <DialogHeader>
             <DialogTitle>{t("pos.processPayment")}</DialogTitle>
           </DialogHeader>

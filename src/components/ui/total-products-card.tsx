@@ -14,7 +14,8 @@ import { StatCard, type StatTone } from "@/components/ui/stat-card";
    appeared under two different names and the wording drifted. This
    component now owns the label, icon and sub-caption, so callers
    supply only the count (and a tone, since each page tints its grid
-   differently).
+   differently). The count ticks between refreshes via StatCard's
+   numericValue path.
    ═══════════════════════════════════════════════════════════════ */
 
 export function TotalProductsCard({ value, tone = "info" }: { value: number; tone?: StatTone }) {
@@ -23,6 +24,8 @@ export function TotalProductsCard({ value, tone = "info" }: { value: number; ton
     <StatCard
       label={t("dashboard.totalProducts")}
       value={String(value)}
+      numericValue={value}
+      formatValue={(v) => String(Math.round(v))}
       icon="box"
       tone={tone}
       sub={t("dashboard.activeInCatalog")}

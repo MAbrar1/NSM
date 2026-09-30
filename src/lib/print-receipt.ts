@@ -213,7 +213,7 @@ export function printRefundReceipts(
 <title>${esc(labels.refundedAmount)}</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif; color: #111; background: #fff; }
+  body { font-family: "IBM Plex Sans", "IBM Plex Sans Arabic", -apple-system, "Segoe UI", Roboto, Arial, sans-serif; color: #111; background: #fff; }
   .receipt { max-width: 420px; margin: 0 auto; padding: 24px 8px; page-break-after: always; }
   .receipt:last-child { page-break-after: auto; }
   .receipt-head { text-align: center; }

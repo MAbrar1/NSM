@@ -14,6 +14,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { renderReceiptBody, renderReceiptDocument, RECEIPT_TEMPLATE_VERSION } from "@/lib/print/receipt-template";
+import { buildReportHtml, type ReportDoc } from "@/lib/print-report";
 import { buildReceiptSnapshot, type ReceiptSnapshot } from "@/lib/receipt-snapshot";
 
 const fmt = (cents: number) => `Rs ${(cents / 100).toFixed(2)}`;
@@ -57,6 +58,7 @@ function snapshotWithItems(n: number): ReceiptSnapshot {
       storePhone: "0300-1234567",
       receiptHeader: null,
       receiptFooter: null,
+      receiptUrduDigits: false,
       receiptQrPayment: null,
     },
   });
@@ -95,11 +97,43 @@ test("no arithmetic in the template: amounts are formatter output", () => {
   assert.ok(!html.includes("500 /"), "no raw arithmetic");
 });
 
-test("Urdu/RTL render marks dir and uses the bundled font", () => {
+test("Urdu/RTL render marks dir and uses the bundled fonts", () => {
   const html = renderReceiptDocument(snapshotWithItems(1), { widthPx: 302, language: "ur" });
   assert.ok(html.includes('dir="rtl"'));
-  assert.ok(html.includes("Noto Nastaliq Urdu"));
-  assert.ok(html.includes("/fonts/noto-nastaliq-urdu-arabic-400-normal.woff2"), "local font, no network");
+  // Urdu body = Noto Naskh Arabic (bundled, local).
+  assert.ok(html.includes("Noto Naskh Arabic"));
+  assert.ok(html.includes("/fonts/noto-naskh-arabic-arabic-400-normal.woff2"), "local font, no network");
+  assert.ok(!html.includes("Jameel"), "no proprietary-derived font names");
+});
+
+test("SPEC: Nastaliq never rides the thermal receipt path", () => {
+  // The typography spec scopes Nastaliq to A4/A5 report letterheads;
+  // it rasterizes to mud at receipt sizes. The receipt document (which
+  // drives preview, measurement AND the thermal band raster) must not
+  // reference it at all.
+  for (const lang of ["en", "ur", "bilingual"] as const) {
+    const html = renderReceiptDocument(snapshotWithItems(1), { widthPx: 302, language: lang });
+    assert.ok(!html.includes("Nastaliq"), `${lang}: no Nastaliq @font-face on the thermal path`);
+    assert.ok(!html.includes("noto-nastaliq"), `${lang}: no Nastaliq font file on the thermal path`);
+  }
+  // The A4/A5 report renderer keeps the Nastaliq letterhead masthead.
+  const report = buildReportHtml(
+    { title: "T", columns: [{ label: "N", value: (r: { n: string }) => r.n }], rows: [{ n: "x" }] },
+    { storeName: "نئیجار سپر مارٹ" },
+    { rtl: true }
+  );
+  assert.ok(report.includes("Noto Nastaliq Urdu"), "Nastaliq stays on the A4/A5 masthead");
+});
+
+test("Urdu digits are opt-in: Western numerals by default", () => {
+  const snap = snapshotWithItems(1);
+  const western = renderReceiptDocument(snap, { widthPx: 302, language: "ur" });
+  assert.ok(!/[\u06F0-\u06F9]/.test(western), "default: Western numerals");
+  const urduDigits = renderReceiptDocument(
+    { ...snap, urduDigits: true },
+    { widthPx: 302, language: "ur" }
+  );
+  assert.match(urduDigits, /[\u06F0-\u06F9]/, "opt-in flag renders Urdu-Indic digits");
 });
 
 test("duplicate and fiscal blocks render on demand", () => {

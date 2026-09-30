@@ -25,6 +25,11 @@ export interface SortableThProps {
   align?: "start" | "center" | "end";
   onClick: () => void;
   className?: string;
+  /** Skip the built-in th/button styling (padding, uppercase, colours) and
+   *  inherit the host table's header classes via `className` — for tables
+   *  that style headers through a CSS class (e.g. `.inv-th`). The arrow
+   *  and aria-sort behaviour are unchanged. */
+  bare?: boolean;
 }
 
 export function SortableTh({
@@ -34,26 +39,40 @@ export function SortableTh({
   align = "start",
   onClick,
   className,
+  bare = false,
 }: SortableThProps) {
   return (
     <th
       scope="col"
       aria-sort={active ? (order === "asc" ? "ascending" : "descending") : "none"}
-      className={cn(
-        "whitespace-nowrap px-4 py-3",
-        align === "end" ? "text-end" : align === "center" ? "text-center" : "text-start",
-        className
-      )}
+      className={
+        bare
+          ? className
+          : cn(
+              "whitespace-nowrap px-4 py-3",
+              align === "end" ? "text-end" : align === "center" ? "text-center" : "text-start",
+              className
+            )
+      }
     >
       <button
         type="button"
         onClick={onClick}
-        className={cn(
-          "group/sort inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wider transition-colors neu-focus rounded",
-          active ? "text-neu-accent-ink" : "text-neu-faint hover:text-neu-primary",
-          align === "end" && "flex-row-reverse",
-          align === "center" && "flex-col"
-        )}
+        className={
+          bare
+            ? cn(
+                "group/sort inline-flex items-center gap-1 rounded neu-focus transition-colors",
+                align === "end" && "flex-row-reverse",
+                align === "center" && "flex-col",
+                active ? "text-neu-accent-ink" : "hover:text-neu-primary"
+              )
+            : cn(
+                "group/sort inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wider transition-colors neu-focus rounded",
+                active ? "text-neu-accent-ink" : "text-neu-faint hover:text-neu-primary",
+                align === "end" && "flex-row-reverse",
+                align === "center" && "flex-col"
+              )
+        }
       >
         {label}
         <svg

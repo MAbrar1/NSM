@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { SortableTh } from "@/components/ui/sortable-th";
+import { useTableRowNav } from "@/hooks/use-table-row-nav";
 import { toast } from "@/stores/toast-store";
 import { formatCurrency } from "@/lib/utils";
 import { readApiError } from "@/lib/api-error";
@@ -105,6 +106,16 @@ export default function PurchaseOrdersPage() {
   useStoreCurrency();
   const { t, dir } = useI18n();
   const [orders, setOrders] = React.useState<PurchaseOrder[]>([]);
+
+  // Keyboard row navigation — Enter opens the PO detail (same as a row
+  // click); index maps to the rendered (server-sorted) row order.
+  const tbodyRef = useTableRowNav<HTMLTableSectionElement>((i) => {
+    const po = orders[i];
+    if (po) {
+      setShowDetail(po);
+      setReceiveQuantities({});
+    }
+  });
   const [loading, setLoading] = React.useState(true);
   const [loadError, setLoadError] = React.useState(false);
   const [search, setSearch] = React.useState("");
@@ -605,7 +616,7 @@ export default function PurchaseOrdersPage() {
                 <th className="text-end px-4 py-3 font-medium text-neu-muted">{t("products.actions")}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neu-hairline">
+            <tbody ref={tbodyRef} className="divide-y divide-neu-hairline">
               {loading ? (
                 <TableSkeleton rows={5} />
               ) : loadError ? (
@@ -648,7 +659,7 @@ export default function PurchaseOrdersPage() {
                 orders.map((po) => {
                   const st = STATUS_MAP[po.status] ?? STATUS_MAP["draft"];
                   return (
-                    <tr key={po.id} className="hover:bg-neu-sunken transition-colors cursor-pointer" onClick={() => { setShowDetail(po); setReceiveQuantities({}); }}>
+                    <tr key={po.id} data-nav-row data-nav-label={`${po.orderNumber} ${po.supplier.name}`} className="hover:bg-neu-sunken transition-colors cursor-pointer" onClick={() => { setShowDetail(po); setReceiveQuantities({}); }}>
                       <td className="px-4 py-3 font-medium text-neu-primary">{po.orderNumber}</td>
                       <td className="px-4 py-3 text-neu-muted">{po.supplier.name}</td>
                       <td className="px-4 py-3 text-neu-faint hidden md:table-cell">{new Date(po.createdAt).toLocaleDateString()}</td>
@@ -690,11 +701,6 @@ export default function PurchaseOrdersPage() {
         <DialogContent size="xl" className="max-w-3xl">
           <DialogHeader>
             <DialogTitle>{t("purchaseOrders.createPO")}</DialogTitle>
-            <button onClick={() => setShowCreate(false)} aria-label={t("common.close")} className="rounded-lg p-1 text-neu-faint hover:bg-neu-sunken">
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
           </DialogHeader>
           <DialogBody className="space-y-4">
               {/* Supplier & Warehouse */}

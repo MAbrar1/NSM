@@ -36,6 +36,7 @@ export default function ReceiptSettingsPage() {
   const [receiptHeader, setReceiptHeader] = React.useState("");
   const [receiptFooter, setReceiptFooter] = React.useState("");
   const [receiptQrPayment, setReceiptQrPayment] = React.useState("");
+  const [receiptUrduDigits, setReceiptUrduDigits] = React.useState(false);
   const [lowStockThreshold, setLowStockThreshold] = React.useState(5);
   const [taxRate, setTaxRate] = React.useState(0);
   const [taxInclusive, setTaxInclusive] = React.useState(false);
@@ -55,6 +56,7 @@ export default function ReceiptSettingsPage() {
         setReceiptHeader(s.receiptHeader ?? "");
         setReceiptFooter(s.receiptFooter ?? "");
         setReceiptQrPayment(s.receiptQrPayment ?? "");
+        setReceiptUrduDigits(s.receiptUrduDigits ?? false);
         setLowStockThreshold(s.lowStockThreshold ?? 5);
         setTaxRate(s.taxRate ?? 0);
         setTaxInclusive(s.taxInclusive ?? false);
@@ -84,6 +86,7 @@ export default function ReceiptSettingsPage() {
           receiptHeader,
           receiptFooter,
           receiptQrPayment,
+          receiptUrduDigits,
           lowStockThreshold,
           taxRate,
           taxInclusive,
@@ -212,6 +215,25 @@ export default function ReceiptSettingsPage() {
                 onChange={(e) => { setReceiptQrPayment(e.target.value); setDirty(true); }}
                 hint={t("settings.receiptQrHint")}
               />
+              {/* Urdu-Indic digits opt-in — money columns stay Western by
+                  default (standard Pakistani retail convention). */}
+              <label className="flex cursor-pointer items-start justify-between gap-3 rounded-xl border border-neu-hairline p-3">
+                <span className="min-w-0">
+                  <span className="block text-sm font-medium text-neu-primary">
+                    {t("settings.receiptUrduDigits")}
+                  </span>
+                  <span className="mt-0.5 block text-xs text-neu-faint">
+                    {t("settings.receiptUrduDigitsHint")}
+                  </span>
+                </span>
+                <input
+                  type="checkbox"
+                  role="switch"
+                  checked={receiptUrduDigits}
+                  onChange={(e) => { setReceiptUrduDigits(e.target.checked); setDirty(true); }}
+                  className="neu-focus mt-0.5 h-5 w-5 shrink-0 accent-[var(--neu-accent-solid)]"
+                />
+              </label>
               <Input
                 label={t("settings.lowStockThreshold")}
                 type="number"

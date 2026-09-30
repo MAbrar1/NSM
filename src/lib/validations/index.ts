@@ -189,6 +189,9 @@ export const storeSettingsSchema = z.object({
   // QR payment payload printed at the foot of POS receipts (e.g. a payment
   // link or wallet deep-link). Empty string => QR line is disabled.
   receiptQrPayment: z.string().max(500).optional().or(z.literal("")),
+  // Receipt digit style: false (default) = Western numerals 0-9 (standard
+  // Pakistani retail convention); true = Urdu-Indic ۰-۹ on receipts.
+  receiptUrduDigits: z.boolean().default(false),
   lowStockThreshold: z.number().int().min(0).default(5),
   allowPublicRegistration: z.boolean().default(false),
   // JSON array of custom refund-reason strings; null/"" means "use the

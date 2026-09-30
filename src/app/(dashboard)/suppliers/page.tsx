@@ -11,7 +11,6 @@ import { readApiError } from "@/lib/api-error";
 import {
   Dialog,
   DialogBody,
-  DialogClose,
   DialogContent,
   DialogFooter,
   DialogHeader,
@@ -26,6 +25,7 @@ import { ExportMenu, type ExportColumn } from "@/components/export/export-menu";
 import { ImportResultDialog, type ImportSummary } from "@/components/import/import-result-dialog";
 import { fetchReportSettings, printReport } from "@/lib/print-report";
 import { SortableTh } from "@/components/ui/sortable-th";
+import { useTableRowNav } from "@/hooks/use-table-row-nav";
 
 /* ═══════════════════════════════════════════════════════════════
    SUPPLIERS PAGE
@@ -94,6 +94,14 @@ export default function SuppliersPage() {
   const [search, setSearch] = React.useState("");
   const [page, setPage] = React.useState(1);
   const [totalPages, setTotalPages] = React.useState(1);
+
+  // Keyboard row navigation (roving tabindex + arrows/type-ahead); Enter
+  // opens the same detail dialog a click does. Index maps 1:1 to the
+  // rendered rows, which follow the (server-sorted) array order.
+  const tbodyRef = useTableRowNav<HTMLTableSectionElement>((i) => {
+    const s = suppliers[i];
+    if (s) setShowDetail(s);
+  });
 
   // Server-side sort in the shared "field.order" wire format — the API
   // clamps it to its allow-list, so a hand-edited query can never throw
@@ -407,7 +415,7 @@ export default function SuppliersPage() {
                 <th className="text-end px-4 py-3 font-medium text-neu-muted">{t("products.actions")}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neu-hairline">
+            <tbody ref={tbodyRef} className="divide-y divide-neu-hairline">
               {loading ? (
                 <TableSkeleton rows={5} />
               ) : loadError ? (
@@ -448,7 +456,7 @@ export default function SuppliersPage() {
                 </tr>
               ) : (
                 suppliers.map((s) => (
-                  <tr key={s.id} className="hover:bg-neu-sunken transition-colors cursor-pointer" onClick={() => setShowDetail(s)}>
+                  <tr key={s.id} data-nav-row data-nav-label={s.name} className="hover:bg-neu-sunken transition-colors cursor-pointer" onClick={() => setShowDetail(s)}>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-neu-accent-wash text-sm font-semibold text-neu-accent-ink-strong">
@@ -512,13 +520,6 @@ export default function SuppliersPage() {
           <form onSubmit={(e) => { e.preventDefault(); handleSave(); }} className="flex min-h-0 flex-1 flex-col">
             <DialogHeader>
               <DialogTitle>{editing ? t("suppliers.editSupplier") : t("suppliers.addSupplier")}</DialogTitle>
-              <DialogClose asChild>
-                <button aria-label={t("common.close")} className="rounded-lg p-1 text-neu-faint hover:bg-neu-sunken">
-                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </DialogClose>
             </DialogHeader>
             <DialogBody className="space-y-4">
               <Input
@@ -595,16 +596,9 @@ export default function SuppliersPage() {
 
       {/* ═══ DETAIL MODAL ═══ */}
       <Dialog open={Boolean(showDetail)} onOpenChange={(o) => !o && setShowDetail(null)}>
-        <DialogContent size="lg">
+        <DialogContent size="lg" height="tall">
           <DialogHeader>
             <DialogTitle>{showDetail?.name}</DialogTitle>
-            <DialogClose asChild>
-              <button aria-label={t("common.close")} className="rounded-lg p-1 text-neu-faint hover:bg-neu-sunken">
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </DialogClose>
           </DialogHeader>
           {showDetail && (
             <DialogBody className="space-y-4">

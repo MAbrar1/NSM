@@ -21,6 +21,9 @@ import {
   RECEIPT_FONT_PRELOADS,
   URDU_FONT_FAMILY,
   URDU_FONT_URL,
+  URDU_FONT_BOLD_URL,
+  LATIN_FONT_FAMILY,
+  LATIN_FONT_URL,
   type TemplateRenderOptions,
 } from "./receipt-template";
 import type { ReceiptSnapshot } from "@/lib/receipt-snapshot";
@@ -56,16 +59,20 @@ async function decodeImages(container: HTMLElement): Promise<void> {
 }
 
 /**
- * Attach a @font-face for the bundled Urdu font if the document does
- * not already declare one (the off-screen container may live in a
- * bare measurement document).
+ * Attach the @font-face set the receipt template uses if the document
+ * does not already declare them (the off-screen container may live in
+ * a bare measurement document that never loaded fonts.css).
  */
 function ensureUrduFontFace(): void {
   if (typeof document === "undefined") return;
   if (document.querySelector("style[data-nsm-receipt-font]")) return;
   const style = document.createElement("style");
   style.setAttribute("data-nsm-receipt-font", "1");
-  style.textContent = `@font-face{font-family:"${URDU_FONT_FAMILY}";src:url("${URDU_FONT_URL}") format("woff2");font-weight:400;font-display:block;}`;
+  style.textContent = [
+    `@font-face{font-family:"${URDU_FONT_FAMILY}";src:url("${URDU_FONT_URL}") format("woff2");font-weight:400;font-display:block;}`,
+    `@font-face{font-family:"${URDU_FONT_FAMILY}";src:url("${URDU_FONT_BOLD_URL}") format("woff2");font-weight:700;font-display:block;}`,
+    `@font-face{font-family:"${LATIN_FONT_FAMILY}";src:url("${LATIN_FONT_URL}") format("woff2");font-weight:400;font-display:block;}`,
+  ].join("");
   document.head.appendChild(style);
 }
 
