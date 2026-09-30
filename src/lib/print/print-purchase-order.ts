@@ -1,5 +1,5 @@
 import { formatCurrencyBase } from "@/lib/utils";
-import { PRINT_BRAND, PRINT_DARK, printCssVars, PRINT_SCHEME_SCRIPT, PAGE_MEASURE_SCRIPT, PRINT_RULER_CSS } from "@/lib/print-brand";
+import { PRINT_BRAND, PRINT_DARK, printCssVars, PRINT_SCHEME_SCRIPT, PAGE_MEASURE_SCRIPT, PRINT_RULER_CSS } from "@/lib/print/print-brand";
 
 /* ═══════════════════════════════════════════════════════════════
    PURCHASE ORDER PRINTER

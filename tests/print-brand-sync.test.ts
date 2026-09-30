@@ -2,7 +2,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { PRINT_BRAND, PRINT_DARK, printCssVars, PRINT_SCHEME_SCRIPT, PRINT_SCHEME_STORAGE_KEY } from "../src/lib/print-brand";
+import { PRINT_BRAND, PRINT_DARK, printCssVars, PRINT_SCHEME_SCRIPT, PRINT_SCHEME_STORAGE_KEY } from "../src/lib/print/print-brand";
 
 /* ═══════════════════════════════════════════════════════════════
    PRINT-BRAND SYNC
@@ -109,12 +109,12 @@ describe("print brand sync", () => {
   });
 
   it("print-report.ts contains no stale teal brand hexes", () => {
-    const src = readFileSync(join(process.cwd(), "src", "lib", "print-report.ts"), "utf8");
+    const src = readFileSync(join(process.cwd(), "src", "lib", "print", "print-report.ts"), "utf8");
     assert.doesNotMatch(src, /#0f766e|#115e59/i, "stale teal palette crept back into print-report");
   });
 
   it("print-purchase-order.ts contains no stale teal brand hexes", () => {
-    const src = readFileSync(join(process.cwd(), "src", "lib", "print-purchase-order.ts"), "utf8");
+    const src = readFileSync(join(process.cwd(), "src", "lib", "print", "print-purchase-order.ts"), "utf8");
     assert.doesNotMatch(src, /#0f766e|#115e59/i, "stale teal palette crept back into print-purchase-order");
   });
 
@@ -131,7 +131,7 @@ describe("print brand sync", () => {
   });
 
   it("print engines declare the dark-scheme override and print-light guard", () => {
-    for (const file of ["print-report.ts", "print-purchase-order.ts"]) {
+    for (const file of ["print/print-report.ts", "print/print-purchase-order.ts"]) {
       const src = readFileSync(join(process.cwd(), "src", "lib", file), "utf8");
       assert.ok(src.includes('[data-scheme="dark"]'), `${file} must style the dark scheme`);
       assert.ok(src.includes("@media print"), `${file} must keep a @media print guard`);
@@ -153,7 +153,7 @@ describe("print brand sync", () => {
   });
 
   it("print engines resolve the system scheme via prefers-color-scheme", () => {
-    for (const file of ["print-report.ts", "print-purchase-order.ts"]) {
+    for (const file of ["print/print-report.ts", "print/print-purchase-order.ts"]) {
       const src = readFileSync(join(process.cwd(), "src", "lib", file), "utf8");
       assert.match(src, /@media \(prefers-color-scheme: dark\)/, `${file} must resolve system preference`);
       assert.match(src, /\[data-scheme="auto"\]/, `${file} must style the auto (system) state`);
@@ -163,13 +163,13 @@ describe("print brand sync", () => {
   });
 
   it("print engines embed the page-measurement handshake", () => {
-    const brand = readFileSync(join(process.cwd(), "src", "lib", "print-brand.ts"), "utf8");
+    const brand = readFileSync(join(process.cwd(), "src", "lib", "print", "print-brand.ts"), "utf8");
     // single source: the script lives in print-brand, engines only reference it
     const decl = brand.match(/export const PAGE_MEASURE_SCRIPT/g) ?? [];
     assert.equal(decl.length, 1, "PAGE_MEASURE_SCRIPT must be declared exactly once (print-brand)");
     const rulerDecl = brand.match(/export const PRINT_RULER_CSS/g) ?? [];
     assert.equal(rulerDecl.length, 1, "PRINT_RULER_CSS must be declared exactly once (print-brand)");
-    for (const file of ["print-report.ts", "print-purchase-order.ts"]) {
+    for (const file of ["print/print-report.ts", "print/print-purchase-order.ts"]) {
       const src = readFileSync(join(process.cwd(), "src", "lib", file), "utf8");
       assert.ok(src.includes("PAGE_MEASURE_SCRIPT"), `${file} must embed the shared measurement script`);
       assert.doesNotMatch(src, /const PAGE_MEASURE_SCRIPT/, `${file} must not redeclare a local copy`);
@@ -199,7 +199,7 @@ describe("print brand sync", () => {
   });
 
   it("scheme choice mirrors to the cookie fallback", () => {
-    const brand = readFileSync(join(process.cwd(), "src", "lib", "print-brand.ts"), "utf8");
+    const brand = readFileSync(join(process.cwd(), "src", "lib", "print", "print-brand.ts"), "utf8");
     assert.match(brand, /PRINT_SCHEME_COOKIE = "najjar-print-scheme"/, "cookie name must be a shared constant");
     const modal = readFileSync(join(process.cwd(), "src", "components", "print", "print-preview.tsx"), "utf8");
     assert.match(modal, /document\.cookie = `\$\{PRINT_SCHEME_COOKIE\}=/, "toggle must write the cookie through");

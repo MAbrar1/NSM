@@ -19,7 +19,7 @@ import { StatCard } from "@/components/ui/stat-card";
 import { toast } from "@/stores/toast-store";
 import { downloadCsv, downloadExcel, sumFormulaCell, type ExcelSheet } from "@/lib/files/csv";
 import { ExportMenu, type ExportColumn } from "@/components/export/export-menu";
-import { fetchReportSettings, printReport } from "@/lib/print-report";
+import { fetchReportSettings, printReport } from "@/lib/print/print-report";
 import { useHardwareScanner } from "@/hooks/use-hardware-scanner";
 import {
   Dialog,

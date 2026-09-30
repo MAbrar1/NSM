@@ -198,8 +198,8 @@ test("buildXlsx: XML escaping and illegal control chars stripped", () => {
 });
 
 test("print engines: buildReportHtml / buildPurchaseOrderHtml are pure and structured", async () => {
-  const { buildReportHtml } = await import("@/lib/print-report");
-  const { buildPurchaseOrderHtml } = await import("@/lib/print-purchase-order");
+  const { buildReportHtml } = await import("@/lib/print/print-report");
+  const { buildPurchaseOrderHtml } = await import("@/lib/print/print-purchase-order");
 
   const settings = { storeName: "Test Mart", storePhone: "+92 300 0000000" };
   const html = buildReportHtml(

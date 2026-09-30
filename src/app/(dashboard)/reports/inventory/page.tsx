@@ -14,7 +14,7 @@ import { StatCard } from "@/components/ui/stat-card";
 import { TotalProductsCard } from "@/components/ui/total-products-card";
 import { downloadCsv, downloadExcel, type ExcelSheet, type XlsxCell } from "@/lib/files/csv";
 import { ExportMenu, type ExportColumn } from "@/components/export/export-menu";
-import { fetchReportSettings, printReport } from "@/lib/print-report";
+import { fetchReportSettings, printReport } from "@/lib/print/print-report";
 import { toast } from "@/stores/toast-store";
 
 /* ═══════════════════════════════════════════════════════════════

@@ -7,7 +7,7 @@ import { ExportMenu, type ExportColumn } from "@/components/export/export-menu";
 import { ImportResultDialog, type ImportSummary } from "@/components/import/import-result-dialog";
 import { displayMajorToBaseCents, baseCentsToDisplayMajorStr } from "@/lib/money/currency-core";
 import { ensureRates, peekRates } from "@/lib/money/currency";
-import { printCustomerStatement } from "@/lib/print-customer-statement";
+import { printCustomerStatement } from "@/lib/print/print-customer-statement";
 import { useI18n } from "@/components/providers/i18n-provider";
 import { useStoreCurrency } from "@/components/providers/currency-provider";
 import { PageHeader } from "@/components/layout/page-header";

@@ -19,8 +19,8 @@ import { WHOLE_UNITS } from "@/lib/products/units";
 import { downloadCsv } from "@/lib/files/csv";
 import { ExportMenu, type ExportColumn } from "@/components/export/export-menu";
 import { ImportResultDialog, type ImportSummary } from "@/components/import/import-result-dialog";
-import { fetchReportSettings, printReport } from "@/lib/print-report";
-import { previewPurchaseOrder, printPurchaseOrder } from "@/lib/print-purchase-order";
+import { fetchReportSettings, printReport } from "@/lib/print/print-report";
+import { previewPurchaseOrder, printPurchaseOrder } from "@/lib/print/print-purchase-order";
 import { useHardwareScanner } from "@/hooks/use-hardware-scanner";
 import {
   Dialog,

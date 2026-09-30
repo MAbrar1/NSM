@@ -14,7 +14,7 @@ import {
   type XlsxCell,
   type XlsxStyle,
 } from "@/lib/files/csv";
-import { fetchReportSettings, previewReport, printReport, type PrintColumn } from "@/lib/print-report";
+import { fetchReportSettings, previewReport, printReport, type PrintColumn } from "@/lib/print/print-report";
 
 /* ═══════════════════════════════════════════════════════════════
    SHARED EXPORT MENU

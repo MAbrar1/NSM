@@ -11,7 +11,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { useI18n } from "@/components/providers/i18n-provider";
 import { downloadCsv, downloadExcel, sumFormulaCell, type ExcelSheet } from "@/lib/files/csv";
 import { ExportMenu, type ExportColumn } from "@/components/export/export-menu";
-import { fetchReportSettings, printReport } from "@/lib/print-report";
+import { fetchReportSettings, printReport } from "@/lib/print/print-report";
 import { useStoreCurrency } from "@/components/providers/currency-provider";
 import { StatCard, type StatIconName, type StatTone } from "@/components/ui/stat-card";
 import { toast } from "@/stores/toast-store";

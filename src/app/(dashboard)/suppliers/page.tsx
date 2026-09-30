@@ -23,7 +23,7 @@ import { cn, formatCurrency } from "@/lib/utils";
 import { downloadCsv } from "@/lib/files/csv";
 import { ExportMenu, type ExportColumn } from "@/components/export/export-menu";
 import { ImportResultDialog, type ImportSummary } from "@/components/import/import-result-dialog";
-import { fetchReportSettings, printReport } from "@/lib/print-report";
+import { fetchReportSettings, printReport } from "@/lib/print/print-report";
 import { SortableTh } from "@/components/ui/sortable-th";
 import { useTableRowNav } from "@/hooks/use-table-row-nav";
 

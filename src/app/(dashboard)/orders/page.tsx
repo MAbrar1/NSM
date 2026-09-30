@@ -3,7 +3,7 @@
 import * as React from "react";
 import { formatCurrency, formatDate, formatTime, cn } from "@/lib/utils";
 import { ExportMenu, type ExportColumn } from "@/components/export/export-menu";
-import { printReport, fetchReportSettings } from "@/lib/print-report";
+import { printReport, fetchReportSettings } from "@/lib/print/print-report";
 import { lineQtyLabel, trimNumber, WHOLE_UNITS } from "@/lib/products/units";
 import { useI18n } from "@/components/providers/i18n-provider";
 import { useStoreCurrency } from "@/components/providers/currency-provider";

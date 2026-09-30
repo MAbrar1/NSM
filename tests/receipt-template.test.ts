@@ -14,7 +14,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { renderReceiptBody, renderReceiptDocument, RECEIPT_TEMPLATE_VERSION } from "@/lib/print/receipt-template";
-import { buildReportHtml, type ReportDoc } from "@/lib/print-report";
+import { buildReportHtml, type ReportDoc } from "@/lib/print/print-report";
 import { buildReceiptSnapshot, type ReceiptSnapshot } from "@/lib/receipts/receipt-snapshot";
 
 const fmt = (cents: number) => `Rs ${(cents / 100).toFixed(2)}`;
