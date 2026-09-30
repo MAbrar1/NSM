@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { z } from "zod";
 import { requirePermission } from "@/lib/api/api-auth";
 import { logAudit } from "@/lib/audit-log";
-import { creditStock } from "@/lib/inventory-service";
+import { creditStock } from "@/lib/inventory/inventory-service";
 
 /* ═══════════════════════════════════════════════════════════════
    TRANSFER STATUS UPDATE

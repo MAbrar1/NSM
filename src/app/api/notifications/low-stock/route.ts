@@ -5,7 +5,7 @@ import {
   scanLowStock,
   deliverLowStockAlerts,
   type StockAlertCandidate,
-} from "@/lib/low-stock";
+} from "@/lib/inventory/low-stock";
 
 /* ═══════════════════════════════════════════════════════════════
    LOW-STOCK NOTIFICATION TRIGGER

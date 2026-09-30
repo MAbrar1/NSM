@@ -18,7 +18,7 @@
    per (product, warehouse) by a persisted cooldown timestamp.
    ═══════════════════════════════════════════════════════════════ */
 
-import { runLowStockNotifier } from "@/lib/low-stock";
+import { runLowStockNotifier } from "@/lib/inventory/low-stock";
 import { runTrackedJob } from "@/lib/job-status";
 
 /** Job-registry name for the low-stock scan. */

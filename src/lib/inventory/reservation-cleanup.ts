@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { releaseStaleReservation } from "@/lib/inventory-service";
+import { releaseStaleReservation } from "@/lib/inventory/inventory-service";
 
 /* ═══════════════════════════════════════════════════════════════
    STOCK RESERVATION CLEANUP (shared engine)

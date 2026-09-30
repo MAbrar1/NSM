@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { apiError } from "@/lib/api/api-errors";
-import { runLowStockNotifier } from "@/lib/low-stock";
+import { runLowStockNotifier } from "@/lib/inventory/low-stock";
 import { requirePermission } from "@/lib/api/api-auth";
 
 /* ═══════════════════════════════════════════════════════════════

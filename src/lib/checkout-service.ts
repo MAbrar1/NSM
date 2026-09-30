@@ -2,7 +2,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { logAudit } from "@/lib/audit-log";
 import { retryOnUniqueConflict } from "@/lib/retry";
-import { triggerLowStockScan } from "@/lib/low-stock-scheduler";
+import { triggerLowStockScan } from "@/lib/inventory/low-stock-scheduler";
 import { loyaltyPointsForSpend } from "@/lib/customers/earn-rate";
 import {
   resolvePayment,
@@ -15,7 +15,7 @@ import {
   resolveLoyaltyRedemption,
 } from "@/lib/checkout-math";
 import { applySaleToCustomer } from "@/lib/customers/customer-balance";
-import { deductForSale } from "@/lib/inventory-service";
+import { deductForSale } from "@/lib/inventory/inventory-service";
 import { revenueStatuses } from "@/lib/report-math";
 import {
   allocateReceiptNo,

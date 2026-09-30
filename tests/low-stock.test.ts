@@ -10,8 +10,8 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { classifyRestockSoon, classifyStock, DEFAULT_COOLDOWN_HOURS } from "@/lib/low-stock";
-import { needsRestock, stockStatus } from "@/lib/stock-status";
+import { classifyRestockSoon, classifyStock, DEFAULT_COOLDOWN_HOURS } from "@/lib/inventory/low-stock";
+import { needsRestock, stockStatus } from "@/lib/inventory/stock-status";
 
 // Product with min = 10
 const MIN = 10;

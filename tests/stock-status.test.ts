@@ -9,7 +9,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { classifyStock } from "@/lib/low-stock";
+import { classifyStock } from "@/lib/inventory/low-stock";
 import {
   stockStatus,
   sellableUnits,
@@ -19,7 +19,7 @@ import {
   needsRestock,
   summarizeLowStock,
   stockStatusForRow,
-} from "@/lib/stock-status";
+} from "@/lib/inventory/stock-status";
 
 test("stockStatus: zero or negative is out", () => {
   assert.equal(stockStatus(0, 5), "out");

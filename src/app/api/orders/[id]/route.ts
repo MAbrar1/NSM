@@ -6,7 +6,7 @@ import { requirePermission } from "@/lib/api/api-auth";
 import { logAudit } from "@/lib/audit-log";
 import { processRefund, refundSchema, RefundError } from "@/lib/refunds/refund-service";
 import { releaseOrderCredit } from "@/lib/customers/customer-balance";
-import { creditStock } from "@/lib/inventory-service";
+import { creditStock } from "@/lib/inventory/inventory-service";
 
 /* ═══════════════════════════════════════════════════════════════
    SINGLE ORDER API

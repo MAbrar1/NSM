@@ -10,7 +10,7 @@ import {
   type RefundableLine,
 } from "@/lib/refunds/refund-math";
 import { applyRefundToCustomer } from "@/lib/customers/customer-balance";
-import { creditStock } from "@/lib/inventory-service";
+import { creditStock } from "@/lib/inventory/inventory-service";
 
 /* ═══════════════════════════════════════════════════════════════
    REFUND SERVICE

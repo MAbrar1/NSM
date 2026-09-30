@@ -10,7 +10,7 @@
    guard prevents overlapping sweeps.
    ═══════════════════════════════════════════════════════════════ */
 
-import { releaseStaleReservations } from "@/lib/reservation-cleanup";
+import { releaseStaleReservations } from "@/lib/inventory/reservation-cleanup";
 import { runTrackedJob } from "@/lib/job-status";
 
 /** Job-registry name for the stale-reservation cleanup. */

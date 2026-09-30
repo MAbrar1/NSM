@@ -4,7 +4,7 @@ import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { requirePermission } from "@/lib/api/api-auth";
 import { parsePagination } from "@/lib/api/pagination";
-import { sumBaseStock, sumStockRows, stockStatus } from "@/lib/stock-status";
+import { sumBaseStock, sumStockRows, stockStatus } from "@/lib/inventory/stock-status";
 import { barcodeCandidates } from "@/lib/barcode";
 
 /* ═══════════════════════════════════════════════════════════════

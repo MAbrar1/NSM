@@ -19,7 +19,7 @@ import { apiError } from "@/lib/api/api-errors";
 import { db } from "@/lib/db";
 import { requirePermission } from "@/lib/api/api-auth";
 import { parsePagination } from "@/lib/api/pagination";
-import { sumBaseStock, stockStatus, sellableUnits } from "@/lib/stock-status";
+import { sumBaseStock, stockStatus, sellableUnits } from "@/lib/inventory/stock-status";
 import { barcodeCandidates } from "@/lib/barcode";
 
 export async function GET(request: NextRequest) {

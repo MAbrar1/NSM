@@ -22,7 +22,7 @@
    ═══════════════════════════════════════════════════════════════ */
 
 import { db } from "@/lib/db";
-import { sellableUnits } from "@/lib/stock-status";
+import { sellableUnits } from "@/lib/inventory/stock-status";
 import { sendLowStockAlert, type LowStockAlertPayload } from "@/lib/notifications/notify";
 
 export type AlertSeverity = "critical" | "warning" | "info";

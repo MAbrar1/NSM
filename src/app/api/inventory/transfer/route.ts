@@ -3,7 +3,7 @@ import { apiError, validationError } from "@/lib/api/api-errors";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { requirePermission } from "@/lib/api/api-auth";
-import { debitStock } from "@/lib/inventory-service";
+import { debitStock } from "@/lib/inventory/inventory-service";
 
 /* ═══════════════════════════════════════════════════════════════
    STOCK TRANSFER API

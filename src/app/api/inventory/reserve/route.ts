@@ -3,7 +3,7 @@ import { apiError, validationError } from "@/lib/api/api-errors";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { requirePermission } from "@/lib/api/api-auth";
-import { reserveStock, releaseReservation } from "@/lib/inventory-service";
+import { reserveStock, releaseReservation } from "@/lib/inventory/inventory-service";
 
 /* ═══════════════════════════════════════════════════════════════
    STOCK RESERVATION API

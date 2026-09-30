@@ -3,8 +3,8 @@ import { apiError } from "@/lib/api/api-errors";
 import { db } from "@/lib/db";
 import { requirePermission } from "@/lib/api/api-auth";
 import { logAudit } from "@/lib/audit-log";
-import { triggerLowStockScan } from "@/lib/low-stock-scheduler";
-import { creditStock } from "@/lib/inventory-service";
+import { triggerLowStockScan } from "@/lib/inventory/low-stock-scheduler";
+import { creditStock } from "@/lib/inventory/inventory-service";
 
 /* ═══════════════════════════════════════════════════════════════
    SINGLE PURCHASE ORDER API
