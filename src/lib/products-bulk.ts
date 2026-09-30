@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { logAudit } from "@/lib/audit-log";
-import { majorToCents } from "@/lib/money";
+import { majorToCents } from "@/lib/money/money";
 
 /* ═══════════════════════════════════════════════════════════════
    PRODUCTS BULK SERVICE

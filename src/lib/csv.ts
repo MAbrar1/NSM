@@ -142,7 +142,7 @@ export function parseCsv(text: string): string[][] {
    `parseMoneyToCents` callers and tests keep their import path while
    the implementation lives in exactly one place. Pure and dependency-
    free, so it stays safe in the browser bundle. */
-export { parseMoneyToCents } from "@/lib/money";
+export { parseMoneyToCents } from "@/lib/money/money";
 
 /* ════════════════════════════════════════════════════════════════
    EXCEL (.xlsx) WRITER — dependency-free

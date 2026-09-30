@@ -4,8 +4,8 @@ import { useSession } from "next-auth/react";
 
 import * as React from "react";
 import { cn, formatCurrency } from "@/lib/utils";
-import { displayMajorToBaseCents, baseCentsToDisplayMajorStr, isDisplayConverted, getDisplayCurrency } from "@/lib/currency-core";
-import { ensureRates, peekRates } from "@/lib/currency";
+import { displayMajorToBaseCents, baseCentsToDisplayMajorStr, isDisplayConverted, getDisplayCurrency } from "@/lib/money/currency-core";
+import { ensureRates, peekRates } from "@/lib/money/currency";
 import type { CartItem } from "@/types";
 import { useCartStore } from "@/stores/cart-store";
 import { useWarehouseStore } from "@/stores/warehouse-store";
@@ -43,7 +43,7 @@ import { SortableTh } from "@/components/ui/sortable-th";
 import { useModalFocus } from "@/hooks/use-modal-focus";
 import { CustomerPicker, type PickedCustomer } from "@/components/pos/customer-picker";
 import { useStockSync, broadcastStockChange } from "@/hooks/use-stock-sync";
-import { resolvePayment, isPartialPaymentAllowed } from "@/lib/payment-math";
+import { resolvePayment, isPartialPaymentAllowed } from "@/lib/money/payment-math";
 
 /* ═══════════════════════════════════════════════════════════════
    POS (POINT OF SALE) PAGE

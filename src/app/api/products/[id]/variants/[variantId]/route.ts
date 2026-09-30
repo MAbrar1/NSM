@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { apiError } from "@/lib/api-errors";
 import { db } from "@/lib/db";
 import { requirePermission } from "@/lib/api-auth";
-import { majorToCents } from "@/lib/money";
+import { majorToCents } from "@/lib/money/money";
 
 /* ═══════════════════════════════════════════════════════════════
    SINGLE PRODUCT VARIANT API

@@ -8,7 +8,7 @@ import {
   resolvePayment,
   allocateSettlement,
   orderStatusAfterSettlement,
-} from "@/lib/payment-math";
+} from "@/lib/money/payment-math";
 import {
   reconcileCheckoutLine,
   reconcileCartTotals,

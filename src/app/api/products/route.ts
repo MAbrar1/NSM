@@ -6,7 +6,7 @@ import { requirePermission } from "@/lib/api-auth";
 import { logAudit } from "@/lib/audit-log";
 import { parsePagination } from "@/lib/pagination";
 import { sumBaseStock, stockStatus } from "@/lib/stock-status";
-import { majorToCents } from "@/lib/money";
+import { majorToCents } from "@/lib/money/money";
 import { ensureStockRow } from "@/lib/inventory-service";
 
 /* ═══════════════════════════════════════════════════════════════

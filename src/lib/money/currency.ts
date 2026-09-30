@@ -22,7 +22,7 @@
    conversion-aware.
    ═══════════════════════════════════════════════════════════════ */
 
-import { registerRateLookup } from "@/lib/currency-core";
+import { registerRateLookup } from "@/lib/money/currency-core";
 
 export interface FxRates {
   /** USD-based rates: rates[code] = 1 USD buys N of code. */

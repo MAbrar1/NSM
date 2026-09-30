@@ -12,7 +12,7 @@ import {
   isPartialPaymentAllowed,
   allocateSettlement,
   orderStatusAfterSettlement,
-} from "@/lib/payment-math";
+} from "@/lib/money/payment-math";
 
 test("full payment: no due, no change beyond overpayment", () => {
   const r = resolvePayment(2000, 2000, true);

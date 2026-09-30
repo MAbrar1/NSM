@@ -5,7 +5,7 @@ import { productSchema } from "@/lib/validations";
 import { requirePermission } from "@/lib/api-auth";
 import { logAudit } from "@/lib/audit-log";
 import { sumStockRows } from "@/lib/stock-status";
-import { majorToCents } from "@/lib/money";
+import { majorToCents } from "@/lib/money/money";
 
 /* ═══════════════════════════════════════════════════════════════
    SINGLE PRODUCT API

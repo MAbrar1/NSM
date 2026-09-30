@@ -3,7 +3,7 @@ import { apiError } from "@/lib/api-errors";
 import { db } from "@/lib/db";
 import { requirePermission } from "@/lib/api-auth";
 import { logAudit } from "@/lib/audit-log";
-import { parseMoneyToCents } from "@/lib/money";
+import { parseMoneyToCents } from "@/lib/money/money";
 import { ensureStockRow } from "@/lib/inventory-service";
 
 /* ═══════════════════════════════════════════════════════════════
