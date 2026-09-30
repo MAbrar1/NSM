@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { EmptyState } from "@/components/ui/empty-state";
 import { NotificationDeliveryLog } from "@/components/settings/notification-delivery-log";
-import { parseApiError } from "@/lib/api-error";
+import { parseApiError } from "@/lib/api/api-error";
 import { toast } from "@/stores/toast-store";
 import { useI18n } from "@/components/providers/i18n-provider";
 import { cn, setCurrencyDefaults } from "@/lib/utils";

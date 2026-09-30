@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { apiError } from "@/lib/api-errors";
-import { requirePermission } from "@/lib/api-auth";
+import { apiError } from "@/lib/api/api-errors";
+import { requirePermission } from "@/lib/api/api-auth";
 import { ensureRates } from "@/lib/money/currency";
 import { refreshRates } from "@/lib/money/currency";
 

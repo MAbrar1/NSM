@@ -13,8 +13,8 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { z } from "zod";
-import { apiError, fieldError, validationError } from "@/lib/api-errors";
-import { parseApiError } from "@/lib/api-error";
+import { apiError, fieldError, validationError } from "@/lib/api/api-errors";
+import { parseApiError } from "@/lib/api/api-error";
 
 const ROOT = process.cwd();
 

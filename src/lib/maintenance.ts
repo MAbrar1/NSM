@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { pruneLoginAttempts } from "@/lib/rate-limit";
+import { pruneLoginAttempts } from "@/lib/api/rate-limit";
 import {
   isManagedFileUrl,
   listImageFiles,

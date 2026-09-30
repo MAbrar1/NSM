@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { apiError, validationError } from "@/lib/api-errors";
+import { apiError, validationError } from "@/lib/api/api-errors";
 import { db } from "@/lib/db";
 import { creditStock } from "@/lib/inventory-service";
 import { z } from "zod";
-import { requirePermission } from "@/lib/api-auth";
+import { requirePermission } from "@/lib/api/api-auth";
 import { triggerLowStockScan } from "@/lib/low-stock-scheduler";
 import { logAudit } from "@/lib/audit-log";
 

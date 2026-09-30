@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { apiError, validationError } from "@/lib/api-errors";
+import { apiError, validationError } from "@/lib/api/api-errors";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { logAudit } from "@/lib/audit-log";
-import { requirePermission } from "@/lib/api-auth";
+import { requirePermission } from "@/lib/api/api-auth";
 import { allocateSettlement, orderStatusAfterSettlement } from "@/lib/money/payment-math";
 import { applySettlementToCustomer } from "@/lib/customers/customer-balance";
 

@@ -7,7 +7,7 @@ import {
   clientIp,
   recordLoginAttempt,
   type LoginRateLimitCode,
-} from "@/lib/rate-limit";
+} from "@/lib/api/rate-limit";
 
 /* ═══════════════════════════════════════════════════════════════
    NEXTAUTH CONFIGURATION (v5)

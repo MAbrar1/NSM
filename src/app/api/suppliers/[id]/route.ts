@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { apiError, fieldError } from "@/lib/api-errors";
+import { apiError, fieldError } from "@/lib/api/api-errors";
 import { db } from "@/lib/db";
-import { requirePermission } from "@/lib/api-auth";
+import { requirePermission } from "@/lib/api/api-auth";
 import { supplierPurchaseStats } from "@/lib/suppliers/supplier-stats";
 
 /* ═══════════════════════════════════════════════════════════════

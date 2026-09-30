@@ -12,7 +12,7 @@ import { SortableTh } from "@/components/ui/sortable-th";
 import { useTableRowNav } from "@/hooks/use-table-row-nav";
 import { toast } from "@/stores/toast-store";
 import { formatCurrency } from "@/lib/utils";
-import { readApiError } from "@/lib/api-error";
+import { readApiError } from "@/lib/api/api-error";
 import { displayMajorToBaseCents, baseCentsToDisplayMajorStr } from "@/lib/money/currency-core";
 import { ensureRates, peekRates } from "@/lib/money/currency";
 import { WHOLE_UNITS } from "@/lib/units";

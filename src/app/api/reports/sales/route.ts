@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { apiError } from "@/lib/api-errors";
+import { apiError } from "@/lib/api/api-errors";
 import { db } from "@/lib/db";
-import { requirePermission } from "@/lib/api-auth";
-import { parseQueryDateStart, parseQueryDateEnd } from "@/lib/query-date";
+import { requirePermission } from "@/lib/api/api-auth";
+import { parseQueryDateStart, parseQueryDateEnd } from "@/lib/api/query-date";
 import { netOf, revenueStatuses } from "@/lib/report-math";
 
 /* ═══════════════════════════════════════════════════════════════

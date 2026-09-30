@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { apiError, fieldError } from "@/lib/api-errors";
-import { requirePermission } from "@/lib/api-auth";
+import { apiError, fieldError } from "@/lib/api/api-errors";
+import { requirePermission } from "@/lib/api/api-auth";
 import { db } from "@/lib/db";
 import {
   canReprint,

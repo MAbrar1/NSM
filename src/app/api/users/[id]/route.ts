@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { apiError, fieldError } from "@/lib/api-errors";
+import { apiError, fieldError } from "@/lib/api/api-errors";
 import { db } from "@/lib/db";
 import bcrypt from "bcryptjs";
 import type { Role } from "@/lib/auth/rbac";
-import { requirePermission, canGrantRole } from "@/lib/api-auth";
+import { requirePermission, canGrantRole } from "@/lib/api/api-auth";
 import { logAudit } from "@/lib/audit-log";
 
 /* ═══════════════════════════════════════════════════════════════

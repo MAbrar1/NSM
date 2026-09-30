@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { apiError } from "@/lib/api-errors";
+import { apiError } from "@/lib/api/api-errors";
 import { runSeed, prisma } from "./seed-runner";
-import { requirePermission } from "@/lib/api-auth";
+import { requirePermission } from "@/lib/api/api-auth";
 
 /* ═══════════════════════════════════════════════
    SEED API  (development-only)

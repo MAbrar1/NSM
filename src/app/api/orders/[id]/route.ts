@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { apiError } from "@/lib/api-errors";
+import { apiError } from "@/lib/api/api-errors";
 import { db } from "@/lib/db";
 import { z } from "zod";
-import { requirePermission } from "@/lib/api-auth";
+import { requirePermission } from "@/lib/api/api-auth";
 import { logAudit } from "@/lib/audit-log";
 import { processRefund, refundSchema, RefundError } from "@/lib/refunds/refund-service";
 import { releaseOrderCredit } from "@/lib/customers/customer-balance";

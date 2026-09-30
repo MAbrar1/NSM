@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { apiError, validationError } from "@/lib/api-errors";
+import { apiError, validationError } from "@/lib/api/api-errors";
 import { db } from "@/lib/db";
-import { requirePermission, type AuthUser } from "@/lib/api-auth";
+import { requirePermission, type AuthUser } from "@/lib/api/api-auth";
 
 /* ═══════════════════════════════════════════════════════════════
    COMMAND-PALETTE RECENTS API

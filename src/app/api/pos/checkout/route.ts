@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { apiError, validationError } from "@/lib/api-errors";
-import { requirePermission } from "@/lib/api-auth";
+import { apiError, validationError } from "@/lib/api/api-errors";
+import { requirePermission } from "@/lib/api/api-auth";
 import {
   processCheckout,
   CheckoutError,

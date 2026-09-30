@@ -9,7 +9,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { parseQueryDateStart, parseQueryDateEnd } from "@/lib/query-date";
+import { parseQueryDateStart, parseQueryDateEnd } from "@/lib/api/query-date";
 
 test("valid YYYY-MM-DD parses to local start/end of day", () => {
   const start = parseQueryDateStart("2026-09-26");
