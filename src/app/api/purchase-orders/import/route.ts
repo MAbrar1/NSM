@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { requirePermission } from "@/lib/api-auth";
 import { logAudit } from "@/lib/audit-log";
 import { parseMoneyToCents } from "@/lib/money/money";
-import { poLineTotals, poTotals } from "@/lib/purchase-order-math";
+import { poLineTotals, poTotals } from "@/lib/suppliers/purchase-order-math";
 
 /* ═══════════════════════════════════════════════════════════════
    PURCHASE ORDER CSV IMPORT API

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { logAudit } from "@/lib/audit-log";
-import { loyaltyPointsForSpend } from "@/lib/earn-rate";
+import { loyaltyPointsForSpend } from "@/lib/customers/earn-rate";
 import {
   resolveRefundLines,
   computeRefundAmount,
@@ -9,7 +9,7 @@ import {
   isOrderFullyRefunded,
   type RefundableLine,
 } from "@/lib/refund-math";
-import { applyRefundToCustomer } from "@/lib/customer-balance";
+import { applyRefundToCustomer } from "@/lib/customers/customer-balance";
 import { creditStock } from "@/lib/inventory-service";
 
 /* ═══════════════════════════════════════════════════════════════

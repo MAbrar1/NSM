@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { logAudit } from "@/lib/audit-log";
 import { retryOnUniqueConflict } from "@/lib/retry";
 import { triggerLowStockScan } from "@/lib/low-stock-scheduler";
-import { loyaltyPointsForSpend } from "@/lib/earn-rate";
+import { loyaltyPointsForSpend } from "@/lib/customers/earn-rate";
 import {
   resolvePayment,
   allocateSettlement,
@@ -14,7 +14,7 @@ import {
   reconcileCartTotals,
   resolveLoyaltyRedemption,
 } from "@/lib/checkout-math";
-import { applySaleToCustomer } from "@/lib/customer-balance";
+import { applySaleToCustomer } from "@/lib/customers/customer-balance";
 import { deductForSale } from "@/lib/inventory-service";
 import { revenueStatuses } from "@/lib/report-math";
 import {

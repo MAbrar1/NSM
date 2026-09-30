@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { logAudit } from "@/lib/audit-log";
 import { requirePermission } from "@/lib/api-auth";
 import { allocateSettlement, orderStatusAfterSettlement } from "@/lib/money/payment-math";
-import { applySettlementToCustomer } from "@/lib/customer-balance";
+import { applySettlementToCustomer } from "@/lib/customers/customer-balance";
 
 /* ═══════════════════════════════════════════════════════════════
    CUSTOMER PAYMENTS API (khata settlement)

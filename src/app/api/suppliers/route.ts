@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { requirePermission } from "@/lib/api-auth";
 import { parsePagination } from "@/lib/pagination";
 import { parseSortParam } from "@/lib/table-sort";
-import { supplierPurchaseStats } from "@/lib/supplier-stats";
+import { supplierPurchaseStats } from "@/lib/suppliers/supplier-stats";
 
 /* ═══════════════════════════════════════════════════════════════
    SUPPLIERS API

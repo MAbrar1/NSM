@@ -5,7 +5,7 @@ import { requirePermission } from "@/lib/api-auth";
 import { parsePagination } from "@/lib/pagination";
 import { parseSortParam } from "@/lib/table-sort";
 import { apiError, fieldError } from "@/lib/api-errors";
-import { poLineTotals, poTotals } from "@/lib/purchase-order-math";
+import { poLineTotals, poTotals } from "@/lib/suppliers/purchase-order-math";
 
 /* ═══════════════════════════════════════════════════════════════
    PURCHASE ORDERS API

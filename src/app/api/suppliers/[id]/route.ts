@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { apiError, fieldError } from "@/lib/api-errors";
 import { db } from "@/lib/db";
 import { requirePermission } from "@/lib/api-auth";
-import { supplierPurchaseStats } from "@/lib/supplier-stats";
+import { supplierPurchaseStats } from "@/lib/suppliers/supplier-stats";
 
 /* ═══════════════════════════════════════════════════════════════
    SINGLE SUPPLIER API

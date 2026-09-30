@@ -5,7 +5,7 @@ import { z } from "zod";
 import { requirePermission } from "@/lib/api-auth";
 import { logAudit } from "@/lib/audit-log";
 import { processRefund, refundSchema, RefundError } from "@/lib/refund-service";
-import { releaseOrderCredit } from "@/lib/customer-balance";
+import { releaseOrderCredit } from "@/lib/customers/customer-balance";
 import { creditStock } from "@/lib/inventory-service";
 
 /* ═══════════════════════════════════════════════════════════════

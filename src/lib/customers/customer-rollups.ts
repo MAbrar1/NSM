@@ -20,7 +20,7 @@
    ═══════════════════════════════════════════════════════════════ */
 
 import type { PrismaClient } from "@prisma/client";
-import { loyaltyPointsForSpend } from "@/lib/earn-rate";
+import { loyaltyPointsForSpend } from "@/lib/customers/earn-rate";
 import { REVENUE_STATUSES, openCreditOrderWhere } from "@/lib/report-math";
 
 /**
