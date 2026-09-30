@@ -8,7 +8,7 @@ import {
   MAX_IMAGES_PER_PRODUCT,
   parseImageGallery,
   saveImageFile,
-} from "@/lib/uploads";
+} from "@/lib/files/uploads";
 
 /* ═══════════════════════════════════════════════════════════════
    PRODUCT IMAGE API

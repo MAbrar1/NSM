@@ -102,7 +102,7 @@ describe("print brand sync", () => {
   });
 
   it("csv.ts Excel header band uses --neu-accent-solid", () => {
-    const csv = readFileSync(join(process.cwd(), "src", "lib", "csv.ts"), "utf8");
+    const csv = readFileSync(join(process.cwd(), "src", "lib", "files", "csv.ts"), "utf8");
     const m = csv.match(/const BAND_HEX = "([0-9A-Fa-f]{6})"/);
     assert.ok(m, "csv.ts must declare BAND_HEX");
     assert.equal(`#${m[1]!.toLowerCase()}`, tokens["neu-accent-solid"]);

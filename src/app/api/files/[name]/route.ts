@@ -7,7 +7,7 @@ import {
   presignedImageUrl,
   readImageFile,
   storageDriver,
-} from "@/lib/uploads";
+} from "@/lib/files/uploads";
 
 /* ═══════════════════════════════════════════════════════════════
    FILE SERVING

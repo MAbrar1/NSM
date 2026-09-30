@@ -17,7 +17,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { SortableTh } from "@/components/ui/sortable-th";
 import { StatCard } from "@/components/ui/stat-card";
 import { toast } from "@/stores/toast-store";
-import { downloadCsv, downloadExcel, sumFormulaCell, type ExcelSheet } from "@/lib/csv";
+import { downloadCsv, downloadExcel, sumFormulaCell, type ExcelSheet } from "@/lib/files/csv";
 import { ExportMenu, type ExportColumn } from "@/components/export/export-menu";
 import { fetchReportSettings, printReport } from "@/lib/print-report";
 import { useHardwareScanner } from "@/hooks/use-hardware-scanner";

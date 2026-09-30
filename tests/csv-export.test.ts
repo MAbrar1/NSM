@@ -17,7 +17,7 @@ import {
   stampFilename,
   buildXlsx,
   sumFormulaCell,
-} from "@/lib/csv";
+} from "@/lib/files/csv";
 
 /* ── CSV injection guard ─────────────────────────────────────── */
 
@@ -308,7 +308,7 @@ test("numericValue-style coercion: comma-formatted money becomes a real number",
 });
 
 test("buildStyledSheet: maps columns, styles and totals by column identity", async () => {
-  const { buildStyledSheet } = await import("@/lib/csv");
+  const { buildStyledSheet } = await import("@/lib/files/csv");
   interface Row {
     name: string;
     qty: number;

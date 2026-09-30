@@ -12,7 +12,7 @@ import { useStoreCurrency } from "@/components/providers/currency-provider";
 import { BarChart, DonutChart } from "@/components/ui/chart";
 import { StatCard } from "@/components/ui/stat-card";
 import { TotalProductsCard } from "@/components/ui/total-products-card";
-import { downloadCsv, downloadExcel, type ExcelSheet, type XlsxCell } from "@/lib/csv";
+import { downloadCsv, downloadExcel, type ExcelSheet, type XlsxCell } from "@/lib/files/csv";
 import { ExportMenu, type ExportColumn } from "@/components/export/export-menu";
 import { fetchReportSettings, printReport } from "@/lib/print-report";
 import { toast } from "@/stores/toast-store";

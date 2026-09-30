@@ -7,7 +7,7 @@ import {
   listObjects,
   presignedGetUrl,
   putObject,
-} from "@/lib/s3-client";
+} from "@/lib/files/s3-client";
 
 /* ═══════════════════════════════════════════════════════════════
    IMAGE UPLOADS

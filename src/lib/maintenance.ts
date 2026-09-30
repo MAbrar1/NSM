@@ -6,7 +6,7 @@ import {
   parseImageGallery,
   deleteImageFile,
   getUploadDir,
-} from "@/lib/uploads";
+} from "@/lib/files/uploads";
 import { stat } from "fs/promises";
 import path from "path";
 
