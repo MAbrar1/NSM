@@ -1,7 +1,0 @@
-count 268
-4 ELITE POS — PROFESSIONAL DESIGN SYSTEM (v3)
-7 OUTSIDE @layer base, which overrides Tailwind's border utilities
-8 and causes buttons/inputs to lose their borders and padding.
-10 All resets MUST be inside @layer base to not conflict with
-11 Tailwind's utility layer.
-12 
