@@ -34,6 +34,11 @@ const eslintConfig = [
       // removed, so plain padding-div bodies no longer scroll correctly.
       "@local/require-dialog-body": "warn",
       "@local/no-dialog-footer-div": "warn",
+
+      // Cents formatting has exactly one home: centsToMajorString() in
+      // @/lib/money/money. Re-deriving (x / 100).toFixed(2) at call sites
+      // is how the 68-copy duplication crept in.
+      "@local/no-raw-cents-format": "error",
     },
   },
   {
@@ -135,6 +140,38 @@ const dialogRulesPlugin = {
                   "Hand-rolled footer div inside DialogContent — use DialogFooter (shrink-0, border, pinned).",
               });
             }
+          },
+        };
+      },
+    },
+    "no-raw-cents-format": {
+      meta: {
+        type: "suggestion",
+        docs: {
+          description:
+            "Use centsToMajorString() from @/lib/money/money instead of re-deriving (cents / 100).toFixed(2).",
+        },
+        schema: [],
+      },
+      create(context) {
+        // The one legal home for the raw conversion is lib/money itself.
+        const file = context.getFilename().replace(/\\/g, "/");
+        if (file.includes("/src/lib/money/")) return {};
+        return {
+          CallExpression(node) {
+            const callee = node.callee;
+            if (callee.type !== "MemberExpression") return;
+            if (callee.property.type !== "Identifier" || callee.property.name !== "toFixed") return;
+            const arg = node.arguments[0];
+            if (!arg || arg.type !== "Literal" || arg.value !== 2) return;
+            const obj = callee.object;
+            if (obj.type !== "BinaryExpression" || obj.operator !== "/") return;
+            if (obj.right.type !== "Literal" || obj.right.value !== 100) return;
+            context.report({
+              node,
+              message:
+                "Raw (cents / 100).toFixed(2) — use centsToMajorString() from @/lib/money/money so cents formatting has one home.",
+            });
           },
         };
       },
