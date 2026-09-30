@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
-import { apiError, validationError } from "@/lib/api/api-errors";
+import { NextResponse } from "next/server";
+import { validationError } from "@/lib/api/api-errors";
 import { requirePermission } from "@/lib/api/api-auth";
+import { withApiHandler } from "@/lib/api/api-handler";
 import { db } from "@/lib/db";
 import { printerProfileSchema } from "@/lib/validations/print";
 import { logAudit } from "@/lib/audit-log";
@@ -13,8 +14,7 @@ import { logAudit } from "@/lib/audit-log";
    data — custom widths like 88 mm are a new row, never code.
    ═══════════════════════════════════════════════════════════════ */
 
-export async function GET() {
-  try {
+export const GET = withApiHandler("PRINTER_PROFILES_GET", async () => {
     const { response } = await requirePermission("settings:view");
     if (response) return response;
 
@@ -22,14 +22,9 @@ export async function GET() {
       orderBy: [{ isEnabled: "desc" }, { name: "asc" }],
     });
     return NextResponse.json({ profiles });
-  } catch (error) {
-    console.error("[PRINTER_PROFILES_GET]", error);
-    return apiError("Internal server error", 500);
-  }
-}
+  });
 
-export async function POST(request: NextRequest) {
-  try {
+export const POST = withApiHandler("PRINTER_PROFILES_POST", async (request) => {
     const { user, response } = await requirePermission("settings:edit");
     if (response) return response;
 
@@ -51,8 +46,4 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({ profile }, { status: 201 });
-  } catch (error) {
-    console.error("[PRINTER_PROFILES_POST]", error);
-    return apiError("Internal server error", 500);
-  }
-}
+  });

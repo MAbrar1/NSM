@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
-import { apiError } from "@/lib/api/api-errors";
+import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requirePermission } from "@/lib/api/api-auth";
+import { withApiHandler } from "@/lib/api/api-handler";
 import { parseQueryDateStart, parseQueryDateEnd } from "@/lib/api/query-date";
 
 /* ═══════════════════════════════════════════════════════════════
@@ -13,8 +13,7 @@ import { parseQueryDateStart, parseQueryDateEnd } from "@/lib/api/query-date";
    SQLite/Postgres (no strftime()/date_trunc() dialect).
    ═══════════════════════════════════════════════════════════════ */
 
-export async function GET(request: NextRequest) {
-  try {
+export const GET = withApiHandler("REFUNDS_GET", async (request) => {
     const { response } = await requirePermission("orders:view");
     if (response) return response;
 
@@ -96,8 +95,4 @@ export async function GET(request: NextRequest) {
       monthlyTrend,
       reasons: reasonBreakdown,
     });
-  } catch (error) {
-    console.error("[REFUNDS_GET]", error);
-    return apiError("Internal server error", 500);
-  }
-}
+  });

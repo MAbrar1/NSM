@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { apiError } from "@/lib/api/api-errors";
 import { requirePermission } from "@/lib/api/api-auth";
+import { withApiHandler } from "@/lib/api/api-handler";
 import { db } from "@/lib/db";
 
 /* ═══════════════════════════════════════════════════════════════
@@ -12,8 +13,7 @@ import { db } from "@/lib/db";
    matched exactly; history filters are conjunctive.
    ═══════════════════════════════════════════════════════════════ */
 
-export async function GET(request: NextRequest) {
-  try {
+export const GET = withApiHandler("RECEIPT_LOOKUP", async (request) => {
     const { user, response } = await requirePermission("orders:view");
     if (response) return response;
 
@@ -69,8 +69,4 @@ export async function GET(request: NextRequest) {
     });
 
     return NextResponse.json({ receipts });
-  } catch (error) {
-    console.error("[RECEIPT_LOOKUP]", error);
-    return apiError("Internal server error", 500);
-  }
-}
+  });

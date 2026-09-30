@@ -1,8 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
-import { apiError, fieldError, validationError } from "@/lib/api/api-errors";
+import { NextResponse } from "next/server";
+import { fieldError, validationError } from "@/lib/api/api-errors";
 import { db } from "@/lib/db";
 import { customerSchema } from "@/lib/validations";
 import { requirePermission } from "@/lib/api/api-auth";
+import { withApiHandler } from "@/lib/api/api-handler";
 import { parsePagination } from "@/lib/api/pagination";
 
 /* ═══════════════════════════════════════════════════════════════
@@ -11,8 +12,7 @@ import { parsePagination } from "@/lib/api/pagination";
    POST /api/customers — Create new customer
    ═══════════════════════════════════════════════════════════════ */
 
-export async function GET(request: NextRequest) {
-  try {
+export const GET = withApiHandler("CUSTOMERS_GET", async (request) => {
     const { response } = await requirePermission("customers:view");
     if (response) return response;
 
@@ -54,14 +54,9 @@ export async function GET(request: NextRequest) {
       totalPages: Math.ceil(total / pageSize),
       hasNext: page * pageSize < total,
     });
-  } catch (error) {
-    console.error("[CUSTOMERS_GET]", error);
-    return apiError("Internal server error", 500);
-  }
-}
+  });
 
-export async function POST(request: NextRequest) {
-  try {
+export const POST = withApiHandler("CUSTOMERS_POST", async (request) => {
     const { response } = await requirePermission("customers:create");
     if (response) return response;
 
@@ -96,8 +91,4 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({ customer }, { status: 201 });
-  } catch (error) {
-    console.error("[CUSTOMERS_POST]", error);
-    return apiError("Internal server error", 500);
-  }
-}
+  });

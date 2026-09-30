@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
-import { apiError, validationError } from "@/lib/api/api-errors";
+import { NextResponse } from "next/server";
+import { validationError } from "@/lib/api/api-errors";
 import { requirePermission } from "@/lib/api/api-auth";
+import { withApiHandler } from "@/lib/api/api-handler";
 import { db } from "@/lib/db";
 import { scanSettingsSchema } from "@/lib/validations/print";
 import { logAudit } from "@/lib/audit-log";
@@ -12,8 +13,7 @@ import { logAudit } from "@/lib/audit-log";
    PUT /api/scan-settings — update (settings:edit)
    ═══════════════════════════════════════════════════════════════ */
 
-export async function GET() {
-  try {
+export const GET = withApiHandler("SCAN_SETTINGS_GET", async () => {
     const { response } = await requirePermission();
     if (response) return response;
 
@@ -22,14 +22,9 @@ export async function GET() {
       settings = await db.scanSettings.create({ data: { id: "singleton" } });
     }
     return NextResponse.json({ settings });
-  } catch (error) {
-    console.error("[SCAN_SETTINGS_GET]", error);
-    return apiError("Internal server error", 500);
-  }
-}
+  });
 
-export async function PUT(request: NextRequest) {
-  try {
+export const PUT = withApiHandler("SCAN_SETTINGS_PUT", async (request) => {
     const { user, response } = await requirePermission("settings:edit");
     if (response) return response;
 
@@ -55,8 +50,4 @@ export async function PUT(request: NextRequest) {
     });
 
     return NextResponse.json({ settings });
-  } catch (error) {
-    console.error("[SCAN_SETTINGS_PUT]", error);
-    return apiError("Internal server error", 500);
-  }
-}
+  });

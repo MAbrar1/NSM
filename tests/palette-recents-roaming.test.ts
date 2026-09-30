@@ -106,7 +106,7 @@ test("sanitize: malformed server payloads are dropped, not rendered", () => {
 /* ─── API route: auth + validation guards ──────────────────────── */
 
 test("GET without a session is rejected with 401", async () => {
-  const res = await GET();
+  const res = await GET(new NextRequest("http://localhost/api/palette-recents"));
   assert.equal(res.status, 401);
 });
 

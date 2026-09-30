@@ -1,8 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { apiError, validationError } from "@/lib/api/api-errors";
 import { db } from "@/lib/db";
 import { categorySchema } from "@/lib/validations";
 import { requirePermission } from "@/lib/api/api-auth";
+import { withApiHandler } from "@/lib/api/api-handler";
 
 /* ═══════════════════════════════════════════════════════════════
    SINGLE CATEGORY API
@@ -11,15 +12,11 @@ import { requirePermission } from "@/lib/api/api-auth";
    DELETE /api/categories/:id — Soft-delete category
    ═══════════════════════════════════════════════════════════════ */
 
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
+export const GET = withApiHandler<{ id: string }>("CATEGORY_GET", async (_request, ctx) => {
     const { response } = await requirePermission("categories:view");
     if (response) return response;
 
-    const { id } = await params;
+    const { id } = await ctx.params;
     const category = await db.category.findUnique({
       where: { id },
       include: {
@@ -36,21 +33,13 @@ export async function GET(
     }
 
     return NextResponse.json({ category });
-  } catch (error) {
-    console.error("[CATEGORY_GET]", error);
-    return apiError("Internal server error", 500);
-  }
-}
+  });
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
+export const PUT = withApiHandler<{ id: string }>("CATEGORY_PUT", async (request, ctx) => {
     const { response } = await requirePermission("categories:edit");
     if (response) return response;
 
-    const { id } = await params;
+    const { id } = await ctx.params;
     const body = await request.json();
     const result = categorySchema.safeParse(body);
 
@@ -98,21 +87,13 @@ export async function PUT(
     });
 
     return NextResponse.json({ category });
-  } catch (error) {
-    console.error("[CATEGORY_PUT]", error);
-    return apiError("Internal server error", 500);
-  }
-}
+  });
 
-export async function DELETE(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
+export const DELETE = withApiHandler<{ id: string }>("CATEGORY_DELETE", async (_request, ctx) => {
     const { response } = await requirePermission("categories:delete");
     if (response) return response;
 
-    const { id } = await params;
+    const { id } = await ctx.params;
     const existing = await db.category.findUnique({
       where: { id },
       include: { _count: { select: { products: true, children: true } } },
@@ -140,8 +121,4 @@ export async function DELETE(
     await db.category.delete({ where: { id } });
 
     return NextResponse.json({ message: "Category deleted" });
-  } catch (error) {
-    console.error("[CATEGORY_DELETE]", error);
-    return apiError("Internal server error", 500);
-  }
-}
+  });

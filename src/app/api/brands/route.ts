@@ -1,8 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { apiError, validationError } from "@/lib/api/api-errors";
 import { db } from "@/lib/db";
 import { brandSchema } from "@/lib/validations";
 import { requirePermission } from "@/lib/api/api-auth";
+import { withApiHandler } from "@/lib/api/api-handler";
 
 /* ═══════════════════════════════════════════════════════════════
    BRANDS API
@@ -10,8 +11,7 @@ import { requirePermission } from "@/lib/api/api-auth";
    POST /api/brands — Create a new brand (admin only)
    ═══════════════════════════════════════════════════════════════ */
 
-export async function GET() {
-  try {
+export const GET = withApiHandler("BRANDS_GET", async () => {
     const { response } = await requirePermission("brands:view");
     if (response) return response;
 
@@ -23,14 +23,9 @@ export async function GET() {
     });
 
     return NextResponse.json({ brands });
-  } catch (error) {
-    console.error("[BRANDS_GET]", error);
-    return apiError("Internal server error", 500);
-  }
-}
+  });
 
-export async function POST(request: NextRequest) {
-  try {
+export const POST = withApiHandler("BRANDS_POST", async (request) => {
     const { response } = await requirePermission("brands:create");
     if (response) return response;
 
@@ -73,8 +68,4 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({ brand }, { status: 201 });
-  } catch (error) {
-    console.error("[BRANDS_POST]", error);
-    return apiError("Internal server error", 500);
-  }
-}
+  });

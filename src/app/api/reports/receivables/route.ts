@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { apiError } from "@/lib/api/api-errors";
 import { db } from "@/lib/db";
 import { requirePermission } from "@/lib/api/api-auth";
+import { withApiHandler } from "@/lib/api/api-handler";
 import { openCreditOrderWhere } from "@/lib/reports/report-math";
 
 /* ═══════════════════════════════════════════════════════════════
@@ -12,8 +12,7 @@ import { openCreditOrderWhere } from "@/lib/reports/report-math";
    gives collections a concrete worklist.
    ═══════════════════════════════════════════════════════════════ */
 
-export async function GET() {
-  try {
+export const GET = withApiHandler("RECEIVABLES_GET", async () => {
     const { response } = await requirePermission("customers:view");
     if (response) return response;
 
@@ -77,8 +76,4 @@ export async function GET() {
       buckets,
       orderCount: openOrders.length,
     });
-  } catch (error) {
-    console.error("[RECEIVABLES_GET]", error);
-    return apiError("Internal server error", 500);
-  }
-}
+  });

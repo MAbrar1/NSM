@@ -1,8 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { z } from "zod";
 import { apiError, validationError } from "@/lib/api/api-errors";
 import { db } from "@/lib/db";
 import { requirePermission, type AuthUser } from "@/lib/api/api-auth";
+import { withApiHandler } from "@/lib/api/api-handler";
 
 /* ═══════════════════════════════════════════════════════════════
    COMMAND-PALETTE RECENTS API
@@ -47,8 +48,7 @@ async function requireSessionUser(): Promise<
   }
 }
 
-export async function GET() {
-  try {
+export const GET = withApiHandler("PALETTE_RECENTS_GET", async () => {
     const { user, response } = await requireSessionUser();
     if (response) return response;
 
@@ -61,14 +61,9 @@ export async function GET() {
     return NextResponse.json({
       recents: rows.map((r) => ({ href: r.href, label: r.label, icon: r.icon })),
     });
-  } catch (error) {
-    console.error("[PALETTE_RECENTS_GET]", error);
-    return apiError("Internal server error", 500);
-  }
-}
+  });
 
-export async function PUT(request: NextRequest) {
-  try {
+export const PUT = withApiHandler("PALETTE_RECENTS_PUT", async (request) => {
     const { user, response } = await requireSessionUser();
     if (response) return response;
 
@@ -107,8 +102,4 @@ export async function PUT(request: NextRequest) {
     });
 
     return NextResponse.json({ recents: capped });
-  } catch (error) {
-    console.error("[PALETTE_RECENTS_PUT]", error);
-    return apiError("Internal server error", 500);
-  }
-}
+  });

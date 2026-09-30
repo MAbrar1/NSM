@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
-import { apiError } from "@/lib/api/api-errors";
 import { db } from "@/lib/db";
 import { requirePermission } from "@/lib/api/api-auth";
+import { withApiHandler } from "@/lib/api/api-handler";
 import { parsePagination } from "@/lib/api/pagination";
 import { parseSortParam } from "@/lib/table-sort";
 
@@ -11,8 +11,7 @@ import { parseSortParam } from "@/lib/table-sort";
    GET /api/audit-log — List audit log entries with filters.
    ═══════════════════════════════════════════════════════════════ */
 
-export async function GET(request: NextRequest) {
-  try {
+export const GET = withApiHandler("AUDIT_LOG_GET", async (request) => {
     const { response } = await requirePermission("settings:view");
     if (response) return response;
 
@@ -62,8 +61,4 @@ export async function GET(request: NextRequest) {
       pageSize,
       totalPages: Math.ceil(total / pageSize),
     });
-  } catch (error) {
-    console.error("[AUDIT_LOG_GET]", error);
-    return apiError("Internal server error", 500);
-  }
-}
+  });

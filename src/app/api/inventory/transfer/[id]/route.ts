@@ -1,8 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { apiError, validationError } from "@/lib/api/api-errors";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { requirePermission } from "@/lib/api/api-auth";
+import { withApiHandler } from "@/lib/api/api-handler";
 import { logAudit } from "@/lib/audit-log";
 import { creditStock } from "@/lib/inventory/inventory-service";
 
@@ -15,16 +16,12 @@ const updateSchema = z.object({
   status: z.enum(["received", "cancelled"]),
 });
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
+export const PUT = withApiHandler<{ id: string }>("TRANSFER_UPDATE", async (request, ctx) => {
     // Resolve the acting user from the session — never trust a client-supplied ID
     const { user, response } = await requirePermission("inventory:transfer");
     if (response) return response;
 
-    const { id } = await params;
+    const { id } = await ctx.params;
     const body = await request.json();
     const result = updateSchema.safeParse(body);
 
@@ -152,8 +149,4 @@ export async function PUT(
     }
 
     return NextResponse.json({ message: `Transfer ${status}` });
-  } catch (error) {
-    console.error("[TRANSFER_UPDATE]", error);
-    return apiError("Internal server error", 500);
-  }
-}
+  });

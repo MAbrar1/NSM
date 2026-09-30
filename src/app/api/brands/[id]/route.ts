@@ -1,8 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { apiError, validationError } from "@/lib/api/api-errors";
 import { db } from "@/lib/db";
 import { brandSchema } from "@/lib/validations";
 import { requirePermission } from "@/lib/api/api-auth";
+import { withApiHandler } from "@/lib/api/api-handler";
 
 /* ═══════════════════════════════════════════════════════════════
    SINGLE BRAND API
@@ -11,15 +12,11 @@ import { requirePermission } from "@/lib/api/api-auth";
    DELETE /api/brands/:id — Soft-delete brand
    ═══════════════════════════════════════════════════════════════ */
 
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
+export const GET = withApiHandler<{ id: string }>("BRAND_GET", async (_request, ctx) => {
     const { response } = await requirePermission("brands:view");
     if (response) return response;
 
-    const { id } = await params;
+    const { id } = await ctx.params;
     const brand = await db.brand.findUnique({
       where: { id },
       include: {
@@ -38,21 +35,13 @@ export async function GET(
     }
 
     return NextResponse.json({ brand });
-  } catch (error) {
-    console.error("[BRAND_GET]", error);
-    return apiError("Internal server error", 500);
-  }
-}
+  });
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
+export const PUT = withApiHandler<{ id: string }>("BRAND_PUT", async (request, ctx) => {
     const { response } = await requirePermission("brands:edit");
     if (response) return response;
 
-    const { id } = await params;
+    const { id } = await ctx.params;
     const body = await request.json();
     const result = brandSchema.safeParse(body);
 
@@ -104,21 +93,13 @@ export async function PUT(
     });
 
     return NextResponse.json({ brand });
-  } catch (error) {
-    console.error("[BRAND_PUT]", error);
-    return apiError("Internal server error", 500);
-  }
-}
+  });
 
-export async function DELETE(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
+export const DELETE = withApiHandler<{ id: string }>("BRAND_DELETE", async (_request, ctx) => {
     const { response } = await requirePermission("brands:delete");
     if (response) return response;
 
-    const { id } = await params;
+    const { id } = await ctx.params;
     const existing = await db.brand.findUnique({
       where: { id },
       include: { _count: { select: { products: true } } },
@@ -139,8 +120,4 @@ export async function DELETE(
     await db.brand.delete({ where: { id } });
 
     return NextResponse.json({ message: "Brand deleted" });
-  } catch (error) {
-    console.error("[BRAND_DELETE]", error);
-    return apiError("Internal server error", 500);
-  }
-}
+  });

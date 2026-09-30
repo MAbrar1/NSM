@@ -1,8 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
-import { apiError, fieldError, validationError } from "@/lib/api/api-errors";
+import { NextResponse } from "next/server";
+import { fieldError, validationError } from "@/lib/api/api-errors";
 import { db } from "@/lib/db";
 import { productSchema } from "@/lib/validations";
 import { requirePermission } from "@/lib/api/api-auth";
+import { withApiHandler } from "@/lib/api/api-handler";
 import { logAudit } from "@/lib/audit-log";
 import { parsePagination } from "@/lib/api/pagination";
 import { sumBaseStock, stockStatus } from "@/lib/inventory/stock-status";
@@ -15,8 +16,7 @@ import { ensureStockRow } from "@/lib/inventory/inventory-service";
    POST /api/products      — Create a new product
    ═══════════════════════════════════════════════════════════════ */
 
-export async function GET(request: NextRequest) {
-  try {
+export const GET = withApiHandler("PRODUCTS_GET", async (request) => {
     // Require authentication for product listing
     const { response } = await requirePermission("products:view");
     if (response) return response;
@@ -115,14 +115,9 @@ export async function GET(request: NextRequest) {
       hasNext: page * pageSize < total,
       hasPrevious: page > 1,
     });
-  } catch (error) {
-    console.error("[PRODUCTS_GET]", error);
-    return apiError("Internal server error", 500);
-  }
-}
+  });
 
-export async function POST(request: NextRequest) {
-  try {
+export const POST = withApiHandler("PRODUCTS_POST", async (request) => {
     const authResult = await requirePermission("products:create");
     if (authResult.response) return authResult.response;
 
@@ -220,8 +215,4 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({ product }, { status: 201 });
-  } catch (error) {
-    console.error("[PRODUCTS_POST]", error);
-    return apiError("Internal server error", 500);
-  }
-}
+  });

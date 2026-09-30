@@ -1,8 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { apiError, fieldError, validationError } from "@/lib/api/api-errors";
 import { db } from "@/lib/db";
 import { productSchema } from "@/lib/validations";
 import { requirePermission } from "@/lib/api/api-auth";
+import { withApiHandler } from "@/lib/api/api-handler";
 import { logAudit } from "@/lib/audit-log";
 import { sumStockRows } from "@/lib/inventory/stock-status";
 import { majorToCents } from "@/lib/money/money";
@@ -14,15 +15,11 @@ import { majorToCents } from "@/lib/money/money";
    DELETE /api/products/:id  — Soft-delete product
    ═══════════════════════════════════════════════════════════════ */
 
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
+export const GET = withApiHandler<{ id: string }>("PRODUCT_GET", async (_request, ctx) => {
     const { response } = await requirePermission("products:view");
     if (response) return response;
 
-    const { id } = await params;
+    const { id } = await ctx.params;
     const product = await db.product.findUnique({
       where: { id },
       include: {
@@ -42,21 +39,13 @@ export async function GET(
     const { totalStock } = sumStockRows(product.stockLevels);
 
     return NextResponse.json({ product: { ...product, totalStock } });
-  } catch (error) {
-    console.error("[PRODUCT_GET]", error);
-    return apiError("Internal server error", 500);
-  }
-}
+  });
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
+export const PUT = withApiHandler<{ id: string }>("PRODUCT_PUT", async (request, ctx) => {
     const { user, response } = await requirePermission("products:edit");
     if (response) return response;
 
-    const { id } = await params;
+    const { id } = await ctx.params;
     const body = await request.json();
     const result = productSchema.safeParse(body);
 
@@ -140,21 +129,13 @@ export async function PUT(
     });
 
     return NextResponse.json({ product });
-  } catch (error) {
-    console.error("[PRODUCT_PUT]", error);
-    return apiError("Internal server error", 500);
-  }
-}
+  });
 
-export async function DELETE(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
+export const DELETE = withApiHandler<{ id: string }>("PRODUCT_DELETE", async (_request, ctx) => {
     const { user, response } = await requirePermission("products:delete");
     if (response) return response;
 
-    const { id } = await params;
+    const { id } = await ctx.params;
     const existing = await db.product.findUnique({ where: { id } });
 
     if (!existing) {
@@ -177,8 +158,4 @@ export async function DELETE(
     });
 
     return NextResponse.json({ message: "Product deleted" });
-  } catch (error) {
-    console.error("[PRODUCT_DELETE]", error);
-    return apiError("Internal server error", 500);
-  }
-}
+  });

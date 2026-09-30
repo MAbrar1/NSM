@@ -1,8 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { apiError, validationError } from "@/lib/api/api-errors";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { requirePermission } from "@/lib/api/api-auth";
+import { withApiHandler } from "@/lib/api/api-handler";
 import { reserveStock, releaseReservation } from "@/lib/inventory/inventory-service";
 
 /* ═══════════════════════════════════════════════════════════════
@@ -22,8 +23,7 @@ const reserveSchema = z.object({
   referenceType: z.string().default("order"),
 });
 
-export async function POST(request: NextRequest) {
-  try {
+export const POST = withApiHandler("RESERVE_POST", async (request) => {
     const { response } = await requirePermission("pos:create_order");
     if (response) return response;
 
@@ -64,14 +64,9 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ message: "Stock reserved", reserved: data.quantity });
-  } catch (error) {
-    console.error("[RESERVE_POST]", error);
-    return apiError("Internal server error", 500);
-  }
-}
+  });
 
-export async function DELETE(request: NextRequest) {
-  try {
+export const DELETE = withApiHandler("RESERVE_DELETE", async (request) => {
     const { response } = await requirePermission("pos:create_order");
     if (response) return response;
 
@@ -102,8 +97,4 @@ export async function DELETE(request: NextRequest) {
     }
 
     return NextResponse.json({ message: "Reservation released" });
-  } catch (error) {
-    console.error("[RESERVE_DELETE]", error);
-    return apiError("Internal server error", 500);
-  }
-}
+  });

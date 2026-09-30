@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { apiError } from "@/lib/api/api-errors";
 import { db } from "@/lib/db";
 import { requirePermission } from "@/lib/api/api-auth";
+import { withApiHandler } from "@/lib/api/api-handler";
 
 /* ═══════════════════════════════════════════════════════════════
    CUSTOMER STATEMENT API
@@ -11,15 +12,11 @@ import { requirePermission } from "@/lib/api/api-auth";
    the printable statement the Customers page opens.
    ═══════════════════════════════════════════════════════════════ */
 
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
+export const GET = withApiHandler<{ id: string }>("CUSTOMER_STATEMENT", async (_request, ctx) => {
     const { response } = await requirePermission("customers:view");
     if (response) return response;
 
-    const { id } = await params;
+    const { id } = await ctx.params;
     const customer = await db.customer.findUnique({
       where: { id },
       select: { id: true, name: true, phone: true, email: true, outstandingBalance: true },
@@ -150,8 +147,4 @@ export async function GET(
       openOrders: openOrders.length,
       generatedAt: new Date().toISOString(),
     });
-  } catch (error) {
-    console.error("[CUSTOMER_STATEMENT]", error);
-    return apiError("Internal server error", 500);
-  }
-}
+  });

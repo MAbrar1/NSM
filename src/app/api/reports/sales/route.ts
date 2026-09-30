@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
-import { apiError } from "@/lib/api/api-errors";
+import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requirePermission } from "@/lib/api/api-auth";
+import { withApiHandler } from "@/lib/api/api-handler";
 import { parseQueryDateStart, parseQueryDateEnd } from "@/lib/api/query-date";
 import { netOf, revenueStatuses } from "@/lib/reports/report-math";
 
@@ -10,8 +10,7 @@ import { netOf, revenueStatuses } from "@/lib/reports/report-math";
    GET /api/reports/sales — Aggregated sales data with date range.
    ═══════════════════════════════════════════════════════════════ */
 
-export async function GET(request: NextRequest) {
-  try {
+export const GET = withApiHandler("SALES_REPORT", async (request) => {
     const { response } = await requirePermission("reports:view");
     if (response) return response;
 
@@ -155,8 +154,4 @@ export async function GET(request: NextRequest) {
         to: endDate.toISOString(),
       },
     });
-  } catch (error) {
-    console.error("[SALES_REPORT]", error);
-    return apiError("Internal server error", 500);
-  }
-}
+  });
