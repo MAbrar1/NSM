@@ -14,7 +14,7 @@ import {
   clampRefundAmount,
   isOrderFullyRefunded,
   type RefundableLine,
-} from "@/lib/refund-math";
+} from "@/lib/refunds/refund-math";
 
 const lines: RefundableLine[] = [
   // $12.00 line (incl. tax/discount), 2 units sold, none returned

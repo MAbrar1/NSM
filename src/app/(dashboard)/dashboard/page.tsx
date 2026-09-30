@@ -23,7 +23,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { TotalProductsCard } from "@/components/ui/total-products-card";
-import { EMPTY_ALERT_SUMMARY, auditAlertForEntry } from "@/lib/alert-utils";
+import { EMPTY_ALERT_SUMMARY, auditAlertForEntry } from "@/lib/notifications/alert-utils";
 import { AlertTileInline } from "@/components/ui/alert-tile";
 import { useAlerts } from "@/hooks/use-alerts";
 import { canAccessRoute, type Role } from "@/lib/rbac";

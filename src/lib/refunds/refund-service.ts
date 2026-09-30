@@ -8,7 +8,7 @@ import {
   clampRefundAmount,
   isOrderFullyRefunded,
   type RefundableLine,
-} from "@/lib/refund-math";
+} from "@/lib/refunds/refund-math";
 import { applyRefundToCustomer } from "@/lib/customers/customer-balance";
 import { creditStock } from "@/lib/inventory-service";
 

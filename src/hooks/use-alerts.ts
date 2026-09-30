@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { parseAlertFeed, type AlertFeed } from "@/lib/alert-utils";
+import { parseAlertFeed, type AlertFeed } from "@/lib/notifications/alert-utils";
 
 /* ═══════════════════════════════════════════════════════════════
    USE ALERTS — one owner for the stock-alert feed

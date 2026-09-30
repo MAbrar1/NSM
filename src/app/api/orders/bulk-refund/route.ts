@@ -7,8 +7,8 @@ import {
   clampRefundAmount,
   computeRefundAmount,
   type RefundableLine,
-} from "@/lib/refund-math";
-import { applyRefundToOrder } from "@/lib/refund-service";
+} from "@/lib/refunds/refund-math";
+import { applyRefundToOrder } from "@/lib/refunds/refund-service";
 
 /* ═══════════════════════════════════════════════════════════════
    BULK REFUND API

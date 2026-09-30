@@ -23,7 +23,7 @@
 
 import { db } from "@/lib/db";
 import { sellableUnits } from "@/lib/stock-status";
-import { sendLowStockAlert, type LowStockAlertPayload } from "@/lib/notify";
+import { sendLowStockAlert, type LowStockAlertPayload } from "@/lib/notifications/notify";
 
 export type AlertSeverity = "critical" | "warning" | "info";
 /** `running_low` is retired (see classifyStock) but kept in the union for
