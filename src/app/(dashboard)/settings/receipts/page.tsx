@@ -1,15 +1,17 @@
 "use client";
 
 import * as React from "react";
+import { centsToMajorString } from "@/lib/money/money";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { EmptyState } from "@/components/ui/empty-state";
-import { readApiError } from "@/lib/api-error";
+import { readApiError } from "@/lib/api/api-error";
+import { useUnsavedGuard } from "@/hooks/use-unsaved-guard";
 import { toast } from "@/stores/toast-store";
 import { useI18n } from "@/components/providers/i18n-provider";
-import { cn } from "@/lib/utils";
+import { cn, formatDateTime } from "@/lib/utils";
 
 /* ═══════════════════════════════════════════════════════════════
    RECEIPT SETTINGS PAGE
@@ -25,6 +27,9 @@ export default function ReceiptSettingsPage() {
   const [saving, setSaving] = React.useState(false);
   const [fieldErrors, setFieldErrors] = React.useState<Record<string, string>>({});
   const [dirty, setDirty] = React.useState(false);
+  // Shield the unsaved edits: beforeunload + in-app leave confirmation
+  // (the DirtyNavGuard in the dashboard layout does the actual blocking).
+  useUnsavedGuard({ when: dirty });
   const [storeName, setStoreName] = React.useState("");
   const [storeAddress, setStoreAddress] = React.useState("");
   const [storePhone, setStorePhone] = React.useState("");
@@ -32,6 +37,7 @@ export default function ReceiptSettingsPage() {
   const [receiptHeader, setReceiptHeader] = React.useState("");
   const [receiptFooter, setReceiptFooter] = React.useState("");
   const [receiptQrPayment, setReceiptQrPayment] = React.useState("");
+  const [receiptUrduDigits, setReceiptUrduDigits] = React.useState(false);
   const [lowStockThreshold, setLowStockThreshold] = React.useState(5);
   const [taxRate, setTaxRate] = React.useState(0);
   const [taxInclusive, setTaxInclusive] = React.useState(false);
@@ -51,6 +57,7 @@ export default function ReceiptSettingsPage() {
         setReceiptHeader(s.receiptHeader ?? "");
         setReceiptFooter(s.receiptFooter ?? "");
         setReceiptQrPayment(s.receiptQrPayment ?? "");
+        setReceiptUrduDigits(s.receiptUrduDigits ?? false);
         setLowStockThreshold(s.lowStockThreshold ?? 5);
         setTaxRate(s.taxRate ?? 0);
         setTaxInclusive(s.taxInclusive ?? false);
@@ -80,6 +87,7 @@ export default function ReceiptSettingsPage() {
           receiptHeader,
           receiptFooter,
           receiptQrPayment,
+          receiptUrduDigits,
           lowStockThreshold,
           taxRate,
           taxInclusive,
@@ -208,6 +216,25 @@ export default function ReceiptSettingsPage() {
                 onChange={(e) => { setReceiptQrPayment(e.target.value); setDirty(true); }}
                 hint={t("settings.receiptQrHint")}
               />
+              {/* Urdu-Indic digits opt-in — money columns stay Western by
+                  default (standard Pakistani retail convention). */}
+              <label className="flex cursor-pointer items-start justify-between gap-3 rounded-xl border border-neu-hairline p-3">
+                <span className="min-w-0">
+                  <span className="block text-sm font-medium text-neu-primary">
+                    {t("settings.receiptUrduDigits")}
+                  </span>
+                  <span className="mt-0.5 block text-xs text-neu-faint">
+                    {t("settings.receiptUrduDigitsHint")}
+                  </span>
+                </span>
+                <input
+                  type="checkbox"
+                  role="switch"
+                  checked={receiptUrduDigits}
+                  onChange={(e) => { setReceiptUrduDigits(e.target.checked); setDirty(true); }}
+                  className="neu-focus mt-0.5 h-5 w-5 shrink-0 accent-[var(--neu-accent-solid)]"
+                />
+              </label>
               <Input
                 label={t("settings.lowStockThreshold")}
                 type="number"
@@ -250,7 +277,7 @@ export default function ReceiptSettingsPage() {
               )}
             </div>
             <div className="text-center text-neu-faint">
-              <p>{new Date().toLocaleString()}</p>
+              <p>{formatDateTime(new Date())}</p>
               <p>{t("receiptSettings.receiptNo")} POS-0001</p>
             </div>
             {receiptHeader && (
@@ -263,7 +290,7 @@ export default function ReceiptSettingsPage() {
             </div>
             <div className="mt-2 border-t border-dashed border-neu-hairline pt-2 space-y-0.5">
               <div className="flex justify-between"><span>{t("pos.subtotal")}</span><span>26.94</span></div>
-              <div className="flex justify-between"><span>{t("pos.tax")} ({taxRate}%)</span><span>{(26.94 * taxRate / 100).toFixed(2)}</span></div>
+              <div className="flex justify-between"><span>{t("pos.tax")} ({taxRate}%)</span><span>{centsToMajorString(26.94 * taxRate)}</span></div>
               <div className="flex justify-between font-bold"><span>{t("pos.total")}</span><span>{(26.94 * (1 + taxRate / 100)).toFixed(2)}</span></div>
               <div className="flex justify-between"><span>{t("receiptSettings.paid")}</span><span>30.00</span></div>
               <div className="flex justify-between text-neu-ink-green"><span>{t("pos.change")}</span><span>{(30 - 26.94 * (1 + taxRate / 100)).toFixed(2)}</span></div>

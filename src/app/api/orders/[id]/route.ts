@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { apiError } from "@/lib/api-errors";
+import { apiError } from "@/lib/api/api-errors";
 import { db } from "@/lib/db";
 import { z } from "zod";
-import { requirePermission } from "@/lib/api-auth";
+import { requirePermission } from "@/lib/api/api-auth";
+import { withApiHandler } from "@/lib/api/api-handler";
 import { logAudit } from "@/lib/audit-log";
-import { processRefund, refundSchema, RefundError } from "@/lib/refund-service";
-import { releaseOrderCredit } from "@/lib/customer-balance";
-import { creditStock } from "@/lib/inventory-service";
+import { processRefund, refundSchema, RefundError } from "@/lib/refunds/refund-service";
+import { releaseOrderCredit } from "@/lib/customers/customer-balance";
+import { creditStock } from "@/lib/inventory/inventory-service";
 
 /* ═══════════════════════════════════════════════════════════════
    SINGLE ORDER API
@@ -15,15 +16,11 @@ import { creditStock } from "@/lib/inventory-service";
    POST   /api/orders/:id  — Process refund
    ═══════════════════════════════════════════════════════════════ */
 
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
+export const GET = withApiHandler<{ id: string }>("ORDER_GET", async (_request, ctx) => {
     const { response } = await requirePermission("orders:view");
     if (response) return response;
 
-    const { id } = await params;
+    const { id } = await ctx.params;
     const order = await db.order.findUnique({
       where: { id },
       include: {
@@ -44,25 +41,17 @@ export async function GET(
     }
 
     return NextResponse.json({ order });
-  } catch (error) {
-    console.error("[ORDER_GET]", error);
-    return apiError("Internal server error", 500);
-  }
-}
+  });
 
 const updateStatusSchema = z.object({
   status: z.enum(["confirmed", "cancelled"]),
 });
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
+export const PUT = withApiHandler<{ id: string }>("ORDER_UPDATE", async (request, ctx) => {
     const { user, response } = await requirePermission("orders:manage");
     if (response) return response;
 
-    const { id } = await params;
+    const { id } = await ctx.params;
     const body = await request.json();
     const result = updateStatusSchema.safeParse(body);
 
@@ -154,11 +143,7 @@ export async function PUT(
     });
 
     return NextResponse.json({ order: updated });
-  } catch (error) {
-    console.error("[ORDER_UPDATE]", error);
-    return apiError("Internal server error", 500);
-  }
-}
+  });
 
 export async function POST(
   request: NextRequest,

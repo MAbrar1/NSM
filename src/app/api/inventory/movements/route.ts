@@ -1,16 +1,15 @@
-import { NextRequest, NextResponse } from "next/server";
-import { apiError } from "@/lib/api-errors";
+import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { requirePermission } from "@/lib/api-auth";
-import { parsePagination } from "@/lib/pagination";
+import { requirePermission } from "@/lib/api/api-auth";
+import { withApiHandler } from "@/lib/api/api-handler";
+import { parsePagination } from "@/lib/api/pagination";
 
 /* ═══════════════════════════════════════════════════════════════
    INVENTORY MOVEMENTS API
    GET /api/inventory/movements — List all stock movements with filters.
    ═══════════════════════════════════════════════════════════════ */
 
-export async function GET(request: NextRequest) {
-  try {
+export const GET = withApiHandler("MOVEMENTS_GET", async (request) => {
     const { response } = await requirePermission("inventory:view");
     if (response) return response;
 
@@ -49,8 +48,4 @@ export async function GET(request: NextRequest) {
       pageSize,
       totalPages: Math.ceil(total / pageSize),
     });
-  } catch (error) {
-    console.error("[MOVEMENTS_GET]", error);
-    return apiError("Internal server error", 500);
-  }
-}
+  });

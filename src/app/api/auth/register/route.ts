@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
-import { apiError, fieldError, validationError } from "@/lib/api-errors";
+import { NextResponse } from "next/server";
+import { withApiHandler } from "@/lib/api/api-handler";
+import { apiError, fieldError, validationError } from "@/lib/api/api-errors";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { registerSchema } from "@/lib/validations";
@@ -7,15 +8,14 @@ import {
   checkRegistrationRateLimit,
   clientIp,
   recordRegistrationAttempt,
-} from "@/lib/rate-limit";
+} from "@/lib/api/rate-limit";
 
 /* ═══════════════════════════════════════════════════════════════
    REGISTER API
    Creates a new user account with hashed password.
    ═══════════════════════════════════════════════════════════════ */
 
-export async function POST(request: NextRequest) {
-  try {
+export const POST = withApiHandler("REGISTER_ERROR", async (request) => {
     const ip = clientIp(request.headers);
 
     // Read the body ONCE — the clone/re-read dance previously risked a
@@ -105,8 +105,4 @@ export async function POST(request: NextRequest) {
       { user: userWithoutPassword, message: "Account created successfully" },
       { status: 201 }
     );
-  } catch (error) {
-    console.error("[REGISTER_ERROR]", error);
-    return apiError("Internal server error", 500);
-  }
-}
+  });

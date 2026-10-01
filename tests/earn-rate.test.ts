@@ -8,7 +8,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { LOYALTY_SPEND_PER_POINT, loyaltyPointsForSpend } from "@/lib/earn-rate";
+import { LOYALTY_SPEND_PER_POINT, loyaltyPointsForSpend } from "@/lib/customers/earn-rate";
 
 test("constant: 100 cents of spend per point", () => {
   assert.equal(LOYALTY_SPEND_PER_POINT, 100);

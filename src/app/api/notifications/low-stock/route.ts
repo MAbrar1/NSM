@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { apiError } from "@/lib/api-errors";
-import { requirePermission } from "@/lib/api-auth";
+import { requirePermission } from "@/lib/api/api-auth";
+import { withApiHandler } from "@/lib/api/api-handler";
 import {
   scanLowStock,
   deliverLowStockAlerts,
   type StockAlertCandidate,
-} from "@/lib/low-stock";
+} from "@/lib/inventory/low-stock";
 
 /* ═══════════════════════════════════════════════════════════════
    LOW-STOCK NOTIFICATION TRIGGER
@@ -46,8 +46,7 @@ export async function GET() {
 }
 
 /** POST — Scan and send notifications (cooldown-throttled per item) */
-export async function POST() {
-  try {
+export const POST = withApiHandler("LOW_STOCK_NOTIFY", async () => {
     const { response } = await requirePermission("inventory:adjust");
     if (response) return response;
 
@@ -61,8 +60,4 @@ export async function POST() {
       throttled,
       errors: errors.length > 0 ? errors : undefined,
     });
-  } catch (error) {
-    console.error("[LOW_STOCK_NOTIFY]", error);
-    return apiError("Internal server error", 500);
-  }
-}
+  });

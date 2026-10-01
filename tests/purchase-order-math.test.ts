@@ -8,7 +8,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { poLineTotals, poTotals } from "@/lib/purchase-order-math";
+import { poLineTotals, poTotals } from "@/lib/suppliers/purchase-order-math";
 
 test("poLineTotals: quantity × unitCost, tax on the line", () => {
   assert.deepEqual(poLineTotals({ quantity: 3, unitCost: 250, taxRate: 10 }), {

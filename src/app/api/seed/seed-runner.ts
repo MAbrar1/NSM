@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
-import { recomputeCustomerRollups } from "@/lib/customer-rollups";
+import { recomputeCustomerRollups } from "@/lib/customers/customer-rollups";
+import { slugify } from "@/lib/utils";
 
 /* ═══════════════════════════════════════════════
    SHARED SEED RUNNER - COMPREHENSIVE MOCK DATA
@@ -10,10 +11,6 @@ import { recomputeCustomerRollups } from "@/lib/customer-rollups";
    ═══════════════════════════════════════════════ */
 
 const prisma = new PrismaClient();
-
-function slugify(text: string): string {
-  return text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
-}
 
 function seededRand(seed: number): number {
   const x = Math.sin(seed * 9301 + 49297) * 49297;

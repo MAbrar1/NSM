@@ -12,7 +12,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { NextRequest } from "next/server";
 import { POST, GET } from "@/app/api/seed/route";
-import { hasPermission, type Role } from "@/lib/rbac";
+import { hasPermission, type Role } from "@/lib/auth/rbac";
 
 /* @types/node marks NODE_ENV read-only; mutate through an indexable
    view of process.env so the test can stage each guard condition. */

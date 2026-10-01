@@ -1,8 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
-import { apiError, validationError } from "@/lib/api-errors";
+import { NextResponse } from "next/server";
+import { apiError, validationError } from "@/lib/api/api-errors";
 import { db } from "@/lib/db";
 import { storeSettingsSchema } from "@/lib/validations";
-import { requirePermission } from "@/lib/api-auth";
+import { requirePermission } from "@/lib/api/api-auth";
+import { withApiHandler } from "@/lib/api/api-handler";
 import { logAudit } from "@/lib/audit-log";
 
 /* ═══════════════════════════════════════════════════════════════
@@ -36,6 +37,7 @@ const DEFAULTS = {
   receiptHeader: "",
   receiptFooter: "",
   receiptQrPayment: "",
+  receiptUrduDigits: false,
   lowStockThreshold: 5,
   allowPublicRegistration: false,
   refundReasonPresets: "",
@@ -62,8 +64,7 @@ const DEFAULTS = {
   lowStockNotifyAdmins: true,
 };
 
-export async function GET() {
-  try {
+export const GET = withApiHandler("SETTINGS_GET", async () => {
     // Settings include SMTP credentials, webhook URLs and registration
     // policy — reading them requires the settings:view permission, not
     // just a session (previously any authenticated user could read it).
@@ -88,14 +89,9 @@ export async function GET() {
     };
 
     return NextResponse.json({ settings: safe });
-  } catch (error) {
-    console.error("[SETTINGS_GET]", error);
-    return apiError("Internal server error", 500);
-  }
-}
+  });
 
-export async function PUT(request: NextRequest) {
-  try {
+export const PUT = withApiHandler("SETTINGS_PUT", async (request) => {
     const { user, response } = await requirePermission("settings:edit");
     if (response) return response;
 
@@ -126,6 +122,7 @@ export async function PUT(request: NextRequest) {
             receiptHeader: existing.receiptHeader ?? "",
             receiptFooter: existing.receiptFooter ?? "",
             receiptQrPayment: existing.receiptQrPayment ?? "",
+            receiptUrduDigits: existing.receiptUrduDigits,
             lowStockThreshold: existing.lowStockThreshold,
             allowPublicRegistration: existing.allowPublicRegistration,
             refundReasonPresets: existing.refundReasonPresets ?? "",
@@ -191,6 +188,7 @@ export async function PUT(request: NextRequest) {
         receiptHeader: data.receiptHeader || null,
         receiptFooter: data.receiptFooter || null,
         receiptQrPayment: data.receiptQrPayment || null,
+        receiptUrduDigits: data.receiptUrduDigits,
         lowStockThreshold: data.lowStockThreshold,
         allowPublicRegistration: data.allowPublicRegistration,
         refundReasonPresets: data.refundReasonPresets || null,
@@ -223,6 +221,7 @@ export async function PUT(request: NextRequest) {
         receiptHeader: data.receiptHeader || null,
         receiptFooter: data.receiptFooter || null,
         receiptQrPayment: data.receiptQrPayment || null,
+        receiptUrduDigits: data.receiptUrduDigits,
         lowStockThreshold: data.lowStockThreshold,
         allowPublicRegistration: data.allowPublicRegistration,
         refundReasonPresets: data.refundReasonPresets || null,
@@ -263,8 +262,4 @@ export async function PUT(request: NextRequest) {
     };
 
     return NextResponse.json({ settings: safeSettings, message: "Settings saved" });
-  } catch (error) {
-    console.error("[SETTINGS_PUT]", error);
-    return apiError("Internal server error", 500);
-  }
-}
+  });

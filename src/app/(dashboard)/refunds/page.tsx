@@ -1,11 +1,12 @@
 "use client";
 
 import * as React from "react";
+import { centsToMajorString } from "@/lib/money/money";
 import { formatCurrency, formatDate, formatTime, cn } from "@/lib/utils";
-import { downloadCsv } from "@/lib/csv";
+import { downloadCsv } from "@/lib/files/csv";
 import { ExportMenu, type ExportColumn } from "@/components/export/export-menu";
-import { fetchReportSettings, printReport } from "@/lib/print-report";
-import { lineQtyLabel, trimNumber, WHOLE_UNITS } from "@/lib/units";
+import { fetchReportSettings, printReport } from "@/lib/print/print-report";
+import { lineQtyLabel, trimNumber, WHOLE_UNITS } from "@/lib/products/units";
 import { useI18n } from "@/components/providers/i18n-provider";
 import { useStoreCurrency } from "@/components/providers/currency-provider";
 import { PageHeader } from "@/components/layout/page-header";
@@ -14,13 +15,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
+import { SortableTh } from "@/components/ui/sortable-th";
 import { EmptyState } from "@/components/ui/empty-state";
 import { StatCard } from "@/components/ui/stat-card";
 import { SmartImage } from "@/components/ui/smart-image";
 import { BarChart, monthRange } from "@/components/ui/chart";
 import { toast } from "@/stores/toast-store";
 import { useResellFromOrder } from "@/hooks/use-resell-from-order";
-import { printRefundReceiptsForOrders } from "@/lib/print-receipt";
+import { printRefundReceiptsForOrders } from "@/lib/receipts/print-receipt";
 import {
   Dialog,
   DialogBody,
@@ -205,7 +207,7 @@ export default function RefundsPage() {
     { header: "items", value: (o) => String(o.fractional ? (o.lineCount ?? o.items?.length ?? 0) : trimNumber(o.itemCount ?? o.items?.length ?? 0)), excelStyle: "int", print: { align: "right" } },
     {
       header: "refundedAmount",
-      value: (o) => ((o.refundedAmount || (o.status === "refunded" ? o.total : 0)) / 100).toFixed(2),
+      value: (o) => centsToMajorString(o.refundedAmount || (o.status === "refunded" ? o.total : 0)),
       excelStyle: "money",
       print: { align: "right", strong: true, total: (rows) => formatCurrency(rows.reduce((s, r) => s + (r.refundedAmount || (r.status === "refunded" ? r.total : 0)), 0)) },
     },
@@ -270,6 +272,19 @@ export default function RefundsPage() {
   const statsReq = React.useRef(0);
 
   // Fetch refunded orders (range applies to refund-processing dates)
+  // Server-side sort in the shared "field.order" wire format — the /api/orders
+  // allow-list covers the refund columns (refundedBy, refundedAt, reason).
+  // Dates/money open high→low; text columns A→Z.
+  const [sort, setSort] = React.useState("refundedAt.desc");
+  function toggleSort(field: string) {
+    setSort((s) => {
+      if (s.startsWith(`${field}.`)) {
+        return `${field}.${s.endsWith(".asc") ? "desc" : "asc"}`;
+      }
+      return `${field}.${field === "orderNumber" || field === "customer" || field === "refundedBy" || field === "refundReason" ? "asc" : "desc"}`;
+    });
+  }
+
   const fetchOrders = React.useCallback(async () => {
     const reqId = ++ordersReq.current;
     setLoading(true);
@@ -279,6 +294,7 @@ export default function RefundsPage() {
     if (dateFrom) params.set("dateFrom", dateFrom);
     if (dateTo) params.set("dateTo", dateTo);
     if (reasonFilter) params.set("reason", reasonFilter);
+    params.set("sort", sort);
 
     try {
       const res = await fetch(`/api/orders?${params}`);
@@ -294,7 +310,7 @@ export default function RefundsPage() {
     } finally {
       if (reqId === ordersReq.current) setLoading(false);
     }
-  }, [page, search, dateFrom, dateTo, reasonFilter]);
+  }, [page, search, dateFrom, dateTo, reasonFilter, sort]);
 
   // Scoped aggregates + monthly refund trend (full range, not just the page)
   const fetchStats = React.useCallback(async () => {
@@ -336,7 +352,7 @@ export default function RefundsPage() {
 
   React.useEffect(() => { fetchOrders(); }, [fetchOrders]);
   React.useEffect(() => { fetchStats(); }, [fetchStats]);
-  React.useEffect(() => { setPage(1); }, [search, dateFrom, dateTo, reasonFilter]);
+  React.useEffect(() => { setPage(1); }, [search, dateFrom, dateTo, reasonFilter, sort]);
 
   // Debounced search
   const [searchInput, setSearchInput] = React.useState("");
@@ -429,7 +445,7 @@ export default function RefundsPage() {
       rows.map((r) => [
         reasonLabel(r.reason),
         r.count,
-        (r.total / 100).toFixed(2),
+        centsToMajorString(r.total),
         counted > 0 ? `${((r.count / counted) * 100).toFixed(1)}%` : "0.0%",
       ])
     );
@@ -834,13 +850,13 @@ export default function RefundsPage() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-neu-hairline bg-neu-sunken">
-                <th className="whitespace-nowrap px-4 py-3 text-start text-xs font-semibold uppercase tracking-wider text-neu-faint">{t("orders.orderNumber")}</th>
-                <th className="whitespace-nowrap px-4 py-3 text-start text-xs font-semibold uppercase tracking-wider text-neu-faint">{t("orders.customer")}</th>
-                <th className="hidden whitespace-nowrap px-4 py-3 text-start text-xs font-semibold uppercase tracking-wider text-neu-faint lg:table-cell">{t("refunds.refundedBy")}</th>
+                <SortableTh label={t("orders.orderNumber")} active={sort.startsWith("orderNumber.")} order={sort.endsWith(".asc") ? "asc" : "desc"} onClick={() => toggleSort("orderNumber")} />
+                <SortableTh label={t("orders.customer")} active={sort.startsWith("customer.")} order={sort.endsWith(".asc") ? "asc" : "desc"} onClick={() => toggleSort("customer")} />
+                <SortableTh label={t("refunds.refundedBy")} className="hidden lg:table-cell" active={sort.startsWith("refundedBy.")} order={sort.endsWith(".asc") ? "asc" : "desc"} onClick={() => toggleSort("refundedBy")} />
                 <th className="hidden whitespace-nowrap px-4 py-3 text-end text-xs font-semibold uppercase tracking-wider text-neu-faint xl:table-cell">{t("orders.items")}</th>
-                <th className="whitespace-nowrap px-4 py-3 text-end text-xs font-semibold uppercase tracking-wider text-neu-faint">{t("refunds.refundedAmount")}</th>
-                <th className="hidden whitespace-nowrap px-4 py-3 text-start text-xs font-semibold uppercase tracking-wider text-neu-faint lg:table-cell">{t("refunds.reason")}</th>
-                <th className="whitespace-nowrap px-4 py-3 text-start text-xs font-semibold uppercase tracking-wider text-neu-faint">{t("refunds.refundedOn")}</th>
+                <SortableTh label={t("refunds.refundedAmount")} align="end" active={sort.startsWith("total.")} order={sort.endsWith(".asc") ? "asc" : "desc"} onClick={() => toggleSort("total")} />
+                <SortableTh label={t("refunds.reason")} className="hidden lg:table-cell" active={sort.startsWith("refundReason.")} order={sort.endsWith(".asc") ? "asc" : "desc"} onClick={() => toggleSort("refundReason")} />
+                <SortableTh label={t("refunds.refundedOn")} active={sort.startsWith("refundedAt.")} order={sort.endsWith(".asc") ? "asc" : "desc"} onClick={() => toggleSort("refundedAt")} />
                 <th className="whitespace-nowrap px-4 py-3 text-end text-xs font-semibold uppercase tracking-wider text-neu-faint">{t("orders.actions")}</th>
               </tr>
             </thead>
@@ -966,7 +982,7 @@ export default function RefundsPage() {
 
       {/* ═══ REFUND DETAIL MODAL ═══ */}
       <Dialog open={Boolean(detailOrder)} onOpenChange={(o) => !o && setDetailOrder(null)}>
-        <DialogContent size="lg">
+        <DialogContent size="lg" height="tall">
           <DialogHeader>
             {detailOrder && !detailLoading ? (
               <div className="flex items-center justify-between w-full">

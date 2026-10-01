@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { requirePermission } from "@/lib/api-auth";
+import { requirePermission } from "@/lib/api/api-auth";
 
 /* ═══════════════════════════════════════════════════════════════
    ALERT DELIVERY LOG

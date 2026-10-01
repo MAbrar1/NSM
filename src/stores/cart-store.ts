@@ -5,7 +5,7 @@ import { generateId } from "@/lib/utils";
 import {
   calculateCartTotals as computeTotals,
   refreshLineTotals,
-} from "@/lib/cart-math";
+} from "@/lib/checkout/cart-math";
 
 /* ═══════════════════════════════════════════════════════════════
    CART STORE

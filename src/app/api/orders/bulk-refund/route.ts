@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { apiError } from "@/lib/api-errors";
+import { apiError } from "@/lib/api/api-errors";
 import { db } from "@/lib/db";
 import { z } from "zod";
-import { requirePermission } from "@/lib/api-auth";
+import { requirePermission } from "@/lib/api/api-auth";
 import {
   clampRefundAmount,
   computeRefundAmount,
   type RefundableLine,
-} from "@/lib/refund-math";
-import { applyRefundToOrder } from "@/lib/refund-service";
+} from "@/lib/refunds/refund-math";
+import { applyRefundToOrder } from "@/lib/refunds/refund-service";
 
 /* ═══════════════════════════════════════════════════════════════
    BULK REFUND API

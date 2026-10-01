@@ -1,12 +1,12 @@
 import { db } from "@/lib/db";
-import { pruneLoginAttempts } from "@/lib/rate-limit";
+import { pruneLoginAttempts } from "@/lib/api/rate-limit";
 import {
   isManagedFileUrl,
   listImageFiles,
   parseImageGallery,
   deleteImageFile,
   getUploadDir,
-} from "@/lib/uploads";
+} from "@/lib/files/uploads";
 import { stat } from "fs/promises";
 import path from "path";
 

@@ -21,7 +21,7 @@ import {
   worstSeverity,
   EMPTY_ALERT_FEED,
   type StockAlert,
-} from "@/lib/alert-utils";
+} from "@/lib/notifications/alert-utils";
 
 function alert(over: Partial<StockAlert>): StockAlert {
   return {

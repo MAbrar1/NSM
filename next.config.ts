@@ -78,8 +78,11 @@ const nextConfig: NextConfig = {
             key: "Permissions-Policy",
             // camera=self is required by the POS barcode scanner; everything
             // else that a POS has no business using is denied.
+            // usb/serial are (self) so the POS can talk to configured
+            // thermal printers via WebUSB/Web Serial (M3 transports);
+            // everything else a POS has no business using stays denied.
             value:
-              "camera=(self), microphone=(), geolocation=(), payment=(), usb=(), bluetooth=()",
+              "camera=(self), microphone=(), geolocation=(), payment=(), usb=(self), serial=(self), bluetooth=()",
           },
           {
             key: "Strict-Transport-Security",

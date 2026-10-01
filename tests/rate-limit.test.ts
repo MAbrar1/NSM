@@ -24,7 +24,7 @@ import {
   MAX_REGISTRATIONS_PER_EMAIL,
   type RateLimitStore,
   type RateLimitContext,
-} from "@/lib/rate-limit";
+} from "@/lib/api/rate-limit";
 
 interface Row {
   email: string;

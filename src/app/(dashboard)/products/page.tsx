@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { centsToMajorString } from "@/lib/money/money";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,12 +21,12 @@ import {
 import { ProductForm } from "@/components/products/product-form";
 import { SmartImage } from "@/components/ui/smart-image";
 import { ImageLightbox } from "@/components/ui/image-lightbox";
-import { normalizeImageFile } from "@/lib/image-normalize";
+import { normalizeImageFile } from "@/lib/files/image-normalize";
 import { useI18n } from "@/components/providers/i18n-provider";
 import { useStoreCurrency } from "@/components/providers/currency-provider";
 import { toast } from "@/stores/toast-store";
 import { formatCurrency, cn } from "@/lib/utils";
-import { downloadCsv, downloadTemplate } from "@/lib/csv";
+import { downloadCsv, downloadTemplate } from "@/lib/files/csv";
 import { ExportMenu, type ExportColumn } from "@/components/export/export-menu";
 import { ImportResultDialog, type ImportSummary } from "@/components/import/import-result-dialog";
 import { useHardwareScanner } from "@/hooks/use-hardware-scanner";
@@ -53,8 +54,8 @@ function productToCsvRow(p: Product): string[] {
     p.category?.name ?? "",
     p.brand?.name ?? "",
     p.unit && p.unit !== "pcs" ? p.unit : "pcs",
-    (p.unitPrice / 100).toFixed(2),
-    (p.costPrice / 100).toFixed(2),
+    centsToMajorString(p.unitPrice),
+    centsToMajorString(p.costPrice),
     p.taxRate != null ? String(p.taxRate) : "0",
     p.status,
     String(p.minStockLevel),
@@ -524,13 +525,13 @@ export default function ProductsPage() {
     { header: "unit", value: (p) => (p.unit && p.unit !== "pcs" ? p.unit : "pcs"), omitPrint: true },
     {
       header: "price",
-      value: (p) => (p.unitPrice / 100).toFixed(2),
+      value: (p) => centsToMajorString(p.unitPrice),
       excelStyle: "money",
       print: { align: "right", total: (rows) => formatCurrency(rows.reduce((s, r) => s + r.unitPrice, 0)) },
     },
     {
       header: "cost",
-      value: (p) => (p.costPrice / 100).toFixed(2),
+      value: (p) => centsToMajorString(p.costPrice),
       excelStyle: "money",
       print: { align: "right", muted: true },
     },

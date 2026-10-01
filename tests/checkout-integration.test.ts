@@ -17,7 +17,7 @@ import {
   cleanTables,
   db,
 } from "./integration/db";
-import { processCheckout, CheckoutError, type CheckoutInput } from "@/lib/checkout-service";
+import { processCheckout, CheckoutError, type CheckoutInput } from "@/lib/checkout/checkout-service";
 import { db as prisma } from "@/lib/db";
 
 let harness: Awaited<ReturnType<typeof setupTestDb>> | null = null;
@@ -337,7 +337,7 @@ test("short payment with a customer becomes a credit sale (khata)", async () => 
     where: { customerId: customerId!, dueAmount: { gt: 0 } },
   });
   assert.ok(open);
-  const { allocateSettlement, orderStatusAfterSettlement } = await import("@/lib/payment-math");
+  const { allocateSettlement, orderStatusAfterSettlement } = await import("@/lib/money/payment-math");
   const { allocations } = allocateSettlement(
     [{ id: open.id, dueAmount: open.dueAmount, createdAt: open.createdAt }],
     350

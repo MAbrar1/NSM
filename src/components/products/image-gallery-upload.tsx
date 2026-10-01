@@ -6,7 +6,7 @@ import { ImageLightbox } from "@/components/ui/image-lightbox";
 import { Spinner } from "@/components/ui/spinner";
 import { useI18n } from "@/components/providers/i18n-provider";
 import { toast } from "@/stores/toast-store";
-import { normalizeImageFile } from "@/lib/image-normalize";
+import { normalizeImageFile } from "@/lib/files/image-normalize";
 import { cn } from "@/lib/utils";
 
 /* ═══════════════════════════════════════════════════════════════

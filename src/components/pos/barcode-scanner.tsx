@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/components/providers/i18n-provider";
 import { useCameraScanner } from "@/hooks/use-camera-scanner";
-import { parseScan } from "@/lib/barcode";
+import { parseScan } from "@/lib/products/barcode";
 
 /* ═══════════════════════════════════════════════════════════════
    BARCODE SCANNER (premium)

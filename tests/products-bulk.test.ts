@@ -21,8 +21,8 @@ import {
   bulkUpdateProducts,
   validateBulkUpdateInput,
   BulkUpdateError,
-} from "@/lib/products-bulk";
-import { hasPermission } from "@/lib/rbac";
+} from "@/lib/products/products-bulk";
+import { hasPermission } from "@/lib/auth/rbac";
 
 let harness: Awaited<ReturnType<typeof setupTestDb>> | null = null;
 

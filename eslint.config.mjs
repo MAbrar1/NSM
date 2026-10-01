@@ -34,6 +34,21 @@ const eslintConfig = [
       // removed, so plain padding-div bodies no longer scroll correctly.
       "@local/require-dialog-body": "warn",
       "@local/no-dialog-footer-div": "warn",
+
+      // Cents formatting has exactly one home: centsToMajorString() in
+      // @/lib/money/money. Re-deriving (x / 100).toFixed(2) at call sites
+      // is how the 68-copy duplication crept in.
+      "@local/no-raw-cents-format": "error",
+
+      // Slug generation has exactly one home: slugify() in @/lib/utils.
+      // Re-typing the lowercase/dash regex chain at create/update routes
+      // is how 11 divergent copies appeared.
+      "@local/no-raw-slugify": "error",
+
+      // Locale-less toLocaleString/toLocaleDateString/toLocaleTimeString
+      // silently follow each browser's locale. Pages that deliberately
+      // switch locales (dashboard, live-clock) pass one explicitly.
+      "@local/no-raw-datetime": "error",
     },
   },
   {
@@ -135,6 +150,99 @@ const dialogRulesPlugin = {
                   "Hand-rolled footer div inside DialogContent — use DialogFooter (shrink-0, border, pinned).",
               });
             }
+          },
+        };
+      },
+    },
+    "no-raw-cents-format": {
+      meta: {
+        type: "suggestion",
+        docs: {
+          description:
+            "Use centsToMajorString() from @/lib/money/money instead of re-deriving (cents / 100).toFixed(2).",
+        },
+        schema: [],
+      },
+      create(context) {
+        // The one legal home for the raw conversion is lib/money itself.
+        const file = context.getFilename().replace(/\\/g, "/");
+        if (file.includes("/src/lib/money/")) return {};
+        return {
+          CallExpression(node) {
+            const callee = node.callee;
+            if (callee.type !== "MemberExpression") return;
+            if (callee.property.type !== "Identifier" || callee.property.name !== "toFixed") return;
+            const arg = node.arguments[0];
+            if (!arg || arg.type !== "Literal" || arg.value !== 2) return;
+            const obj = callee.object;
+            if (obj.type !== "BinaryExpression" || obj.operator !== "/") return;
+            if (obj.right.type !== "Literal" || obj.right.value !== 100) return;
+            context.report({
+              node,
+              message:
+                "Raw (cents / 100).toFixed(2) — use centsToMajorString() from @/lib/money/money so cents formatting has one home.",
+            });
+          },
+        };
+      },
+    },
+    "no-raw-slugify": {
+      meta: {
+        type: "suggestion",
+        docs: {
+          description:
+            "Use slugify() from @/lib/utils instead of re-typing the lowercase/dash regex chain.",
+        },
+        schema: [],
+      },
+      create(context) {
+        // The one legal home for the raw chain is lib/utils itself.
+        const file = context.getFilename().replace(/\\/g, "/");
+        if (file.includes("/src/lib/utils.ts")) return {};
+        return {
+          Literal(node) {
+            if (node.regex === undefined) return;
+            if (node.regex.pattern !== "[^a-z0-9]+") return;
+            context.report({
+              node,
+              message:
+                "Raw slug regex — use slugify() from @/lib/utils so slug generation has one home.",
+            });
+          },
+        };
+      },
+    },
+    "no-raw-datetime": {
+      meta: {
+        type: "suggestion",
+        docs: {
+          description:
+            "Locale-less toLocaleString/toLocaleDateString/toLocaleTimeString drifts per browser — use formatDate/formatTime/formatDateTime from @/lib/utils or pin a locale.",
+        },
+        schema: [],
+      },
+      create(context) {
+        // The live clock intentionally manages its own locale machinery.
+        const file = context.getFilename().replace(/\\/g, "/");
+        if (file.includes("/src/components/layout/live-clock.tsx")) return {};
+        return {
+          CallExpression(node) {
+            if (node.arguments.length > 0) return; // an explicit locale is deliberate
+            const callee = node.callee;
+            if (callee.type !== "MemberExpression") return;
+            if (callee.property.type !== "Identifier") return;
+            const name = callee.property.name;
+            if (
+              name !== "toLocaleString" &&
+              name !== "toLocaleDateString" &&
+              name !== "toLocaleTimeString"
+            )
+              return;
+            context.report({
+              node,
+              message:
+                "Locale-less toLocale*() — use formatDate()/formatTime()/formatDateTime() from @/lib/utils (or pin an explicit locale) so display output doesn't drift per browser.",
+            });
           },
         };
       },

@@ -32,7 +32,7 @@ export {
   registerRateLookup,
   formatCurrency,
   formatAmount,
-} from "@/lib/currency-core";
+} from "@/lib/money/currency-core";
 
 /**
  * Format a number with locale-aware thousand separators.
@@ -81,6 +81,37 @@ export function formatTime(
     hour: "2-digit",
     minute: "2-digit",
     hour12: style === "12h",
+  }).format(d);
+}
+
+/**
+ * Slugify a name for URL-unique columns (brands, categories, products,
+ * suppliers): lowercase, non-alphanumerics folded to a single dash,
+ * leading/trailing dashes trimmed. Single home for the regex chain
+ * that used to be re-typed at every create/update route.
+ */
+export function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
+/**
+ * Format a date+time in one string, pinned to the app's display locale
+ * (en-US). The single home for what used to be hand-rolled locale-less
+ * `toLocaleString` calls — which silently followed each browser's
+ * locale instead of the app's format.
+ */
+export function formatDateTime(date: Date | string): string {
+  const d = typeof date === "string" ? new Date(date) : date;
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
   }).format(d);
 }
 

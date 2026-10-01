@@ -1,13 +1,15 @@
-import { NextRequest, NextResponse } from "next/server";
-import { apiError, fieldError, validationError } from "@/lib/api-errors";
+import { NextResponse } from "next/server";
+import { fieldError, validationError } from "@/lib/api/api-errors";
 import { db } from "@/lib/db";
 import { productSchema } from "@/lib/validations";
-import { requirePermission } from "@/lib/api-auth";
+import { requirePermission } from "@/lib/api/api-auth";
+import { withApiHandler } from "@/lib/api/api-handler";
 import { logAudit } from "@/lib/audit-log";
-import { parsePagination } from "@/lib/pagination";
-import { sumBaseStock, stockStatus } from "@/lib/stock-status";
-import { majorToCents } from "@/lib/money";
-import { ensureStockRow } from "@/lib/inventory-service";
+import { parsePagination } from "@/lib/api/pagination";
+import { sumBaseStock, stockStatus } from "@/lib/inventory/stock-status";
+import { majorToCents } from "@/lib/money/money";
+import { ensureStockRow } from "@/lib/inventory/inventory-service";
+import { slugify } from "@/lib/utils";
 
 /* ═══════════════════════════════════════════════════════════════
    PRODUCTS API
@@ -15,8 +17,7 @@ import { ensureStockRow } from "@/lib/inventory-service";
    POST /api/products      — Create a new product
    ═══════════════════════════════════════════════════════════════ */
 
-export async function GET(request: NextRequest) {
-  try {
+export const GET = withApiHandler("PRODUCTS_GET", async (request) => {
     // Require authentication for product listing
     const { response } = await requirePermission("products:view");
     if (response) return response;
@@ -115,14 +116,9 @@ export async function GET(request: NextRequest) {
       hasNext: page * pageSize < total,
       hasPrevious: page > 1,
     });
-  } catch (error) {
-    console.error("[PRODUCTS_GET]", error);
-    return apiError("Internal server error", 500);
-  }
-}
+  });
 
-export async function POST(request: NextRequest) {
-  try {
+export const POST = withApiHandler("PRODUCTS_POST", async (request) => {
     const authResult = await requirePermission("products:create");
     if (authResult.response) return authResult.response;
 
@@ -141,11 +137,18 @@ export async function POST(request: NextRequest) {
       return fieldError({ sku: ["A product with this SKU already exists"] }, 409);
     }
 
+    // Barcodes are globally unique across products and extra-barcode
+    // rows — a duplicate would make scan resolution ambiguous.
+    if (data.barcode) {
+      const dupeProduct = await db.product.findFirst({ where: { barcode: data.barcode, deletedAt: null } });
+      const dupeExtra = await db.productBarcode.findUnique({ where: { barcode: data.barcode } });
+      if (dupeProduct || dupeExtra) {
+        return fieldError({ barcode: ["This barcode is already assigned to another product"] }, 409);
+      }
+    }
+
     // Generate slug from name (append SKU suffix to avoid collisions)
-    let slug = data.name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)/g, "");
+    let slug = slugify(data.name);
     const existingSlug = await db.product.findUnique({ where: { slug } });
     if (existingSlug) {
       slug = `${slug}-${data.sku.toLowerCase()}`;
@@ -210,8 +213,4 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({ product }, { status: 201 });
-  } catch (error) {
-    console.error("[PRODUCTS_POST]", error);
-    return apiError("Internal server error", 500);
-  }
-}
+  });

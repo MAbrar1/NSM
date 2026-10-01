@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { apiError, fieldError } from "@/lib/api-errors";
+import { apiError, fieldError } from "@/lib/api/api-errors";
 import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import bcrypt from "bcryptjs";
-import type { Role } from "@/lib/rbac";
-import { requirePermission, canGrantRole } from "@/lib/api-auth";
+import type { Role } from "@/lib/auth/rbac";
+import { requirePermission, canGrantRole } from "@/lib/api/api-auth";
 import { logAudit } from "@/lib/audit-log";
-import { parsePagination } from "@/lib/pagination";
+import { parsePagination } from "@/lib/api/pagination";
+import { parseSortParam } from "@/lib/table-sort";
 
 /* ═══════════════════════════════════════════════════════════════
    USERS MANAGEMENT API
@@ -39,6 +40,16 @@ export async function GET(request: NextRequest) {
       ];
     }
 
+    // Allow-listed sort — a hand-edited query falls back to createdAt.desc
+    // instead of reaching Prisma's orderBy and throwing. Status sorts on
+    // the Boolean column, so inactive rows cluster after active ones.
+    const sort = parseSortParam(
+      searchParams.get("sort"),
+      ["name", "email", "role", "isActive", "lastLoginAt", "createdAt"],
+      { field: "createdAt", order: "desc" }
+    );
+    const orderBy: Prisma.UserOrderByWithRelationInput = { [sort.field]: sort.order };
+
     const [users, total] = await Promise.all([
       db.user.findMany({
         where,
@@ -52,7 +63,7 @@ export async function GET(request: NextRequest) {
           lastLoginAt: true,
           createdAt: true,
         },
-        orderBy: { createdAt: "desc" },
+        orderBy,
         skip,
         take,
       }),

@@ -1,14 +1,15 @@
-import { NextRequest, NextResponse } from "next/server";
-import { apiError } from "@/lib/api-errors";
+import { NextResponse } from "next/server";
+import { apiError } from "@/lib/api/api-errors";
 import { db } from "@/lib/db";
-import { requirePermission } from "@/lib/api-auth";
+import { requirePermission } from "@/lib/api/api-auth";
+import { withApiHandler } from "@/lib/api/api-handler";
 import {
   deleteImageFile,
   isManagedFileUrl,
   MAX_IMAGES_PER_PRODUCT,
   parseImageGallery,
   saveImageFile,
-} from "@/lib/uploads";
+} from "@/lib/files/uploads";
 
 /* ═══════════════════════════════════════════════════════════════
    PRODUCT IMAGE API
@@ -25,16 +26,12 @@ import {
    skipped by file cleanup and keep rendering as-is.
    ═══════════════════════════════════════════════════════════════ */
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
+export const POST = withApiHandler<{ id: string }>("PRODUCT_IMAGE", async (request, ctx) => {
     // Image mutations are product edits — require the same permission
     const { response } = await requirePermission("products:edit");
     if (response) return response;
 
-    const { id } = await params;
+    const { id } = await ctx.params;
     const formData = await request.formData();
     const file = formData.get("image") as File | null;
 
@@ -88,21 +85,13 @@ export async function POST(
       imageUrl: dataUrl,
       message: "Image uploaded successfully",
     });
-  } catch (error) {
-    console.error("[PRODUCT_IMAGE]", error);
-    return apiError("Internal server error", 500);
-  }
-}
+  });
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
+export const PUT = withApiHandler<{ id: string }>("PRODUCT_IMAGE_PUT", async (request, ctx) => {
     const { response } = await requirePermission("products:edit");
     if (response) return response;
 
-    const { id } = await params;
+    const { id } = await ctx.params;
     const body = (await request.json()) as { images?: unknown };
 
     if (!Array.isArray(body.images)) {
@@ -152,8 +141,4 @@ export async function PUT(
       product: { ...product, images: parseImageGallery(product.images) },
       message: "Gallery saved",
     });
-  } catch (error) {
-    console.error("[PRODUCT_IMAGE_PUT]", error);
-    return apiError("Internal server error", 500);
-  }
-}
+  });

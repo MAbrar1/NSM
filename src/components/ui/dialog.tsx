@@ -3,22 +3,26 @@
 import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/components/providers/i18n-provider";
 
 /* ═══════════════════════════════════════════════════════════════
-   DIALOG COMPONENT (v4)
-   Fix for the "footer cut off / body unscrollable" bug class
-   found in the POS payment modal:
+   DIALOG COMPONENT (v5 — Elite polish pass)
 
-   - Content: flex column, max-h clamped to the viewport (dvh so
+   - Panel elevation: `.neu-dialog-panel` (globals.css) — a levitating
+     sheet (soft emboss + one large ambient drop), NOT the flat-tile
+     card emboss. This is the single fix for the "dialog looks flat /
+     badly shadowed" bug class.
+   - Built-in close button: DialogContent renders an X in the corner
+     (RTL-aware) unless `hideClose` is set. Every dialog in the app
+     gets a visible, named, keyboard-reachable close affordance for
+     free — before, only 3 of ~30 dialogs had one.
+   - Structure contract (unchanged, keeps the footer-clip fix):
+     Content: flex column, max-h clamped to the viewport (dvh so
      mobile URL bars don't clip it), width never exceeds screen.
-   - Header/Footer: `shrink-0` → they always stay visible.
-   - Body: `flex-1 min-h-0 overflow-y-auto` → the ONLY scrollable
+     Header/Footer: `shrink-0` → they always stay visible.
+     Body: `flex-1 min-h-0 overflow-y-auto` → the ONLY scrollable
      region. `min-h-0` is mandatory: without it a flex child refuses
      to shrink below its content height and the clip is lost.
-
-   Contract: every dialog wraps its middle content in <DialogBody>.
-   The legacy auto-wrap shim (DialogScrollShim) was removed once the
-   full codebase audit confirmed every DialogContent does so.
    ═══════════════════════════════════════════════════════════════ */
 
 const Dialog = DialogPrimitive.Root;
@@ -47,8 +51,28 @@ const DialogContent = React.forwardRef<
   React.ComponentRef<typeof DialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & {
     size?: "sm" | "md" | "lg" | "xl";
+    /** Hide the built-in X (confirm-destructive rows, print sheets…). */
+    hideClose?: boolean;
+    /**
+     * Vertical ambition of the panel:
+     *   • "fit" (default) — hug the content up to the viewport clamp;
+     *     confirm sheets, qty editors, short forms.
+     *   • "tall" — claim a stable tall frame (~85dvh) so data-heavy
+     *     detail views (orders, customers, payment) don't jump height
+     *     as tabs/sections stream in; the Body scrolls inside it.
+     */
+    height?: "fit" | "tall";
   }
->(({ className, children, size = "md", onOpenAutoFocus, onCloseAutoFocus, ...props }, ref) => {
+>(({
+  className,
+  children,
+  size = "md",
+  hideClose = false,
+  height = "fit",
+  onOpenAutoFocus,
+  onCloseAutoFocus,
+  ...props
+}, ref) => {
   const sizeClasses = {
     sm: "max-w-sm",
     // spec: the default dialog panel is 480px
@@ -64,6 +88,11 @@ const DialogContent = React.forwardRef<
   // in the page. Remember what was focused as the panel opened and put it
   // back on close, which is what a trigger would have done.
   const returnFocusRef = React.useRef<HTMLElement | null>(null);
+
+  // The built-in close is a labelled Radix Close, so Esc, ✕ and the footer
+  // action all run the same dismiss path. Hidden from the a11y tree when
+  // hidden — never a phantom tab stop.
+  const { t } = useI18n();
 
   return (
     <DialogPortal>
@@ -94,16 +123,40 @@ const DialogContent = React.forwardRef<
           // pushes the footer under it; dvh tracks the visible viewport.
           "w-[calc(100vw-2rem)] sm:w-full p-0",
           sizeClasses[size],
-          // surface / radius / emboss / cyan top-border from .neu-card.
-          // Flush because Header + Body + Footer own the inner padding.
+          // surface / radius come from .neu-card; the LEVITATING sheet
+          // elevation + entrance come from .neu-dialog-panel (declared
+          // after .neu-card, so the shadow handoff is source-order safe).
           "neu-card neu-card-flush neu-dialog-panel",
           "neu-focus",
           "max-h-[calc(100dvh-2rem)] overflow-hidden flex flex-col",
+          height === "tall" && "h-[85dvh]",
           className
         )}
         {...props}
       >
         {children}
+        {!hideClose && (
+          <DialogPrimitive.Close
+            aria-label={t("common.close")}
+            title={t("common.close")}
+            className={cn(
+              "neu-dialog-close neu-btn neu-btn-icon-sm neu-focus",
+              "bg-neu-bg text-neu-muted hover:text-neu-primary",
+              "transition-colors"
+            )}
+          >
+            <svg
+              className="h-4 w-4"
+              aria-hidden
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </DialogPrimitive.Close>
+        )}
       </DialogPrimitive.Content>
     </DialogPortal>
   );
@@ -113,7 +166,16 @@ DialogContent.displayName = DialogPrimitive.Content.displayName;
 function DialogHeader({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn("shrink-0 flex items-start justify-between p-6 pb-4", className)}
+      className={cn(
+        "shrink-0 flex items-start justify-between gap-3 p-6 pb-4",
+        // the header rule is the dark edge of the separator emboss
+        "border-b border-[color:var(--neu-shadow-dark)]",
+        // the built-in close keycap sits 12px inside the trailing corner —
+        // reserve that corner so long titles never slide under it (the X is
+        // a physical position on the panel, not a logical child of the row).
+        "pe-16",
+        className
+      )}
       {...props}
     />
   );
@@ -145,8 +207,12 @@ function DialogFooter({ className, ...props }: React.HTMLAttributes<HTMLDivEleme
   return (
     <div
       className={cn(
-        // the footer rule is the dark edge of the separator emboss
-        "shrink-0 flex items-center justify-end gap-2 border-t border-[color:var(--neu-shadow-dark)] px-6 py-4",
+        // the footer rule is the dark edge of the separator emboss; the
+        // faint recessed tint grounds the actions without a hard fill
+        "shrink-0 flex items-center justify-end gap-2 px-6 py-4",
+        "border-t border-[color:var(--neu-shadow-dark)] bg-neu-sunken/40",
+        // keep the buttons clear of the rounded panel corners
+        "rounded-b-[inherit]",
         className
       )}
       {...props}

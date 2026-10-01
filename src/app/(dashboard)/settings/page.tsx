@@ -1,17 +1,19 @@
 "use client";
 
 import * as React from "react";
+import { centsToMajorString } from "@/lib/money/money";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { EmptyState } from "@/components/ui/empty-state";
 import { NotificationDeliveryLog } from "@/components/settings/notification-delivery-log";
-import { parseApiError } from "@/lib/api-error";
+import { parseApiError } from "@/lib/api/api-error";
 import { toast } from "@/stores/toast-store";
 import { useI18n } from "@/components/providers/i18n-provider";
 import { cn, setCurrencyDefaults } from "@/lib/utils";
 import { useSettingsStore } from "@/stores/settings-store";
+import { useUnsavedGuard } from "@/hooks/use-unsaved-guard";
 
 /* ═══════════════════════════════════════════════════════════════
    SETTINGS PAGE
@@ -93,6 +95,9 @@ export default function SettingsPage() {
   const [exporting, setExporting] = React.useState(false);
   const [running, setRunning] = React.useState(false);
   const [dirty, setDirty] = React.useState(false);
+  // Shield the unsaved edits: beforeunload + in-app leave confirmation
+  // (the DirtyNavGuard in the dashboard layout does the actual blocking).
+  useUnsavedGuard({ when: dirty });
   const [refundPresets, setRefundPresets] = React.useState<string[]>([]);
   const [newPreset, setNewPreset] = React.useState("");
 
@@ -266,8 +271,8 @@ export default function SettingsPage() {
           p.sku,
           p.barcode ?? "",
           p.categoryName ?? "",
-          (p.unitPrice / 100).toFixed(2),
-          (p.costPrice / 100).toFixed(2),
+          centsToMajorString(p.unitPrice),
+          centsToMajorString(p.costPrice),
           "active",
           String(p.totalStock ?? 0),
         ]),

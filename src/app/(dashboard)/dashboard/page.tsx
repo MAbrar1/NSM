@@ -23,10 +23,10 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { TotalProductsCard } from "@/components/ui/total-products-card";
-import { EMPTY_ALERT_SUMMARY, auditAlertForEntry } from "@/lib/alert-utils";
+import { EMPTY_ALERT_SUMMARY, auditAlertForEntry } from "@/lib/notifications/alert-utils";
 import { AlertTileInline } from "@/components/ui/alert-tile";
 import { useAlerts } from "@/hooks/use-alerts";
-import { canAccessRoute, type Role } from "@/lib/rbac";
+import { canAccessRoute, type Role } from "@/lib/auth/rbac";
 
 /* ═══════════════════════════════════════════════════════════════
    DASHBOARD PAGE
@@ -203,6 +203,8 @@ type DashboardStatEntry =
       sub?: string;
       bar?: StatBarSegment[];
       barLabel?: string;
+      numericValue?: number;
+      formatValue?: (v: number) => string;
     }
   | { key: "products" };
 
@@ -460,6 +462,7 @@ export default function DashboardPage() {
           key: "range",
           label: t("dashboard.revenueRange").replace("{range}", rangeLabel),
           value: formatCurrency(data.rangeRevenue),
+          numericValue: data.rangeRevenue,
           icon: "cash",
           tone: "success",
           delta: todayDelta,
@@ -470,6 +473,7 @@ export default function DashboardPage() {
           key: "month",
           label: t("dashboard.thisMonth"),
           value: formatCurrency(data.monthRevenue),
+          numericValue: data.monthRevenue,
           icon: "trend",
           tone: "brand",
           delta: monthDelta,
@@ -482,6 +486,8 @@ export default function DashboardPage() {
           key: "alerts",
           label: t("dashboard.needsRestock"),
           value: String(lowStockProducts),
+          numericValue: lowStockProducts,
+          formatValue: (v) => String(Math.round(v)),
           icon: "alert",
           tone: alertSummary.critical > 0 ? "danger" : lowStockProducts > 0 ? "warning" : "success",
           sub:
@@ -499,6 +505,7 @@ export default function DashboardPage() {
           key: "dues",
           label: t("dashboard.outstandingDues"),
           value: formatCurrency(data.outstandingDues ?? 0),
+          numericValue: data.outstandingDues ?? 0,
           icon: "wallet",
           tone: (data.outstandingDues ?? 0) > 0 ? "warning" : "success",
           sub:
@@ -602,6 +609,14 @@ export default function DashboardPage() {
     color: STATUS_COLORS[s.status] ?? "var(--neu-text-muted)",
   }));
   const hasDonutData = donutData.some((d) => d.value > 0);
+
+  /* Skeleton→content crossfade: the entrance animation keys off the
+     FIRST-load boundary only (hasLoadedOnce), not the `loading` flag —
+     so the 60s background refetch and the manual refresh swap values
+     with a quick opacity fade instead of replaying the stagger pop-in
+     every minute. Content keeps a persistent fade transition; the
+     skeleton only ever appears for the initial load. */
+  const hasLoadedOnce = !loading || data !== null;
 
   return (
     <div className="stagger space-y-6">
@@ -743,8 +758,8 @@ export default function DashboardPage() {
       )}
 
       {/* ─── Stat cards ─── */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-        {loading
+      <div className="grid grid-cols-1 gap-4 transition-opacity duration-300 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        {!hasLoadedOnce
           ? Array.from({ length: 5 }).map((_, i) => (
               <Card key={i}>
                 <CardContent className="p-5">
@@ -772,6 +787,8 @@ export default function DashboardPage() {
                   sub={stat.sub}
                   bar={stat.bar}
                   barLabel={stat.barLabel}
+                  numericValue={stat.numericValue}
+                  formatValue={stat.formatValue}
                 />
               ) : (
                 <TotalProductsCard key={stat.key} value={totalProductsCount} tone="info" />
@@ -804,8 +821,8 @@ export default function DashboardPage() {
               )}
             </div>
           </CardHeader>
-          <CardContent>
-            {loading ? (
+          <CardContent className="transition-opacity duration-300">
+            {!hasLoadedOnce ? (
               <div className="skeleton h-[190px] w-full rounded-lg" />
             ) : weekTrendData.length === 0 || weekTrendData.every((d) => d.value === 0) ? (
               <div className="flex h-[190px] items-center justify-center rounded-lg border border-dashed border-neu-hairline">
@@ -1003,7 +1020,7 @@ export default function DashboardPage() {
           </div>
         </CardHeader>
         <CardContent>
-          {loading ? (
+          {!hasLoadedOnce ? (
             <div className="skeleton h-[150px] w-full rounded-lg" />
           ) : !hasHourlyData ? (
             <EmptyState
@@ -1037,7 +1054,7 @@ export default function DashboardPage() {
             </div>
           </CardHeader>
           <CardContent>
-            {loading ? (
+            {!hasLoadedOnce ? (
               <div className="space-y-3">
                 {Array.from({ length: 3 }).map((_, i) => (
                   <div key={i} className="flex items-center gap-3">
@@ -1057,7 +1074,7 @@ export default function DashboardPage() {
                     <div key={w.warehouseId} className="group">
                       <div className="flex items-baseline justify-between gap-2">
                         <p className="flex min-w-0 items-center gap-2 text-sm font-medium text-neu-primary">
-                          <span className="truncate">{w.name}</span>
+                          <span className="min-w-0 truncate">{w.name}</span>
                           {isLeader && (
                             <Badge variant="success" size="sm">
                               #1
@@ -1124,7 +1141,7 @@ export default function DashboardPage() {
             </div>
           </CardHeader>
           <CardContent>
-            {loading ? (
+            {!hasLoadedOnce ? (
               <div className="skeleton h-[190px] w-full rounded-lg" />
             ) : !hasRefundData ? (
               <EmptyState
@@ -1171,7 +1188,7 @@ export default function DashboardPage() {
             </div>
           </CardHeader>
           <CardContent>
-            {loading ? (
+            {!hasLoadedOnce ? (
               <div className="skeleton h-[190px] w-full rounded-lg" />
             ) : !hasReasonData ? (
               <EmptyState
@@ -1190,7 +1207,7 @@ export default function DashboardPage() {
                 {refundReasons.slice(0, 5).map((r) => (
                   <div key={r.reason ?? "__none__"} className="group">
                     <div className="flex items-baseline justify-between gap-2">
-                      <p className="truncate text-sm font-medium text-neu-primary">
+                      <p className="min-w-0 truncate text-sm font-medium text-neu-primary">
                         {r.reason || t("refunds.noReason")}
                       </p>
                       <p className="shrink-0 text-sm font-bold tabular-nums text-neu-ink-red">
@@ -1241,7 +1258,7 @@ export default function DashboardPage() {
           </div>
         </CardHeader>
         <CardContent>
-          {loading ? (
+          {!hasLoadedOnce ? (
             <div className="skeleton h-[210px] w-full rounded-lg" />
           ) : !heatmapHasData ? (
             <EmptyState
@@ -1347,7 +1364,7 @@ export default function DashboardPage() {
             </div>
           </CardHeader>
           <CardContent className="px-2 pb-2 sm:px-6 sm:pb-6">
-            {loading ? (
+            {!hasLoadedOnce ? (
               <div className="space-y-2 px-3">
                 {Array.from({ length: 5 }).map((_, i) => (
                   <div key={i} className="flex items-center gap-3 py-2">
@@ -1402,7 +1419,9 @@ export default function DashboardPage() {
                         <Badge variant={STATUS_VARIANT[order.status] ?? "default"} size="sm">
                           {t(`orders.${order.status}`)}
                         </Badge>
-                        <span className="w-24 shrink-0 text-end text-sm font-bold text-neu-primary tabular-nums">
+                        {/* Money reads whole — a fixed w-24 elided large totals
+                            into "…". min-w + end-align keeps the column tidy. */}
+                        <span className="min-w-24 shrink-0 text-end text-sm font-bold text-neu-primary tabular-nums">
                           {formatCurrency(order.total)}
                         </span>
                       </div>
@@ -1427,7 +1446,7 @@ export default function DashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {loading ? (
+            {!hasLoadedOnce ? (
               <div className="space-y-3">
                 {Array.from({ length: 5 }).map((_, i) => (
                   <div key={i} className="flex items-center gap-3">
@@ -1468,7 +1487,9 @@ export default function DashboardPage() {
                         </span>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-baseline justify-between gap-2">
-                            <p className="truncate text-sm font-medium text-neu-primary">{product.name}</p>
+                            {/* name gives way, money never: min-w-0 + truncate on
+                                the label, whole amount on the trailing side */}
+                            <p className="min-w-0 truncate text-sm font-medium text-neu-primary">{product.name}</p>
                             <p className="shrink-0 text-sm font-bold text-neu-primary tabular-nums">
                               {formatCurrency(product.revenue)}
                             </p>
@@ -1512,7 +1533,7 @@ export default function DashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {loading ? (
+            {!hasLoadedOnce ? (
               <div className="space-y-3">
                 {Array.from({ length: 5 }).map((_, i) => (
                   <div key={i} className="flex items-center gap-3">
@@ -1558,7 +1579,7 @@ export default function DashboardPage() {
                         </span>
                       </span>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium text-neu-primary">{customer.name}</p>
+                        <p className="min-w-0 truncate text-sm font-medium text-neu-primary">{customer.name}</p>
                         <p className="text-[11px] text-neu-faint">
                           {customer.orders} {t("dashboard.orders")}
                         </p>
@@ -1590,7 +1611,7 @@ export default function DashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {loading ? (
+            {!hasLoadedOnce ? (
               <div className="space-y-3">
                 {Array.from({ length: 5 }).map((_, i) => (
                   <div key={i} className="flex items-center gap-3">

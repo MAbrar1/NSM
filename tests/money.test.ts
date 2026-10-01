@@ -10,7 +10,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { majorToCents, parseMoneyToCents } from "@/lib/money";
+import { majorToCents, parseMoneyToCents } from "@/lib/money/money";
 
 test("majorToCents: whole and decimal amounts", () => {
   assert.equal(majorToCents(0), 0);

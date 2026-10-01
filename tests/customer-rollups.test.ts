@@ -19,7 +19,7 @@ import { test, before, after, beforeEach } from "node:test";
 import assert from "node:assert/strict";
 import "./integration/env"; // MUST come before anything that loads @/lib/db
 import { setupTestDb, teardownTestDb, cleanTables, db } from "./integration/db";
-import { recomputeCustomerRollups, ROLLUP_PAID_STATUSES } from "@/lib/customer-rollups";
+import { recomputeCustomerRollups, ROLLUP_PAID_STATUSES } from "@/lib/customers/customer-rollups";
 
 let harness: Awaited<ReturnType<typeof setupTestDb>> | null = null;
 

@@ -1,17 +1,18 @@
 "use client";
 
 import * as React from "react";
+import { centsToMajorString } from "@/lib/money/money";
 import { formatCurrency, cn, percentDelta } from "@/lib/utils";
-import { lineQtyLabel } from "@/lib/units";
+import { lineQtyLabel } from "@/lib/products/units";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useI18n } from "@/components/providers/i18n-provider";
-import { downloadCsv, downloadExcel, sumFormulaCell, type ExcelSheet } from "@/lib/csv";
+import { downloadCsv, downloadExcel, sumFormulaCell, type ExcelSheet } from "@/lib/files/csv";
 import { ExportMenu, type ExportColumn } from "@/components/export/export-menu";
-import { fetchReportSettings, printReport } from "@/lib/print-report";
+import { fetchReportSettings, printReport } from "@/lib/print/print-report";
 import { useStoreCurrency } from "@/components/providers/currency-provider";
 import { StatCard, type StatIconName, type StatTone } from "@/components/ui/stat-card";
 import { toast } from "@/stores/toast-store";
@@ -158,19 +159,19 @@ export default function SalesReportPage() {
     const summaryRows: Array<Array<string | number>> = [
       ["dateFrom", dateFrom ?? ""],
       ["dateTo", dateTo ?? ""],
-      ["totalRevenue", (data.summary.totalRevenue / 100).toFixed(2)],
-      ["netRevenue", (data.summary.netRevenue / 100).toFixed(2)],
+      ["totalRevenue", centsToMajorString(data.summary.totalRevenue)],
+      ["netRevenue", centsToMajorString(data.summary.netRevenue)],
       ["totalOrders", String(data.summary.totalOrders)],
-      ["averageOrderValue", (data.summary.averageOrderValue / 100).toFixed(2)],
-      ["totalTax", (data.summary.totalTax / 100).toFixed(2)],
-      ["totalDiscounts", (data.summary.totalDiscounts / 100).toFixed(2)],
+      ["averageOrderValue", centsToMajorString(data.summary.averageOrderValue)],
+      ["totalTax", centsToMajorString(data.summary.totalTax)],
+      ["totalDiscounts", centsToMajorString(data.summary.totalDiscounts)],
     ];
     const productRows: Array<Array<string | number>> = data.topProducts.map((p) => [
       p.name, p.sku, lineQtyLabel(p.quantitySold, p.unit) ?? "",
-      (p.revenue / 100).toFixed(2), String(p.orderCount),
+      centsToMajorString(p.revenue), String(p.orderCount),
     ]);
     const categoryRows: Array<Array<string | number>> = data.categories.map((c) => [
-      c.name, (c.revenue / 100).toFixed(2), String(c.quantity), String(c.items),
+      c.name, centsToMajorString(c.revenue), String(c.quantity), String(c.items),
     ]);
     return { summaryRows, productRows, categoryRows };
   }
@@ -225,7 +226,7 @@ export default function SalesReportPage() {
     { header: "qtySold", value: (p) => lineQtyLabel(p.quantitySold, p.unit) ?? "", excelStyle: "int", print: { label: "Qty Sold", align: "right" } },
     {
       header: "revenue",
-      value: (p) => (p.revenue / 100).toFixed(2),
+      value: (p) => centsToMajorString(p.revenue),
       excelStyle: "money",
       print: { align: "right", strong: true, total: (rows) => formatCurrency(rows.reduce((s, r) => s + r.revenue, 0)) },
     },
@@ -405,6 +406,7 @@ export default function SalesReportPage() {
                 {
                   label: t("reports.totalRevenue"),
                   value: formatCurrency(data.summary.totalRevenue),
+                  numericValue: data.summary.totalRevenue,
                   icon: "cash" as StatIconName,
                   tone: "brand" as StatTone,
                   delta: prevSummary ? percentDelta(data.summary.totalRevenue, prevSummary.totalRevenue) : null,
@@ -414,6 +416,7 @@ export default function SalesReportPage() {
                 {
                   label: t("reports.netRevenue"),
                   value: formatCurrency(data.summary.netRevenue),
+                  numericValue: data.summary.netRevenue,
                   icon: "trend" as StatIconName,
                   tone: "success" as StatTone,
                   delta: prevSummary ? percentDelta(data.summary.netRevenue, prevSummary.netRevenue) : null,
@@ -423,6 +426,8 @@ export default function SalesReportPage() {
                 {
                   label: t("reports.totalOrders"),
                   value: String(data.summary.totalOrders),
+                  numericValue: data.summary.totalOrders,
+                  formatValue: (v: number) => String(Math.round(v)),
                   icon: "bag" as StatIconName,
                   tone: "info" as StatTone,
                   delta: prevSummary ? percentDelta(data.summary.totalOrders, prevSummary.totalOrders) : null,
@@ -431,6 +436,7 @@ export default function SalesReportPage() {
                 {
                   label: t("reports.avgOrderValue"),
                   value: formatCurrency(data.summary.averageOrderValue),
+                  numericValue: data.summary.averageOrderValue,
                   icon: "chart" as StatIconName,
                   tone: "warning" as StatTone,
                   delta: prevSummary ? percentDelta(data.summary.averageOrderValue, prevSummary.averageOrderValue) : null,
@@ -439,6 +445,8 @@ export default function SalesReportPage() {
               ] as Array<{
                 label: string;
                 value: string;
+                numericValue?: number;
+                formatValue?: (v: number) => string;
                 icon: StatIconName;
                 tone: StatTone;
                 delta: number | null;
@@ -450,6 +458,8 @@ export default function SalesReportPage() {
                 key={stat.label}
                 label={stat.label}
                 value={stat.value}
+                numericValue={stat.numericValue}
+                formatValue={stat.formatValue}
                 icon={stat.icon}
                 tone={stat.tone}
                 delta={stat.delta}

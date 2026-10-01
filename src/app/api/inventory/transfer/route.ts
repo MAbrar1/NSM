@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { apiError, validationError } from "@/lib/api-errors";
+import { apiError, validationError } from "@/lib/api/api-errors";
 import { db } from "@/lib/db";
 import { z } from "zod";
-import { requirePermission } from "@/lib/api-auth";
-import { debitStock } from "@/lib/inventory-service";
+import { requirePermission } from "@/lib/api/api-auth";
+import { withApiHandler } from "@/lib/api/api-handler";
+import { debitStock } from "@/lib/inventory/inventory-service";
 
 /* ═══════════════════════════════════════════════════════════════
    STOCK TRANSFER API
@@ -25,8 +26,7 @@ const createTransferSchema = z.object({
   notes: z.string().max(500).optional(),
 });
 
-export async function GET(request: NextRequest) {
-  try {
+export const GET = withApiHandler("TRANSFER_GET", async (request) => {
     const { response } = await requirePermission("inventory:view");
     if (response) return response;
 
@@ -67,11 +67,7 @@ export async function GET(request: NextRequest) {
     }));
 
     return NextResponse.json({ transfers: enriched });
-  } catch (error) {
-    console.error("[TRANSFER_GET]", error);
-    return apiError("Internal server error", 500);
-  }
-}
+  });
 
 export async function POST(request: NextRequest) {
   try {

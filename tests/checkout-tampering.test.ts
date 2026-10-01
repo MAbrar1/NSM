@@ -21,7 +21,7 @@ import {
   validatePayment,
   type ClientCheckoutLine,
   type ServerPricing,
-} from "@/lib/checkout-math";
+} from "@/lib/checkout/checkout-math";
 
 /** An honest line: $10.00 unit price, $6.00 cost, 5% tax. */
 const SERVER: ServerPricing = { unitPrice: 1000, costPrice: 600, taxRate: 5 };

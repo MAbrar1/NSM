@@ -1,8 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
-import { apiError, fieldError, validationError } from "@/lib/api-errors";
+import { NextResponse } from "next/server";
+import { fieldError, validationError } from "@/lib/api/api-errors";
 import { db } from "@/lib/db";
 import { warehouseSchema } from "@/lib/validations";
-import { requirePermission } from "@/lib/api-auth";
+import { requirePermission } from "@/lib/api/api-auth";
+import { withApiHandler } from "@/lib/api/api-handler";
 
 /* ═══════════════════════════════════════════════════════════════
    WAREHOUSES API
@@ -10,8 +11,7 @@ import { requirePermission } from "@/lib/api-auth";
    POST /api/warehouses — Create a new warehouse (admin only)
    ═══════════════════════════════════════════════════════════════ */
 
-export async function GET() {
-  try {
+export const GET = withApiHandler("WAREHOUSES_GET", async () => {
     // Warehouse list is needed by the POS terminal, the header selector,
     // and the inventory screens — auth (any role) is enough here.
     const { response } = await requirePermission();
@@ -24,14 +24,9 @@ export async function GET() {
       },
     });
     return NextResponse.json({ warehouses });
-  } catch (error) {
-    console.error("[WAREHOUSES_GET]", error);
-    return apiError("Internal server error", 500);
-  }
-}
+  });
 
-export async function POST(request: NextRequest) {
-  try {
+export const POST = withApiHandler("WAREHOUSES_POST", async (request) => {
     const { response } = await requirePermission("settings:edit");
     if (response) return response;
 
@@ -69,8 +64,4 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({ warehouse }, { status: 201 });
-  } catch (error) {
-    console.error("[WAREHOUSES_POST]", error);
-    return apiError("Internal server error", 500);
-  }
-}
+  });

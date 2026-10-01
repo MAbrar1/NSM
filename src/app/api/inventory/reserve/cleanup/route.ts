@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
-import { apiError } from "@/lib/api-errors";
-import { requirePermission } from "@/lib/api-auth";
-import { releaseStaleReservations } from "@/lib/reservation-cleanup";
+import { NextResponse } from "next/server";
+import { apiError } from "@/lib/api/api-errors";
+import { requirePermission } from "@/lib/api/api-auth";
+import { withApiHandler } from "@/lib/api/api-handler";
+import { releaseStaleReservations } from "@/lib/inventory/reservation-cleanup";
 
 /* ═══════════════════════════════════════════════════════════════
    STOCK RESERVATION CLEANUP
@@ -21,8 +22,7 @@ import { releaseStaleReservations } from "@/lib/reservation-cleanup";
    already-released row is a no-op.
    ═══════════════════════════════════════════════════════════════ */
 
-export async function POST(request: NextRequest) {
-  try {
+export const POST = withApiHandler("RESERVE_CLEANUP", async (request) => {
     // 1) Session-based permission (manual admin run)
     const { response } = await requirePermission("inventory:adjust");
     if (!response) {
@@ -51,8 +51,4 @@ export async function POST(request: NextRequest) {
     }
 
     return apiError("Unauthorized", 401);
-  } catch (error) {
-    console.error("[RESERVE_CLEANUP]", error);
-    return apiError("Internal server error", 500);
-  }
-}
+  });

@@ -24,7 +24,7 @@
       the phases run.
 
    Usage:
-     import { createHarness, sleep, POS } from "./scripts/audit-harness.mjs";
+     import { createHarness, sleep, POS } from "./audit-harness.mjs";
      const h = await createHarness({ name: "pos", loginPath: "/pos" });
      const { check, evalJs, waitFor, nav, shot } = h;
      const ok = await h.login();

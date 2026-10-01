@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/components/providers/i18n-provider";
-import { downloadCsv } from "@/lib/csv";
+import { downloadCsv } from "@/lib/files/csv";
 
 /* ═══════════════════════════════════════════════════════════════
    IMPORT RESULT DIALOG — elite post-import feedback.

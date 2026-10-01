@@ -8,7 +8,7 @@ import {
   type StockAlert,
   alertMessage,
   auditAlertForEntry,
-} from "@/lib/alert-utils";
+} from "@/lib/notifications/alert-utils";
 
 /* ═══════════════════════════════════════════════════════════════
    ALERT TILE — shared compact row for alert surfaces

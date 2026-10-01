@@ -32,7 +32,7 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useI18n } from "@/components/providers/i18n-provider";
-import { PRINT_SCHEME_STORAGE_KEY, PRINT_SCHEME_COOKIE, type PrintScheme } from "@/lib/print-brand";
+import { PRINT_SCHEME_STORAGE_KEY, PRINT_SCHEME_COOKIE, type PrintScheme } from "@/lib/print/print-brand";
 
 type Scheme = PrintScheme;
 
@@ -108,7 +108,17 @@ function buildSrc(html: string, scheme: Scheme): string {
   // makes the frame's print() work in Chromium without popup
   // permission — the whole point of previewing in-app. The preview
   // attribute enables the page-break ruler inside the frame only.
-  return `data:text/html;charset=utf-8;base64,${base64EncodeUtf8(withPreviewChrome(withScheme(html, scheme)))}`;
+  //
+  // Bundled fonts: the frame is an opaque-origin data: URL, so the
+  // documents' root-relative /fonts/... URLs cannot resolve inside it
+  // and Urdu/Arabic would silently fall back. Absolutize them against
+  // the app origin (same files the print windows load — no network).
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  const prepared = withScheme(html, scheme).replaceAll(
+    /url\(("?)\/fonts\//g,
+    `url($1${origin}/fonts/`
+  );
+  return `data:text/html;charset=utf-8;base64,${base64EncodeUtf8(withPreviewChrome(prepared))}`;
 }
 
 export const usePreviewStore = create<PreviewState>((set, get) => ({

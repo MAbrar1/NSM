@@ -9,7 +9,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { parseApiError, readApiError } from "@/lib/api-error";
+import { parseApiError, readApiError } from "@/lib/api/api-error";
 
 test("a plain string error becomes the message with no field target", () => {
   const parsed = parseApiError({ error: "Email already in use" }, "fallback");

@@ -1,8 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
-import { apiError, fieldError, validationError } from "@/lib/api-errors";
+import { NextResponse } from "next/server";
+import { apiError, fieldError, validationError } from "@/lib/api/api-errors";
 import { db } from "@/lib/db";
 import { customerSchema } from "@/lib/validations";
-import { requirePermission } from "@/lib/api-auth";
+import { requirePermission } from "@/lib/api/api-auth";
+import { withApiHandler } from "@/lib/api/api-handler";
 import { logAudit } from "@/lib/audit-log";
 
 /* ═══════════════════════════════════════════════════════════════
@@ -12,15 +13,11 @@ import { logAudit } from "@/lib/audit-log";
    DELETE /api/customers/:id — Soft-delete customer
    ═══════════════════════════════════════════════════════════════ */
 
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
+export const GET = withApiHandler<{ id: string }>("CUSTOMER_GET", async (_request, ctx) => {
     const { response } = await requirePermission("customers:view");
     if (response) return response;
 
-    const { id } = await params;
+    const { id } = await ctx.params;
     const customer = await db.customer.findUnique({
       where: { id },
       include: {
@@ -59,21 +56,13 @@ export async function GET(
         creditOrderCount: openCreditOrders.length,
       },
     });
-  } catch (error) {
-    console.error("[CUSTOMER_GET]", error);
-    return apiError("Internal server error", 500);
-  }
-}
+  });
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
+export const PUT = withApiHandler<{ id: string }>("CUSTOMER_PUT", async (request, ctx) => {
     const { user, response } = await requirePermission("customers:edit");
     if (response) return response;
 
-    const { id } = await params;
+    const { id } = await ctx.params;
     const body = await request.json();
     const result = customerSchema.safeParse(body);
 
@@ -124,21 +113,13 @@ export async function PUT(
     });
 
     return NextResponse.json({ customer });
-  } catch (error) {
-    console.error("[CUSTOMER_PUT]", error);
-    return apiError("Internal server error", 500);
-  }
-}
+  });
 
-export async function DELETE(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
+export const DELETE = withApiHandler<{ id: string }>("CUSTOMER_DELETE", async (_request, ctx) => {
     const { response } = await requirePermission("customers:delete");
     if (response) return response;
 
-    const { id } = await params;
+    const { id } = await ctx.params;
     const existing = await db.customer.findUnique({ where: { id } });
     if (!existing) {
       return apiError("Customer not found", 404);
@@ -150,8 +131,4 @@ export async function DELETE(
     });
 
     return NextResponse.json({ message: "Customer removed" });
-  } catch (error) {
-    console.error("[CUSTOMER_DELETE]", error);
-    return apiError("Internal server error", 500);
-  }
-}
+  });

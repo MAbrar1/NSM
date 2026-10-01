@@ -1,16 +1,17 @@
-import { NextRequest, NextResponse } from "next/server";
-import { apiError } from "@/lib/api-errors";
+import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
-import { requirePermission } from "@/lib/api-auth";
-import { parsePagination } from "@/lib/pagination";
+import { requirePermission } from "@/lib/api/api-auth";
+import { withApiHandler } from "@/lib/api/api-handler";
+import { parsePagination } from "@/lib/api/pagination";
+import { parseSortParam } from "@/lib/table-sort";
 
 /* ═══════════════════════════════════════════════════════════════
    AUDIT LOG API
    GET /api/audit-log — List audit log entries with filters.
    ═══════════════════════════════════════════════════════════════ */
 
-export async function GET(request: NextRequest) {
-  try {
+export const GET = withApiHandler("AUDIT_LOG_GET", async (request) => {
     const { response } = await requirePermission("settings:view");
     if (response) return response;
 
@@ -27,13 +28,26 @@ export async function GET(request: NextRequest) {
     if (action) where["action"] = action;
     if (userId) where["userId"] = userId;
 
+    // Allow-listed sort — a hand-edited query falls back to createdAt.desc
+    // instead of reaching Prisma's orderBy and throwing. `user` sorts on
+    // the related user's name.
+    const auditSort = parseSortParam(
+      searchParams.get("sort"),
+      ["createdAt", "user", "action", "entity"],
+      { field: "createdAt", order: "desc" }
+    );
+    const orderBy: Prisma.AuditLogOrderByWithRelationInput =
+      auditSort.field === "user"
+        ? { user: { name: auditSort.order } }
+        : { [auditSort.field]: auditSort.order };
+
     const [logs, total] = await Promise.all([
       db.auditLog.findMany({
         where,
         include: {
           user: { select: { id: true, name: true, email: true, role: true } },
         },
-        orderBy: { createdAt: "desc" },
+        orderBy,
         skip,
         take,
       }),
@@ -47,8 +61,4 @@ export async function GET(request: NextRequest) {
       pageSize,
       totalPages: Math.ceil(total / pageSize),
     });
-  } catch (error) {
-    console.error("[AUDIT_LOG_GET]", error);
-    return apiError("Internal server error", 500);
-  }
-}
+  });

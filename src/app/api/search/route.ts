@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { requirePermission } from "@/lib/api-auth";
-import { parsePagination } from "@/lib/pagination";
+import { requirePermission } from "@/lib/api/api-auth";
+import { parsePagination } from "@/lib/api/pagination";
+import { formatDate } from "@/lib/utils";
 
 /* ═══════════════════════════════════════════════════════════════
    GLOBAL SEARCH API
@@ -173,7 +174,7 @@ export async function GET(request: NextRequest) {
         type: "order",
         id: o.id,
         title: o.orderNumber,
-        subtitle: `${o.customer?.name ?? "Walk-in"} · ${new Date(o.createdAt).toLocaleDateString()}`,
+        subtitle: `${o.customer?.name ?? "Walk-in"} · ${formatDate(o.createdAt)}`,
         href: `/orders?search=${encodeURIComponent(o.orderNumber)}`,
         badge: o.status,
         badgeVariant: o.status === "completed" ? "success" : o.status === "cancelled" || o.status === "refunded" ? "danger" : "info",

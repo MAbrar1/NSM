@@ -118,7 +118,7 @@ if (!readiness.ready) {
 console.log(`✓ production server ready at ${BASE_URL}`);
 
 const results = [
-  ["Page design-system audit", ["audit-neu-pages.mjs"]],
+  ["Page design-system audit", ["scripts/audit-neu-pages.mjs"]],
   ["UI verification", ["scripts/verify-ui.mjs"]],
 ].map(([label, argv]) => runGate(label, argv));
 

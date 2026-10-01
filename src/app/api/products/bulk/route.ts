@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { apiError } from "@/lib/api-errors";
-import { requirePermission } from "@/lib/api-auth";
+import { apiError } from "@/lib/api/api-errors";
+import { requirePermission } from "@/lib/api/api-auth";
 import {
   bulkUpdateProducts,
   validateBulkUpdateInput,
   BulkUpdateError,
-} from "@/lib/products-bulk";
+} from "@/lib/products/products-bulk";
 
 /* ═══════════════════════════════════════════════════════════════
    PRODUCTS BULK API

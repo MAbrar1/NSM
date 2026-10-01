@@ -26,7 +26,7 @@ import {
   releaseReservation,
   releaseStaleReservation,
   deductForSale,
-} from "@/lib/inventory-service";
+} from "@/lib/inventory/inventory-service";
 
 let harness: Awaited<ReturnType<typeof setupTestDb>> | null = null;
 

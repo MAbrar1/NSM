@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { apiError } from "@/lib/api-errors";
 import { db } from "@/lib/db";
-import { requirePermission } from "@/lib/api-auth";
-import { stockStatusForRow } from "@/lib/stock-status";
+import { requirePermission } from "@/lib/api/api-auth";
+import { withApiHandler } from "@/lib/api/api-handler";
+import { stockStatusForRow } from "@/lib/inventory/stock-status";
 
 /* ═══════════════════════════════════════════════════════════════
    WAREHOUSE STOCK SUMMARY API
@@ -10,8 +10,7 @@ import { stockStatusForRow } from "@/lib/stock-status";
    breakdown across all warehouses with product counts.
    ═══════════════════════════════════════════════════════════════ */
 
-export async function GET() {
-  try {
+export const GET = withApiHandler("WAREHOUSE_STOCK_SUMMARY", async () => {
     const { response } = await requirePermission("inventory:view");
     if (response) return response;
 
@@ -117,8 +116,4 @@ export async function GET() {
     };
 
     return NextResponse.json({ summary, warehouses });
-  } catch (error) {
-    console.error("[WAREHOUSE_STOCK_SUMMARY]", error);
-    return apiError("Internal server error", 500);
-  }
-}
+  });

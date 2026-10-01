@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useI18n } from "@/components/providers/i18n-provider";
-import { ROLE_LABELS, ROLE_COLORS, ROLE_PERMISSIONS, type Permission, type Role } from "@/lib/rbac";
+import { ROLE_LABELS, ROLE_COLORS, ROLE_PERMISSIONS, type Permission, type Role } from "@/lib/auth/rbac";
 import { cn } from "@/lib/utils";
 
 /* ═══════════════════════════════════════════════════════════════

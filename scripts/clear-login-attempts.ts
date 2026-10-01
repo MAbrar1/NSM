@@ -26,7 +26,7 @@ import {
   clearAllAttempts,
   clearAttemptsForEmail,
   pruneLoginAttempts,
-} from "@/lib/rate-limit";
+} from "@/lib/api/rate-limit";
 
 interface Options {
   mode: "prune" | "email" | "all";

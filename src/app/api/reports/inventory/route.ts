@@ -1,23 +1,22 @@
-import { NextRequest, NextResponse } from "next/server";
-import { apiError } from "@/lib/api-errors";
+import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { requirePermission } from "@/lib/api-auth";
-import { stockStatusForRow, sumStockRows } from "@/lib/stock-status";
+import { requirePermission } from "@/lib/api/api-auth";
+import { withApiHandler } from "@/lib/api/api-handler";
+import { stockStatusForRow, sumStockRows } from "@/lib/inventory/stock-status";
 import {
   stockCostValue,
   stockRetailValue,
   netOf,
   marginPercent,
   revenueStatuses,
-} from "@/lib/report-math";
+} from "@/lib/reports/report-math";
 
 /* ═══════════════════════════════════════════════════════════════
    INVENTORY REPORT API
    GET /api/reports/inventory — Stock valuation, turnover, aging.
    ═══════════════════════════════════════════════════════════════ */
 
-export async function GET(request: NextRequest) {
-  try {
+export const GET = withApiHandler("INVENTORY_REPORT", async (request) => {
     const { response } = await requirePermission("reports:view");
     if (response) return response;
 
@@ -198,8 +197,4 @@ export async function GET(request: NextRequest) {
         deadStock: turnoverData.filter((t) => t.turnoverCategory === "Dead Stock").length,
       },
     });
-  } catch (error) {
-    console.error("[INVENTORY_REPORT]", error);
-    return apiError("Internal server error", 500);
-  }
-}
+  });

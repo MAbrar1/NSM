@@ -1,17 +1,17 @@
 "use client";
 
 import * as React from "react";
+import { centsToMajorString } from "@/lib/money/money";
 import { useI18n } from "@/components/providers/i18n-provider";
 import { useStoreCurrency } from "@/components/providers/currency-provider";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { readApiError } from "@/lib/api-error";
+import { readApiError } from "@/lib/api/api-error";
 import {
   Dialog,
   DialogBody,
-  DialogClose,
   DialogContent,
   DialogFooter,
   DialogHeader,
@@ -21,10 +21,12 @@ import { TableSkeleton } from "@/components/ui/table-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "@/stores/toast-store";
 import { cn, formatCurrency } from "@/lib/utils";
-import { downloadCsv } from "@/lib/csv";
+import { downloadCsv } from "@/lib/files/csv";
 import { ExportMenu, type ExportColumn } from "@/components/export/export-menu";
 import { ImportResultDialog, type ImportSummary } from "@/components/import/import-result-dialog";
-import { fetchReportSettings, printReport } from "@/lib/print-report";
+import { fetchReportSettings, printReport } from "@/lib/print/print-report";
+import { SortableTh } from "@/components/ui/sortable-th";
+import { useTableRowNav } from "@/hooks/use-table-row-nav";
 
 /* ═══════════════════════════════════════════════════════════════
    SUPPLIERS PAGE
@@ -93,6 +95,28 @@ export default function SuppliersPage() {
   const [search, setSearch] = React.useState("");
   const [page, setPage] = React.useState(1);
   const [totalPages, setTotalPages] = React.useState(1);
+
+  // Keyboard row navigation (roving tabindex + arrows/type-ahead); Enter
+  // opens the same detail dialog a click does. Index maps 1:1 to the
+  // rendered rows, which follow the (server-sorted) array order.
+  const tbodyRef = useTableRowNav<HTMLTableSectionElement>((i) => {
+    const s = suppliers[i];
+    if (s) setShowDetail(s);
+  });
+
+  // Server-side sort in the shared "field.order" wire format — the API
+  // clamps it to its allow-list, so a hand-edited query can never throw
+  // inside Prisma's orderBy. Names read best A→Z; numeric columns open
+  // high→low.
+  const [sort, setSort] = React.useState("name.asc");
+  function toggleSort(field: string) {
+    setSort((s) => {
+      if (s.startsWith(`${field}.`)) {
+        return `${field}.${s.endsWith(".asc") ? "desc" : "asc"}`;
+      }
+      return `${field}.${field === "name" ? "asc" : "desc"}`;
+    });
+  }
 
   // CSV export/import (export state lives inside ExportMenu)
 
@@ -166,7 +190,7 @@ export default function SuppliersPage() {
     { header: "products", value: (s) => String(s._count?.products ?? 0), excelStyle: "int", print: { align: "right" } },
     {
       header: "totalSpent",
-      value: (s) => ((s.stats?.totalSpent ?? 0) / 100).toFixed(2),
+      value: (s) => centsToMajorString(s.stats?.totalSpent ?? 0),
       excelStyle: "money",
       print: { align: "right", strong: true, total: (rows) => formatCurrency(rows.reduce((a, r) => a + (r.stats?.totalSpent ?? 0), 0)) },
     },
@@ -238,13 +262,14 @@ export default function SuppliersPage() {
     try {
       const params = new URLSearchParams({ page: String(page), limit: "20" });
       if (search) params.set("search", search);
+      params.set("sort", sort);
       const res = await fetch(`/api/suppliers?${params}`);
       const data = await res.json();
       setSuppliers(data.suppliers ?? []);
       setTotalPages(data.pagination?.totalPages ?? 1);
     } catch { setLoadError(true); }
     setLoading(false);
-  }, [page, search]);
+  }, [page, search, sort]);
 
   React.useEffect(() => { fetchSuppliers(); }, [fetchSuppliers]);
 
@@ -252,6 +277,9 @@ export default function SuppliersPage() {
     const timer = setTimeout(() => setPage(1), 300);
     return () => clearTimeout(timer);
   }, [search]);
+
+  // A new sort goes back to page 1.
+  React.useEffect(() => { setPage(1); }, [sort]);
 
   function openCreate() { setEditing(null); setForm(EMPTY_FORM); setFieldErrors({}); setShowForm(true); }
   function openEdit(s: Supplier) {
@@ -379,16 +407,16 @@ export default function SuppliersPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-neu-hairline bg-neu-sunken">
-                <th className="text-start px-4 py-3 font-medium text-neu-muted">{t("suppliers.name")}</th>
+                <SortableTh label={t("suppliers.name")} active={sort.startsWith("name.")} order={sort.endsWith(".asc") ? "asc" : "desc"} onClick={() => toggleSort("name")} />
                 <th className="text-start px-4 py-3 font-medium text-neu-muted hidden md:table-cell">{t("suppliers.email")}</th>
                 <th className="text-start px-4 py-3 font-medium text-neu-muted hidden lg:table-cell">{t("suppliers.phone")}</th>
-                <th className="text-center px-4 py-3 font-medium text-neu-muted">{t("suppliers.rating")}</th>
-                <th className="text-center px-4 py-3 font-medium text-neu-muted hidden sm:table-cell">{t("suppliers.products")}</th>
-                <th className="text-center px-4 py-3 font-medium text-neu-muted hidden md:table-cell">{t("suppliers.purchaseOrders")}</th>
+                <SortableTh label={t("suppliers.rating")} align="center" active={sort.startsWith("rating.")} order={sort.endsWith(".asc") ? "asc" : "desc"} onClick={() => toggleSort("rating")} />
+                <SortableTh label={t("suppliers.products")} align="center" className="hidden sm:table-cell" active={sort.startsWith("products.")} order={sort.endsWith(".asc") ? "asc" : "desc"} onClick={() => toggleSort("products")} />
+                <SortableTh label={t("suppliers.purchaseOrders")} align="center" className="hidden md:table-cell" active={sort.startsWith("purchaseOrders.")} order={sort.endsWith(".asc") ? "asc" : "desc"} onClick={() => toggleSort("purchaseOrders")} />
                 <th className="text-end px-4 py-3 font-medium text-neu-muted">{t("products.actions")}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neu-hairline">
+            <tbody ref={tbodyRef} className="divide-y divide-neu-hairline">
               {loading ? (
                 <TableSkeleton rows={5} />
               ) : loadError ? (
@@ -429,7 +457,7 @@ export default function SuppliersPage() {
                 </tr>
               ) : (
                 suppliers.map((s) => (
-                  <tr key={s.id} className="hover:bg-neu-sunken transition-colors cursor-pointer" onClick={() => setShowDetail(s)}>
+                  <tr key={s.id} data-nav-row data-nav-label={s.name} className="hover:bg-neu-sunken transition-colors cursor-pointer" onClick={() => setShowDetail(s)}>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-neu-accent-wash text-sm font-semibold text-neu-accent-ink-strong">
@@ -493,13 +521,6 @@ export default function SuppliersPage() {
           <form onSubmit={(e) => { e.preventDefault(); handleSave(); }} className="flex min-h-0 flex-1 flex-col">
             <DialogHeader>
               <DialogTitle>{editing ? t("suppliers.editSupplier") : t("suppliers.addSupplier")}</DialogTitle>
-              <DialogClose asChild>
-                <button aria-label={t("common.close")} className="rounded-lg p-1 text-neu-faint hover:bg-neu-sunken">
-                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </DialogClose>
             </DialogHeader>
             <DialogBody className="space-y-4">
               <Input
@@ -576,16 +597,9 @@ export default function SuppliersPage() {
 
       {/* ═══ DETAIL MODAL ═══ */}
       <Dialog open={Boolean(showDetail)} onOpenChange={(o) => !o && setShowDetail(null)}>
-        <DialogContent size="lg">
+        <DialogContent size="lg" height="tall">
           <DialogHeader>
             <DialogTitle>{showDetail?.name}</DialogTitle>
-            <DialogClose asChild>
-              <button aria-label={t("common.close")} className="rounded-lg p-1 text-neu-faint hover:bg-neu-sunken">
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </DialogClose>
           </DialogHeader>
           {showDetail && (
             <DialogBody className="space-y-4">

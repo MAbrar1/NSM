@@ -1,11 +1,12 @@
 "use client";
 
 import { useSession } from "next-auth/react";
+import { centsToMajorString } from "@/lib/money/money";
 
 import * as React from "react";
-import { cn, formatCurrency } from "@/lib/utils";
-import { displayMajorToBaseCents, baseCentsToDisplayMajorStr, isDisplayConverted, getDisplayCurrency } from "@/lib/currency-core";
-import { ensureRates, peekRates } from "@/lib/currency";
+import { cn, formatCurrency, formatDateTime } from "@/lib/utils";
+import { displayMajorToBaseCents, baseCentsToDisplayMajorStr, isDisplayConverted, getDisplayCurrency } from "@/lib/money/currency-core";
+import { ensureRates, peekRates } from "@/lib/money/currency";
 import type { CartItem } from "@/types";
 import { useCartStore } from "@/stores/cart-store";
 import { useWarehouseStore } from "@/stores/warehouse-store";
@@ -18,7 +19,7 @@ import { toast } from "@/stores/toast-store";
 import { SmartImage } from "@/components/ui/smart-image";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Spinner } from "@/components/ui/spinner";
-import { printPOSReceipt } from "@/lib/print-pos-receipt";
+import { printPOSReceipt } from "@/lib/receipts/print-pos-receipt";
 import {
   getSaleUnits,
   lineQtyLabel,
@@ -27,7 +28,7 @@ import {
   toBaseQty,
   trimNumber,
   WHOLE_UNITS,
-} from "@/lib/units";
+} from "@/lib/products/units";
 import {
   Dialog,
   DialogBody,
@@ -37,12 +38,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { BarcodeScanner } from "@/components/pos/barcode-scanner";
-import { parseScan, barcodeCandidates } from "@/lib/barcode";
+import { parseScan, barcodeCandidates } from "@/lib/products/barcode";
 import { useHardwareScanner } from "@/hooks/use-hardware-scanner";
+import { SortableTh } from "@/components/ui/sortable-th";
 import { useModalFocus } from "@/hooks/use-modal-focus";
 import { CustomerPicker, type PickedCustomer } from "@/components/pos/customer-picker";
 import { useStockSync, broadcastStockChange } from "@/hooks/use-stock-sync";
-import { resolvePayment, isPartialPaymentAllowed } from "@/lib/payment-math";
+import { resolvePayment, isPartialPaymentAllowed } from "@/lib/money/payment-math";
 
 /* ═══════════════════════════════════════════════════════════════
    POS (POINT OF SALE) PAGE
@@ -1051,6 +1053,49 @@ export default function POSPage() {
   const [categories, setCategories] = React.useState<Array<{ id: string; name: string }>>([]);
   const [activeCategory, setActiveCategory] = React.useState("");
   const [browseProducts, setBrowseProducts] = React.useState<POSProduct[]>([]);
+
+  // Margin panel table sort (client-side over the loaded rows; the panel
+  // never pages, so the whole dataset is in memory). The default name/asc
+  // keeps the list stable while the cashier scans the margin spread.
+  const [marginSort, setMarginSort] = React.useState("name.asc");
+  const sortedBrowseProducts = React.useMemo(() => {
+    const [field, order] = marginSort.split(".");
+    const sign = order === "asc" ? 1 : -1;
+    const rows = [...browseProducts];
+    rows.sort((a, b) => {
+      switch (field) {
+        case "stock":
+          return sign * ((a.available ?? 0) - (b.available ?? 0));
+        case "cost":
+          return sign * ((a.costPrice ?? 0) - (b.costPrice ?? 0));
+        case "price":
+          return sign * ((a.unitPrice ?? 0) - (b.unitPrice ?? 0));
+        case "margin": {
+          const ma =
+            a.unitPrice > 0 ? (a.unitPrice - a.costPrice) / a.unitPrice : 0;
+          const mb =
+            b.unitPrice > 0 ? (b.unitPrice - b.costPrice) / b.unitPrice : 0;
+          return sign * (ma - mb);
+        }
+        case "category":
+          return (
+            sign *
+            (a.categoryName ?? "").localeCompare(b.categoryName ?? "")
+          );
+        default:
+          return sign * (a.name ?? "").localeCompare(b.name ?? "");
+      }
+    });
+    return rows;
+  }, [browseProducts, marginSort]);
+  function toggleMarginSort(field: string) {
+    setMarginSort((s) => {
+      if (s.startsWith(`${field}.`)) {
+        return `${field}.${s.endsWith(".asc") ? "desc" : "asc"}`;
+      }
+      return `${field}.${field === "name" || field === "category" ? "asc" : "desc"}`;
+    });
+  }
   const [browseLoading, setBrowseLoading] = React.useState(true);
   const [browseError, setBrowseError] = React.useState(false);
 
@@ -2068,17 +2113,17 @@ export default function POSPage() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-neu-hairline bg-neu-sunken text-[11px] uppercase tracking-wider text-neu-faint">
-                        <th className="px-3 py-2.5 text-start font-semibold">{t("products.name")}</th>
-                        <th className="px-3 py-2.5 text-start font-semibold">{t("products.category")}</th>
-                        <th className="px-3 py-2.5 text-end font-semibold">{t("pos.stockColumn")}</th>
-                        <th className="px-3 py-2.5 text-end font-semibold">{t("products.cost")}</th>
-                        <th className="px-3 py-2.5 text-end font-semibold">{t("products.price")}</th>
-                        <th className="px-3 py-2.5 text-end font-semibold">{t("pos.marginColumn")}</th>
+                        <SortableTh label={t("products.name")} className="px-3 py-2.5" active={marginSort.startsWith("name.")} order={marginSort.endsWith(".asc") ? "asc" : "desc"} onClick={() => toggleMarginSort("name")} />
+                        <SortableTh label={t("products.category")} className="px-3 py-2.5" active={marginSort.startsWith("category.")} order={marginSort.endsWith(".asc") ? "asc" : "desc"} onClick={() => toggleMarginSort("category")} />
+                        <SortableTh label={t("pos.stockColumn")} align="end" className="px-3 py-2.5" active={marginSort.startsWith("stock.")} order={marginSort.endsWith(".asc") ? "asc" : "desc"} onClick={() => toggleMarginSort("stock")} />
+                        <SortableTh label={t("products.cost")} align="end" className="px-3 py-2.5" active={marginSort.startsWith("cost.")} order={marginSort.endsWith(".asc") ? "asc" : "desc"} onClick={() => toggleMarginSort("cost")} />
+                        <SortableTh label={t("products.price")} align="end" className="px-3 py-2.5" active={marginSort.startsWith("price.")} order={marginSort.endsWith(".asc") ? "asc" : "desc"} onClick={() => toggleMarginSort("price")} />
+                        <SortableTh label={t("pos.marginColumn")} align="end" className="px-3 py-2.5" active={marginSort.startsWith("margin.")} order={marginSort.endsWith(".asc") ? "asc" : "desc"} onClick={() => toggleMarginSort("margin")} />
                         <th className="px-3 py-2.5 text-end font-semibold">{t("products.actions")}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-neu-hairline">
-                      {browseProducts.map((product) => {
+                      {sortedBrowseProducts.map((product) => {
                         // Shared stockStatus from the API (lib/stock-status
                         // rule); fallback recomputes for cached rows.
                         const out = product.available <= 0;
@@ -2351,9 +2396,10 @@ export default function POSPage() {
                     onInc={() => cart.updateItemQuantity(item.id, item.quantity + 1)}
                   />
 
-                  {/* Line total + actions */}
-                  <div className="w-20 shrink-0 text-end sm:w-24">
-                    <p className="pos-line-total text-sm font-bold text-neu-primary">{formatCurrency(item.total)}</p>
+                  {/* Line total + actions. min-w, not w-: a fixed 80/96px box
+                      elided large line totals into "…" in the cart. */}
+                  <div className="min-w-20 shrink-0 text-end sm:min-w-24">
+                    <p className="pos-line-total whitespace-nowrap text-sm font-bold text-neu-primary">{formatCurrency(item.total)}</p>
                     <div className="mt-0.5 flex items-center justify-end gap-1">
                       <button
                         onClick={() => openDiscount(item.id)}
@@ -2556,7 +2602,7 @@ export default function POSPage() {
                         onDec={() => cart.updateItemQuantity(item.id, Math.max(0, item.quantity - 1))}
                         onInc={() => cart.updateItemQuantity(item.id, item.quantity + 1)}
                       />
-                      <span className="pos-line-total w-16 shrink-0 text-end text-sm font-bold text-neu-primary">
+                      <span className="pos-line-total min-w-16 shrink-0 text-end text-sm font-bold text-neu-primary">
                         {formatCurrency(item.total)}
                       </span>
                       <button
@@ -2617,7 +2663,7 @@ export default function POSPage() {
       {/* ═══ PAYMENT MODAL ═══ */}
       {/* ═══ PROCESS PAYMENT ═══ */}
       <Dialog open={paymentOpen} onOpenChange={setPaymentOpen}>
-        <DialogContent size="md">
+        <DialogContent size="md" height="tall">
           <DialogHeader>
             <DialogTitle>{t("pos.processPayment")}</DialogTitle>
           </DialogHeader>
@@ -2670,7 +2716,7 @@ export default function POSPage() {
                   />
                   <button
                     type="button"
-                    onClick={() => setSettleInput((maxSettleCents / 100).toFixed(2))}
+                    onClick={() => setSettleInput(centsToMajorString(maxSettleCents))}
                     disabled={maxSettleCents <= 0}
                     className="shrink-0 rounded-lg border border-neu-ink-amber/35 bg-neu-bg px-2.5 py-1.5 text-[11px] font-semibold text-neu-ink-amber transition-colors hover:bg-neu-wash-amber disabled:cursor-not-allowed disabled:opacity-40"
                   >
@@ -2805,7 +2851,7 @@ export default function POSPage() {
                   )}
                   <button
                     type="button"
-                    onClick={() => setAmountPaid((finalTotal / 100).toFixed(2))}
+                    onClick={() => setAmountPaid(centsToMajorString(finalTotal))}
                     className="pos-cash-quick-btn border border-neu-accent-line bg-neu-accent-wash px-3 text-neu-accent-ink-strong"
                   >
                     {t("pos.exact")} · {baseCentsToDisplayMajorStr(finalTotal, fx)}
@@ -2934,7 +2980,7 @@ export default function POSPage() {
                     <p className="text-[10px] text-neu-faint">{storeReceipt.storePhone}</p>
                   )}
                   <p className="text-[10px] text-neu-faint">
-                    {new Date(completedOrder.createdAt).toLocaleString()}
+                    {formatDateTime(completedOrder.createdAt)}
                   </p>
                 </div>
                 {storeReceipt.receiptHeader && (

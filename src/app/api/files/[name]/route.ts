@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { apiError } from "@/lib/api-errors";
+import { apiError } from "@/lib/api/api-errors";
 import path from "path";
 import {
   contentTypeForName,
@@ -7,7 +7,7 @@ import {
   presignedImageUrl,
   readImageFile,
   storageDriver,
-} from "@/lib/uploads";
+} from "@/lib/files/uploads";
 
 /* ═══════════════════════════════════════════════════════════════
    FILE SERVING

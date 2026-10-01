@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { requirePermission } from "@/lib/api-auth";
-import { scanLowStock, scanRestockSoon } from "@/lib/low-stock";
-import type { StockAlert } from "@/lib/alert-utils";
+import { requirePermission } from "@/lib/api/api-auth";
+import { scanLowStock, scanRestockSoon } from "@/lib/inventory/low-stock";
+import type { StockAlert } from "@/lib/notifications/alert-utils";
 
 /* ═══════════════════════════════════════════════════════════════
    ALERTS API

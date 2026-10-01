@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { centsToMajorString } from "@/lib/money/money";
 import { useI18n } from "@/components/providers/i18n-provider";
 import { useStoreCurrency } from "@/components/providers/currency-provider";
 import { PageHeader } from "@/components/layout/page-header";
@@ -8,17 +9,19 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { SortableTh } from "@/components/ui/sortable-th";
+import { useTableRowNav } from "@/hooks/use-table-row-nav";
 import { toast } from "@/stores/toast-store";
-import { formatCurrency } from "@/lib/utils";
-import { readApiError } from "@/lib/api-error";
-import { displayMajorToBaseCents, baseCentsToDisplayMajorStr } from "@/lib/currency-core";
-import { ensureRates, peekRates } from "@/lib/currency";
-import { WHOLE_UNITS } from "@/lib/units";
-import { downloadCsv } from "@/lib/csv";
+import { formatCurrency, formatDate } from "@/lib/utils";
+import { readApiError } from "@/lib/api/api-error";
+import { displayMajorToBaseCents, baseCentsToDisplayMajorStr } from "@/lib/money/currency-core";
+import { ensureRates, peekRates } from "@/lib/money/currency";
+import { WHOLE_UNITS } from "@/lib/products/units";
+import { downloadCsv } from "@/lib/files/csv";
 import { ExportMenu, type ExportColumn } from "@/components/export/export-menu";
 import { ImportResultDialog, type ImportSummary } from "@/components/import/import-result-dialog";
-import { fetchReportSettings, printReport } from "@/lib/print-report";
-import { previewPurchaseOrder, printPurchaseOrder } from "@/lib/print-purchase-order";
+import { fetchReportSettings, printReport } from "@/lib/print/print-report";
+import { previewPurchaseOrder, printPurchaseOrder } from "@/lib/print/print-purchase-order";
 import { useHardwareScanner } from "@/hooks/use-hardware-scanner";
 import {
   Dialog,
@@ -104,12 +107,35 @@ export default function PurchaseOrdersPage() {
   useStoreCurrency();
   const { t, dir } = useI18n();
   const [orders, setOrders] = React.useState<PurchaseOrder[]>([]);
+
+  // Keyboard row navigation — Enter opens the PO detail (same as a row
+  // click); index maps to the rendered (server-sorted) row order.
+  const tbodyRef = useTableRowNav<HTMLTableSectionElement>((i) => {
+    const po = orders[i];
+    if (po) {
+      setShowDetail(po);
+      setReceiveQuantities({});
+    }
+  });
   const [loading, setLoading] = React.useState(true);
   const [loadError, setLoadError] = React.useState(false);
   const [search, setSearch] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState("");
   const [page, setPage] = React.useState(1);
   const [totalPages, setTotalPages] = React.useState(1);
+
+  // Server-side sort in the shared "field.order" wire format (the API
+  // clamps it to its allow-list). Numbers/dates open high→low, the PO
+  // number opens A→Z.
+  const [sort, setSort] = React.useState("createdAt.desc");
+  function toggleSort(field: string) {
+    setSort((s) => {
+      if (s.startsWith(`${field}.`)) {
+        return `${field}.${s.endsWith(".asc") ? "desc" : "asc"}`;
+      }
+      return `${field}.${field === "orderNumber" || field === "supplier" ? "asc" : "desc"}`;
+    });
+  }
 
   // Create PO state
   const [showCreate, setShowCreate] = React.useState(false);
@@ -252,13 +278,14 @@ export default function PurchaseOrdersPage() {
       const params = new URLSearchParams({ page: String(page), limit: "20" });
       if (search) params.set("search", search);
       if (statusFilter) params.set("status", statusFilter);
+      params.set("sort", sort);
       const res = await fetch(`/api/purchase-orders?${params}`);
       const data = await res.json();
       setOrders(data.orders ?? []);
       setTotalPages(data.pagination?.totalPages ?? 1);
     } catch { setLoadError(true); }
     setLoading(false);
-  }, [page, search, statusFilter]);
+  }, [page, search, statusFilter, sort]);
 
   React.useEffect(() => { fetchOrders(); }, [fetchOrders]);
   React.useEffect(() => { const t = setTimeout(() => setPage(1), 300); return () => clearTimeout(t); }, [search, statusFilter]);
@@ -422,12 +449,12 @@ export default function PurchaseOrdersPage() {
     { header: "warehouse", value: (o) => o.warehouse?.name ?? "", omitPrint: true },
     { header: "status", value: (o) => o.status, print: { align: "center" } },
     { header: "items", value: (o) => String(o._count?.items ?? o.items?.length ?? 0), excelStyle: "int", print: { align: "right" } },
-    { header: "subtotal", value: (o) => (o.subtotal / 100).toFixed(2), excelStyle: "money", print: { align: "right", muted: true } },
-    { header: "tax", value: (o) => (o.taxAmount / 100).toFixed(2), excelStyle: "money", print: { align: "right", muted: true } },
-    { header: "shipping", value: (o) => (o.shippingCost / 100).toFixed(2), excelStyle: "money", print: { align: "right", muted: true } },
+    { header: "subtotal", value: (o) => centsToMajorString(o.subtotal), excelStyle: "money", print: { align: "right", muted: true } },
+    { header: "tax", value: (o) => centsToMajorString(o.taxAmount), excelStyle: "money", print: { align: "right", muted: true } },
+    { header: "shipping", value: (o) => centsToMajorString(o.shippingCost), excelStyle: "money", print: { align: "right", muted: true } },
     {
       header: "total",
-      value: (o) => (o.total / 100).toFixed(2),
+      value: (o) => centsToMajorString(o.total),
       excelStyle: "money",
       print: { align: "right", strong: true, total: (rows) => formatCurrency(rows.reduce((s, r) => s + r.total, 0)) },
     },
@@ -482,8 +509,8 @@ export default function PurchaseOrdersPage() {
   const poPrintPayload = (po: PurchaseOrder) => ({
     poNumber: po.orderNumber,
     status: po.status,
-    orderDate: new Date(po.createdAt).toLocaleDateString(),
-    expectedDate: po.expectedDate ? new Date(po.expectedDate).toLocaleDateString() : null,
+    orderDate: formatDate(po.createdAt),
+    expectedDate: po.expectedDate ? formatDate(po.expectedDate) : null,
     supplier: { name: po.supplier?.name ?? "" },
     createdBy: po.createdBy?.name ?? null,
     notes: po.notes,
@@ -581,16 +608,16 @@ export default function PurchaseOrdersPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-neu-hairline bg-neu-sunken">
-                <th className="text-start px-4 py-3 font-medium text-neu-muted">{t("purchaseOrders.orderNumber")}</th>
-                <th className="text-start px-4 py-3 font-medium text-neu-muted">{t("purchaseOrders.supplier")}</th>
-                <th className="text-start px-4 py-3 font-medium text-neu-muted hidden md:table-cell">{t("purchaseOrders.date")}</th>
-                <th className="text-start px-4 py-3 font-medium text-neu-muted hidden lg:table-cell">{t("purchaseOrders.expectedDate")}</th>
-                <th className="text-end px-4 py-3 font-medium text-neu-muted">{t("purchaseOrders.total")}</th>
+                <SortableTh label={t("purchaseOrders.orderNumber")} active={sort.startsWith("orderNumber.")} order={sort.endsWith(".asc") ? "asc" : "desc"} onClick={() => toggleSort("orderNumber")} />
+                <SortableTh label={t("purchaseOrders.supplier")} active={sort.startsWith("supplier.")} order={sort.endsWith(".asc") ? "asc" : "desc"} onClick={() => toggleSort("supplier")} />
+                <SortableTh label={t("purchaseOrders.date")} className="hidden md:table-cell" active={sort.startsWith("createdAt.")} order={sort.endsWith(".asc") ? "asc" : "desc"} onClick={() => toggleSort("createdAt")} />
+                <SortableTh label={t("purchaseOrders.expectedDate")} className="hidden lg:table-cell" active={sort.startsWith("expectedDate.")} order={sort.endsWith(".asc") ? "asc" : "desc"} onClick={() => toggleSort("expectedDate")} />
+                <SortableTh label={t("purchaseOrders.total")} align="end" active={sort.startsWith("total.")} order={sort.endsWith(".asc") ? "asc" : "desc"} onClick={() => toggleSort("total")} />
                 <th className="text-center px-4 py-3 font-medium text-neu-muted">{t("purchaseOrders.status")}</th>
                 <th className="text-end px-4 py-3 font-medium text-neu-muted">{t("products.actions")}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neu-hairline">
+            <tbody ref={tbodyRef} className="divide-y divide-neu-hairline">
               {loading ? (
                 <TableSkeleton rows={5} />
               ) : loadError ? (
@@ -633,12 +660,12 @@ export default function PurchaseOrdersPage() {
                 orders.map((po) => {
                   const st = STATUS_MAP[po.status] ?? STATUS_MAP["draft"];
                   return (
-                    <tr key={po.id} className="hover:bg-neu-sunken transition-colors cursor-pointer" onClick={() => { setShowDetail(po); setReceiveQuantities({}); }}>
+                    <tr key={po.id} data-nav-row data-nav-label={`${po.orderNumber} ${po.supplier.name}`} className="hover:bg-neu-sunken transition-colors cursor-pointer" onClick={() => { setShowDetail(po); setReceiveQuantities({}); }}>
                       <td className="px-4 py-3 font-medium text-neu-primary">{po.orderNumber}</td>
                       <td className="px-4 py-3 text-neu-muted">{po.supplier.name}</td>
-                      <td className="px-4 py-3 text-neu-faint hidden md:table-cell">{new Date(po.createdAt).toLocaleDateString()}</td>
+                      <td className="px-4 py-3 text-neu-faint hidden md:table-cell">{formatDate(po.createdAt)}</td>
                       <td className="px-4 py-3 text-neu-faint hidden lg:table-cell">
-                        {po.expectedDate ? new Date(po.expectedDate).toLocaleDateString() : "—"}
+                        {po.expectedDate ? formatDate(po.expectedDate) : "—"}
                       </td>
                       <td className="px-4 py-3 text-end font-medium text-neu-primary">{formatCurrency(po.total)}</td>
                       <td className="px-4 py-3 text-center"><Badge variant={(st?.variant ?? "default") as "success" | "warning" | "danger" | "info" | "default"}>{t(`purchaseOrders.${st?.key ?? "draft"}`)}</Badge></td>
@@ -675,11 +702,6 @@ export default function PurchaseOrdersPage() {
         <DialogContent size="xl" className="max-w-3xl">
           <DialogHeader>
             <DialogTitle>{t("purchaseOrders.createPO")}</DialogTitle>
-            <button onClick={() => setShowCreate(false)} aria-label={t("common.close")} className="rounded-lg p-1 text-neu-faint hover:bg-neu-sunken">
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
           </DialogHeader>
           <DialogBody className="space-y-4">
               {/* Supplier & Warehouse */}
@@ -861,7 +883,7 @@ export default function PurchaseOrdersPage() {
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
                 <div><p className="text-neu-faint">{t("purchaseOrders.supplier")}</p><p className="font-medium">{showDetail.supplier.name}</p></div>
                 <div><p className="text-neu-faint">{t("inventory.warehouse")}</p><p className="font-medium">{showDetail.warehouse.name}</p></div>
-                <div><p className="text-neu-faint">{t("purchaseOrders.date")}</p><p className="font-medium">{new Date(showDetail.createdAt).toLocaleDateString()}</p></div>
+                <div><p className="text-neu-faint">{t("purchaseOrders.date")}</p><p className="font-medium">{formatDate(showDetail.createdAt)}</p></div>
                 <div><p className="text-neu-faint">{t("common.createdBy")}</p><p className="font-medium">{showDetail.createdBy.name}</p></div>
               </div>
 

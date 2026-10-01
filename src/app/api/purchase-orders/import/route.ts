@@ -1,10 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
-import { apiError } from "@/lib/api-errors";
+import { NextResponse } from "next/server";
+import { apiError } from "@/lib/api/api-errors";
 import { db } from "@/lib/db";
-import { requirePermission } from "@/lib/api-auth";
+import { requirePermission } from "@/lib/api/api-auth";
+import { withApiHandler } from "@/lib/api/api-handler";
 import { logAudit } from "@/lib/audit-log";
-import { parseMoneyToCents } from "@/lib/money";
-import { poLineTotals, poTotals } from "@/lib/purchase-order-math";
+import { parseMoneyToCents } from "@/lib/money/money";
+import { poLineTotals, poTotals } from "@/lib/suppliers/purchase-order-math";
 
 /* ═══════════════════════════════════════════════════════════════
    PURCHASE ORDER CSV IMPORT API
@@ -106,8 +107,7 @@ interface GroupedPO {
   lines: GroupedLine[];
 }
 
-export async function POST(request: NextRequest) {
-  try {
+export const POST = withApiHandler("PO_IMPORT", async (request) => {
     const { user, response } = await requirePermission("purchase_orders:create");
     if (response) return response;
 
@@ -353,8 +353,4 @@ export async function POST(request: NextRequest) {
       skipped: result.failed,
       result,
     });
-  } catch (error) {
-    console.error("[PO_IMPORT]", error);
-    return apiError("Internal server error", 500);
-  }
-}
+  });

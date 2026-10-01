@@ -1,8 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
-import { apiError, validationError } from "@/lib/api-errors";
+import { NextResponse } from "next/server";
+import { validationError } from "@/lib/api/api-errors";
 import { db } from "@/lib/db";
 import { categorySchema } from "@/lib/validations";
-import { requirePermission } from "@/lib/api-auth";
+import { requirePermission } from "@/lib/api/api-auth";
+import { withApiHandler } from "@/lib/api/api-handler";
+import { slugify } from "@/lib/utils";
 
 /* ═══════════════════════════════════════════════════════════════
    CATEGORIES API
@@ -10,8 +12,7 @@ import { requirePermission } from "@/lib/api-auth";
    POST /api/categories — Create a new category (admin only)
    ═══════════════════════════════════════════════════════════════ */
 
-export async function GET() {
-  try {
+export const GET = withApiHandler("CATEGORIES_GET", async () => {
     const { response } = await requirePermission("categories:view");
     if (response) return response;
 
@@ -23,14 +24,9 @@ export async function GET() {
     });
 
     return NextResponse.json({ categories });
-  } catch (error) {
-    console.error("[CATEGORIES_GET]", error);
-    return apiError("Internal server error", 500);
-  }
-}
+  });
 
-export async function POST(request: NextRequest) {
-  try {
+export const POST = withApiHandler("CATEGORIES_POST", async (request) => {
     const { response } = await requirePermission("categories:create");
     if (response) return response;
 
@@ -44,10 +40,7 @@ export async function POST(request: NextRequest) {
     const data = result.data;
 
     // Generate slug from name
-    let slug = data.name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)/g, "");
+    let slug = slugify(data.name);
 
     // Check for slug collision
     const existingSlug = await db.category.findUnique({ where: { slug } });
@@ -67,8 +60,4 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({ category }, { status: 201 });
-  } catch (error) {
-    console.error("[CATEGORIES_POST]", error);
-    return apiError("Internal server error", 500);
-  }
-}
+  });

@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { centsToMajorString } from "@/lib/money/money";
 import { formatCurrency, cn, percentDelta } from "@/lib/utils";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
@@ -11,9 +12,9 @@ import { useI18n } from "@/components/providers/i18n-provider";
 import { useStoreCurrency } from "@/components/providers/currency-provider";
 import { DonutChart } from "@/components/ui/chart";
 import { StatCard } from "@/components/ui/stat-card";
-import { downloadCsv, downloadExcel, sumFormulaCell, type ExcelSheet } from "@/lib/csv";
+import { downloadCsv, downloadExcel, sumFormulaCell, type ExcelSheet } from "@/lib/files/csv";
 import { ExportMenu, type ExportColumn } from "@/components/export/export-menu";
-import { fetchReportSettings, printReport } from "@/lib/print-report";
+import { fetchReportSettings, printReport } from "@/lib/print/print-report";
 import { toast } from "@/stores/toast-store";
 
 /* ═══════════════════════════════════════════════════════════════
@@ -130,15 +131,15 @@ export default function ProfitLossPage() {
   const categoryProfitColumns: ExportColumn<PnLData["categoryProfitability"][number]>[] = [
     { header: "category", value: (c) => c.name, print: { strong: true } },
     {
-      header: "revenue", value: (c) => (c.revenue / 100).toFixed(2), excelStyle: "money",
+      header: "revenue", value: (c) => centsToMajorString(c.revenue), excelStyle: "money",
       print: { align: "right", strong: true, total: (rows) => formatCurrency(rows.reduce((s, r) => s + r.revenue, 0)) },
     },
     {
-      header: "cogs", value: (c) => (c.cogs / 100).toFixed(2), excelStyle: "money",
+      header: "cogs", value: (c) => centsToMajorString(c.cogs), excelStyle: "money",
       print: { align: "right", muted: true, total: (rows) => formatCurrency(rows.reduce((s, r) => s + r.cogs, 0)) },
     },
     {
-      header: "grossProfit", value: (c) => (c.grossProfit / 100).toFixed(2), excelStyle: "money",
+      header: "grossProfit", value: (c) => centsToMajorString(c.grossProfit), excelStyle: "money",
       print: { align: "right", strong: true, total: (rows) => formatCurrency(rows.reduce((s, r) => s + r.grossProfit, 0)) },
     },
     { header: "margin", value: (c) => `${c.margin}%`, print: { align: "right" } },
@@ -149,19 +150,19 @@ export default function ProfitLossPage() {
   const monthlyColumns: ExportColumn<PnLData["monthlyData"][number]>[] = [
     { header: "month", value: (m) => m.month, print: { width: "16%", strong: true } },
     {
-      header: "revenue", value: (m) => (m.revenue / 100).toFixed(2), excelStyle: "money",
+      header: "revenue", value: (m) => centsToMajorString(m.revenue), excelStyle: "money",
       print: { align: "right", strong: true, total: (rows) => formatCurrency(rows.reduce((s, r) => s + r.revenue, 0)) },
     },
     {
-      header: "cogs", value: (m) => (m.cogs / 100).toFixed(2), excelStyle: "money",
+      header: "cogs", value: (m) => centsToMajorString(m.cogs), excelStyle: "money",
       print: { align: "right", muted: true, total: (rows) => formatCurrency(rows.reduce((s, r) => s + r.cogs, 0)) },
     },
     {
-      header: "grossProfit", value: (m) => (m.grossProfit / 100).toFixed(2), excelStyle: "money",
+      header: "grossProfit", value: (m) => centsToMajorString(m.grossProfit), excelStyle: "money",
       print: { align: "right", strong: true, total: (rows) => formatCurrency(rows.reduce((s, r) => s + r.grossProfit, 0)) },
     },
     { header: "orders", value: (m) => String(m.orders), excelStyle: "int", print: { align: "right" } },
-    { header: "avgOrderValue", value: (m) => (m.averageOrderValue / 100).toFixed(2), excelStyle: "money", print: { align: "right" } },
+    { header: "avgOrderValue", value: (m) => centsToMajorString(m.averageOrderValue), excelStyle: "money", print: { align: "right" } },
   ];
 
   // Excel workbook: Statement + Monthly + Categories
@@ -172,14 +173,14 @@ export default function ProfitLossPage() {
         name: "P&L Statement",
         headers: ["line", "amount"],
         rows: [
-          ["revenue", { v: (data.summary.totalRevenue / 100).toFixed(2), style: "money" as const }],
-          ["cogs", { v: (data.summary.totalCOGS / 100).toFixed(2), style: "money" as const }],
-          ["grossProfit", { v: (data.summary.grossProfit / 100).toFixed(2), style: "money" as const }],
+          ["revenue", { v: centsToMajorString(data.summary.totalRevenue), style: "money" as const }],
+          ["cogs", { v: centsToMajorString(data.summary.totalCOGS), style: "money" as const }],
+          ["grossProfit", { v: centsToMajorString(data.summary.grossProfit), style: "money" as const }],
           ["grossMargin", { v: `${data.summary.grossMargin}%` }],
-          ["totalDiscounts", { v: (data.summary.totalDiscounts / 100).toFixed(2), style: "money" as const }],
-          ["taxCollected", { v: (data.summary.totalTax / 100).toFixed(2), style: "money" as const }],
+          ["totalDiscounts", { v: centsToMajorString(data.summary.totalDiscounts), style: "money" as const }],
+          ["taxCollected", { v: centsToMajorString(data.summary.totalTax), style: "money" as const }],
           ["totalOrders", { v: data.summary.totalOrders, style: "int" as const }],
-          ["averageOrderValue", { v: (data.summary.averageOrderValue / 100).toFixed(2), style: "money" as const }],
+          ["averageOrderValue", { v: centsToMajorString(data.summary.averageOrderValue), style: "money" as const }],
         ],
       },
       {
@@ -227,14 +228,14 @@ export default function ProfitLossPage() {
   function exportCSV() {
     if (!data) return;
     downloadCsv("profit-loss-statement", ["line", "amount"], [
-      ["revenue", (data.summary.totalRevenue / 100).toFixed(2)],
-      ["cogs", (data.summary.totalCOGS / 100).toFixed(2)],
-      ["grossProfit", (data.summary.grossProfit / 100).toFixed(2)],
+      ["revenue", centsToMajorString(data.summary.totalRevenue)],
+      ["cogs", centsToMajorString(data.summary.totalCOGS)],
+      ["grossProfit", centsToMajorString(data.summary.grossProfit)],
       ["grossMargin", `${data.summary.grossMargin}%`],
-      ["totalDiscounts", (data.summary.totalDiscounts / 100).toFixed(2)],
-      ["taxCollected", (data.summary.totalTax / 100).toFixed(2)],
+      ["totalDiscounts", centsToMajorString(data.summary.totalDiscounts)],
+      ["taxCollected", centsToMajorString(data.summary.totalTax)],
       ["totalOrders", String(data.summary.totalOrders)],
-      ["averageOrderValue", (data.summary.averageOrderValue / 100).toFixed(2)],
+      ["averageOrderValue", centsToMajorString(data.summary.averageOrderValue)],
     ]);
     downloadCsv(
       "profit-loss-monthly",
@@ -372,6 +373,7 @@ export default function ProfitLossPage() {
             <StatCard
               label={t("reports.totalRevenue")}
               value={formatCurrency(data.summary.totalRevenue)}
+              numericValue={data.summary.totalRevenue}
               icon="cash"
               tone="brand"
               delta={prevSummary ? percentDelta(data.summary.totalRevenue, prevSummary.totalRevenue) : null}
@@ -380,6 +382,7 @@ export default function ProfitLossPage() {
             <StatCard
               label={t("reports.grossProfit")}
               value={formatCurrency(data.summary.grossProfit)}
+              numericValue={data.summary.grossProfit}
               icon="trend"
               tone={data.summary.grossProfit >= 0 ? "success" : "danger"}
               delta={prevSummary ? percentDelta(data.summary.grossProfit, prevSummary.grossProfit) : null}
@@ -389,6 +392,8 @@ export default function ProfitLossPage() {
             <StatCard
               label={t("reports.totalOrders")}
               value={String(data.summary.totalOrders)}
+              numericValue={data.summary.totalOrders}
+              formatValue={(v) => String(Math.round(v))}
               icon="bag"
               tone="info"
               delta={prevSummary ? percentDelta(data.summary.totalOrders, prevSummary.totalOrders) : null}
@@ -397,6 +402,7 @@ export default function ProfitLossPage() {
             <StatCard
               label={t("reports.avgOrderValue")}
               value={formatCurrency(data.summary.averageOrderValue)}
+              numericValue={data.summary.averageOrderValue}
               icon="chart"
               tone="warning"
               delta={prevSummary ? percentDelta(data.summary.averageOrderValue, prevSummary.averageOrderValue) : null}

@@ -1,4 +1,4 @@
-import type { Role } from "@/lib/rbac";
+import type { Role } from "@/lib/auth/rbac";
 
 /* ═══════════════════════════════════════════════════════════════
    NEXTAUTH TYPE EXTENSIONS

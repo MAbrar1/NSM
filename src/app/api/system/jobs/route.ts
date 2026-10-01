@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { apiError } from "@/lib/api-errors";
-import { requirePermission } from "@/lib/api-auth";
+import { requirePermission } from "@/lib/api/api-auth";
+import { withApiHandler } from "@/lib/api/api-handler";
 import { jobStatusSnapshot } from "@/lib/job-status";
 
 /* ═══════════════════════════════════════════════════════════════
@@ -10,8 +10,7 @@ import { jobStatusSnapshot } from "@/lib/job-status";
    the same gate as the Settings screen that renders it.
    ═══════════════════════════════════════════════════════════════ */
 
-export async function GET() {
-  try {
+export const GET = withApiHandler("SYSTEM_JOBS_GET", async () => {
     const { response } = await requirePermission("settings:view");
     if (response) return response;
 
@@ -21,8 +20,4 @@ export async function GET() {
       note:
         "In-process status for this server instance. Resets on restart; instances behind a load balancer report independently.",
     });
-  } catch (error) {
-    console.error("[SYSTEM_JOBS_GET]", error);
-    return apiError("Internal server error", 500);
-  }
-}
+  });

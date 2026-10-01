@@ -6,11 +6,11 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { readApiError } from "@/lib/api-error";
+import { readApiError } from "@/lib/api/api-error";
+import { formatDateTime } from "@/lib/utils";
 import {
   Dialog,
   DialogBody,
-  DialogClose,
   DialogContent,
   DialogFooter,
   DialogHeader,
@@ -18,8 +18,10 @@ import {
 } from "@/components/ui/dialog";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { SortableTh } from "@/components/ui/sortable-th";
+import { useTableRowNav } from "@/hooks/use-table-row-nav";
 import { toast } from "@/stores/toast-store";
-import { ROLE_LABELS, ROLE_COLORS, type Role } from "@/lib/rbac";
+import { ROLE_LABELS, ROLE_COLORS, type Role } from "@/lib/auth/rbac";
 
 /* ═══════════════════════════════════════════════════════════════
    USERS MANAGEMENT PAGE
@@ -61,6 +63,28 @@ export default function UsersPage() {
   const [page, setPage] = React.useState(1);
   const [totalPages, setTotalPages] = React.useState(1);
 
+  // Keyboard row navigation — Enter opens edit (same as the row's edit
+  // affordance); index maps to the rendered (server-sorted) row order.
+  const tbodyRef = useTableRowNav<HTMLTableSectionElement>((i) => {
+    const u = users[i];
+    if (u) openEdit(u);
+  });
+
+  // Server-side sort in the shared "field.order" wire format (the API
+  // clamps it to its allow-list). Names read best A→Z; dates open
+  // high→low. `status` sorts on the Boolean column (active first, then
+  // inactive) rather than a meaningless string compare.
+  const [sort, setSort] = React.useState("createdAt.desc");
+  function toggleSort(field: string) {
+    setSort((s) => {
+      if (field === "status") return s === "isActive.asc" ? "isActive.desc" : "isActive.asc";
+      if (s.startsWith(`${field}.`)) {
+        return `${field}.${s.endsWith(".asc") ? "desc" : "asc"}`;
+      }
+      return `${field}.${field === "name" ? "asc" : "desc"}`;
+    });
+  }
+
   const [showForm, setShowForm] = React.useState(false);
   const [editing, setEditing] = React.useState<UserItem | null>(null);
   const [form, setForm] = React.useState<UserForm>(EMPTY_FORM);
@@ -84,16 +108,18 @@ export default function UsersPage() {
       const params = new URLSearchParams({ page: String(page), limit: "20" });
       if (search) params.set("search", search);
       if (roleFilter) params.set("role", roleFilter);
+      params.set("sort", sort);
       const res = await fetch(`/api/users?${params}`);
       const data = await res.json();
       setUsers(data.users ?? []);
       setTotalPages(data.pagination?.totalPages ?? 1);
     } catch { setLoadError(true); }
     setLoading(false);
-  }, [page, search, roleFilter]);
+  }, [page, search, roleFilter, sort]);
 
   React.useEffect(() => { fetchUsers(); }, [fetchUsers]);
   React.useEffect(() => { const t = setTimeout(() => setPage(1), 300); return () => clearTimeout(t); }, [search, roleFilter]);
+  React.useEffect(() => { setPage(1); }, [sort]);
 
   function openCreate() { setEditing(null); setForm(EMPTY_FORM); setFieldErrors({}); setShowForm(true); }
   function openEdit(u: UserItem) {
@@ -192,15 +218,15 @@ export default function UsersPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-neu-hairline bg-neu-sunken">
-                <th className="text-start px-4 py-3 font-medium text-neu-muted">{t("users.name")}</th>
+                <SortableTh label={t("users.name")} active={sort.startsWith("name.")} order={sort.endsWith(".asc") ? "asc" : "desc"} onClick={() => toggleSort("name")} />
                 <th className="text-start px-4 py-3 font-medium text-neu-muted hidden md:table-cell">{t("users.email")}</th>
                 <th className="text-center px-4 py-3 font-medium text-neu-muted">{t("users.role")}</th>
-                <th className="text-center px-4 py-3 font-medium text-neu-muted">{t("users.status")}</th>
-                <th className="text-start px-4 py-3 font-medium text-neu-muted hidden lg:table-cell">{t("users.lastLogin")}</th>
+                <SortableTh label={t("users.status")} align="center" active={sort.startsWith("isActive.")} order={sort.endsWith(".asc") ? "asc" : "desc"} onClick={() => toggleSort("status")} />
+                <SortableTh label={t("users.lastLogin")} className="hidden lg:table-cell" active={sort.startsWith("lastLoginAt.")} order={sort.endsWith(".asc") ? "asc" : "desc"} onClick={() => toggleSort("lastLoginAt")} />
                 <th className="text-end px-4 py-3 font-medium text-neu-muted">{t("products.actions")}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neu-hairline">
+            <tbody ref={tbodyRef} className="divide-y divide-neu-hairline">
               {loading ? (
                 <TableSkeleton rows={5} />
               ) : loadError ? (
@@ -235,13 +261,13 @@ export default function UsersPage() {
                         </svg>
                       }
                       title={t("users.noUsers")}
-                      description={t("users.noUsersHint")}
+                      description={search || roleFilter ? t("users.noUsersHintFilter") : t("users.noUsersHint")}
                     />
                   </td>
                 </tr>
               ) : (
                 users.map((u) => (
-                  <tr key={u.id} className="hover:bg-neu-sunken transition-colors">
+                  <tr key={u.id} data-nav-row data-nav-label={u.name} className="hover:bg-neu-sunken transition-colors">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-neu-accent-wash text-sm font-semibold text-neu-accent-ink-strong">
@@ -265,7 +291,7 @@ export default function UsersPage() {
                       </Badge>
                     </td>
                     <td className="px-4 py-3 text-sm text-neu-faint hidden lg:table-cell">
-                      {u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString() : "—"}
+                      {u.lastLoginAt ? formatDateTime(u.lastLoginAt) : "—"}
                     </td>
                     <td className="px-4 py-3 text-end">
                       <div className="flex items-center justify-end gap-1">
@@ -302,13 +328,6 @@ export default function UsersPage() {
           <form onSubmit={(e) => { e.preventDefault(); handleSave(); }} className="flex min-h-0 flex-1 flex-col">
             <DialogHeader>
               <DialogTitle>{editing ? t("users.editUser") : t("users.addUser")}</DialogTitle>
-              <DialogClose asChild>
-                <button aria-label={t("common.close")} className="rounded-lg p-1 text-neu-faint hover:bg-neu-sunken">
-                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </DialogClose>
             </DialogHeader>
             <DialogBody className="space-y-4">
               <Input
@@ -346,10 +365,15 @@ export default function UsersPage() {
                 <label className="text-sm font-medium text-neu-primary">{t("users.status")}</label>
                 <button
                   type="button"
+                  role="switch"
+                  aria-checked={form.isActive}
                   onClick={() => setForm({ ...form, isActive: !form.isActive })}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${form.isActive ? "bg-neu-green" : "bg-neu-sunken"}`}
+                  className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${form.isActive ? "bg-neu-solid-green" : "bg-neu-sunken"}`}
                 >
-                  <span className={`inline-block h-4 w-4 transform rounded-full bg-neu-solid-ink transition-transform ${form.isActive ? "translate-x-6" : "translate-x-1"}`} />
+                  {/* logical knob: rtl:-translate mirrors with the layout, and
+                      the MODE-STABLE solid tokens keep contrast in both themes
+                      (bg-neu-green/solid-ink knob was dark-mode broken). */}
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-neu-bg shadow transition-transform ${form.isActive ? "translate-x-6 rtl:-translate-x-6" : "translate-x-1 rtl:-translate-x-1"}`} />
                 </button>
                 <span className="text-sm text-neu-muted">{form.isActive ? t("products.active") : t("products.inactive")}</span>
               </div>
@@ -364,7 +388,7 @@ export default function UsersPage() {
 
       {/* ═══ DELETE CONFIRM ═══ */}
       <Dialog open={Boolean(deleting)} onOpenChange={(o) => !o && setDeleting(null)}>
-        <DialogContent size="sm">
+        <DialogContent size="sm" hideClose>
           <DialogBody className="space-y-4 text-center">
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-neu-red/15">
               <svg className="h-6 w-6 text-neu-ink-red" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { normalizeScannedCode } from "@/lib/barcode";
+import { normalizeScannedCode } from "@/lib/products/barcode";
 
 /* ═══════════════════════════════════════════════════════════════
    USE-HARDWARE-SCANNER — global USB/Bluetooth scanner-wedge listener.

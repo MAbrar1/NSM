@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useI18n } from "@/components/providers/i18n-provider";
+import { SortableTh } from "@/components/ui/sortable-th";
 import { formatDate, formatTime } from "@/lib/utils";
 
 /* ═══════════════════════════════════════════════════════════════
@@ -99,6 +100,17 @@ export default function AuditLogPage() {
   const [totalPages, setTotalPages] = React.useState(0);
   const [entityFilter, setEntityFilter] = React.useState("");
   const [actionFilter, setActionFilter] = React.useState("");
+  // Server-side sort in the shared "field.order" wire format — the API
+  // clamps it to its allow-list. Time opens high→low; everything else A→Z.
+  const [sort, setSort] = React.useState("createdAt.desc");
+  function toggleSort(field: string) {
+    setSort((s) => {
+      if (s.startsWith(`${field}.`)) {
+        return `${field}.${s.endsWith(".asc") ? "desc" : "asc"}`;
+      }
+      return `${field}.${field === "createdAt" ? "desc" : "asc"}`;
+    });
+  }
   const [expandedId, setExpandedId] = React.useState<string | null>(null);
 
   const fetchLogs = React.useCallback(async () => {
@@ -108,6 +120,7 @@ export default function AuditLogPage() {
       const params = new URLSearchParams({ page: String(page), pageSize: "20" });
       if (entityFilter) params.set("entity", entityFilter);
       if (actionFilter) params.set("action", actionFilter);
+      params.set("sort", sort);
       const res = await fetch(`/api/audit-log?${params}`);
       const data = await res.json();
       setLogs(data.logs ?? []);
@@ -118,10 +131,10 @@ export default function AuditLogPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, entityFilter, actionFilter]);
+  }, [page, entityFilter, actionFilter, sort]);
 
   React.useEffect(() => { fetchLogs(); }, [fetchLogs]);
-  React.useEffect(() => { setPage(1); }, [entityFilter, actionFilter]);
+  React.useEffect(() => { setPage(1); }, [entityFilter, actionFilter, sort]);
 
   function parseValues(raw: string | null | undefined): Record<string, unknown> | null {
     if (!raw) return null;
@@ -131,12 +144,12 @@ export default function AuditLogPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Audit Log"
-        description="Track all system activity and changes"
+        title={t("settings.auditLog")}
+        description={t("settings.auditLogDescription")}
         breadcrumbs={[
           { label: t("dashboard.title"), href: "/dashboard" },
           { label: t("settings.title"), href: "/settings" },
-          { label: "Audit Log" },
+          { label: t("settings.auditLog") },
         ]}
       />
 
@@ -149,35 +162,35 @@ export default function AuditLogPage() {
               value={entityFilter}
               onChange={(e) => setEntityFilter(e.target.value)}
             >
-              <option value="">All Entities</option>
-              <option value="product">Products</option>
-              <option value="order">Orders</option>
-              <option value="customer">Customers</option>
-              <option value="supplier">Suppliers</option>
-              <option value="warehouse">Warehouses</option>
-              <option value="user">Users</option>
-              <option value="settings">Settings</option>
-              <option value="category">Categories</option>
-              <option value="brand">Brands</option>
-              <option value="purchase_order">Purchase Orders</option>
+              <option value="">{t("settings.auditAllEntities")}</option>
+              <option value="product">{t("settings.auditEntityProduct")}</option>
+              <option value="order">{t("settings.auditEntityOrder")}</option>
+              <option value="customer">{t("settings.auditEntityCustomer")}</option>
+              <option value="supplier">{t("settings.auditEntitySupplier")}</option>
+              <option value="warehouse">{t("settings.auditEntityWarehouse")}</option>
+              <option value="user">{t("settings.auditEntityUser")}</option>
+              <option value="settings">{t("settings.auditEntitySettings")}</option>
+              <option value="category">{t("settings.auditEntityCategory")}</option>
+              <option value="brand">{t("settings.auditEntityBrand")}</option>
+              <option value="purchase_order">{t("settings.auditEntityPO")}</option>
             </select>
             <select
               className="h-9 rounded-lg border border-neu-hairline bg-neu-bg px-3 text-sm text-neu-primary"
               value={actionFilter}
               onChange={(e) => setActionFilter(e.target.value)}
             >
-              <option value="">All Actions</option>
-              <option value="create">Create</option>
-              <option value="update">Update</option>
-              <option value="delete">Delete</option>
-              <option value="login">Login</option>
-              <option value="checkout">Checkout</option>
-              <option value="refund">Refund</option>
-              <option value="stock_adjust">Stock Adjust</option>
-              <option value="stock_transfer">Stock Transfer</option>
-              <option value="status_change">Status Change</option>
+              <option value="">{t("settings.auditAllActions")}</option>
+              <option value="create">{t("settings.auditActionCreate")}</option>
+              <option value="update">{t("settings.auditActionUpdate")}</option>
+              <option value="delete">{t("settings.auditActionDelete")}</option>
+              <option value="login">{t("settings.auditActionLogin")}</option>
+              <option value="checkout">{t("settings.auditActionCheckout")}</option>
+              <option value="refund">{t("settings.auditActionRefund")}</option>
+              <option value="stock_adjust">{t("settings.auditActionStockAdjust")}</option>
+              <option value="stock_transfer">{t("settings.auditActionStockTransfer")}</option>
+              <option value="status_change">{t("settings.auditActionStatusChange")}</option>
             </select>
-            <span className="text-sm text-neu-faint">{total} entries</span>
+            <span className="text-sm text-neu-faint">{t("settings.auditEntriesCount", { n: total })}</span>
           </div>
         </CardContent>
       </Card>
@@ -223,11 +236,11 @@ export default function AuditLogPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-neu-hairline bg-neu-sunken">
-                  <th className="px-4 py-3 text-start text-xs font-semibold uppercase tracking-wider text-neu-faint">Time</th>
-                  <th className="px-4 py-3 text-start text-xs font-semibold uppercase tracking-wider text-neu-faint">User</th>
-                  <th className="px-4 py-3 text-start text-xs font-semibold uppercase tracking-wider text-neu-faint">Action</th>
-                  <th className="px-4 py-3 text-start text-xs font-semibold uppercase tracking-wider text-neu-faint">Entity</th>
-                  <th className="px-4 py-3 text-start text-xs font-semibold uppercase tracking-wider text-neu-faint">Details</th>
+                  <SortableTh label={t("settings.auditColTime")} active={sort.startsWith("createdAt.")} order={sort.endsWith(".asc") ? "asc" : "desc"} onClick={() => toggleSort("createdAt")} />
+                  <SortableTh label={t("settings.auditColUser")} active={sort.startsWith("user.")} order={sort.endsWith(".asc") ? "asc" : "desc"} onClick={() => toggleSort("user")} />
+                  <SortableTh label={t("settings.auditColAction")} active={sort.startsWith("action.")} order={sort.endsWith(".asc") ? "asc" : "desc"} onClick={() => toggleSort("action")} />
+                  <SortableTh label={t("settings.auditColEntity")} active={sort.startsWith("entity.")} order={sort.endsWith(".asc") ? "asc" : "desc"} onClick={() => toggleSort("entity")} />
+                  <th className="px-4 py-3 text-start text-xs font-semibold uppercase tracking-wider text-neu-faint">{t("settings.auditColDetails")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-neu-hairline">
@@ -264,10 +277,10 @@ export default function AuditLogPage() {
                         </td>
                         <td className="px-4 py-3 text-xs text-neu-faint">
                           {log.newValues && (
-                            <span className="text-neu-ink-green">+{Object.keys(newVals ?? {}).length} fields</span>
+                            <span className="text-neu-ink-green">+{Object.keys(newVals ?? {}).length} {t("settings.auditFields")}</span>
                           )}
                           {log.oldValues && (
-                            <span className="ms-2 text-neu-ink-red">-{Object.keys(parseValues(log.oldValues) ?? {}).length} fields</span>
+                            <span className="ms-2 text-neu-ink-red">-{Object.keys(parseValues(log.oldValues) ?? {}).length} {t("settings.auditFields")}</span>
                           )}
                         </td>
                       </tr>
@@ -277,7 +290,7 @@ export default function AuditLogPage() {
                             <div className="grid gap-4 sm:grid-cols-2">
                               {log.oldValues && (
                                 <div>
-                                  <p className="text-[10px] font-semibold uppercase tracking-wider text-neu-ink-red mb-1">Before</p>
+                                  <p className="text-[10px] font-semibold uppercase tracking-wider text-neu-ink-red mb-1">{t("settings.auditBefore")}</p>
                                   <pre className="rounded-lg bg-neu-wash-red p-2 text-xs text-neu-ink-red overflow-x-auto max-h-40 overflow-y-auto">
                                     {JSON.stringify(parseValues(log.oldValues), null, 2)}
                                   </pre>
@@ -285,14 +298,14 @@ export default function AuditLogPage() {
                               )}
                               {log.newValues && (
                                 <div>
-                                  <p className="text-[10px] font-semibold uppercase tracking-wider text-neu-ink-green mb-1">After</p>
+                                  <p className="text-[10px] font-semibold uppercase tracking-wider text-neu-ink-green mb-1">{t("settings.auditAfter")}</p>
                                   <pre className="rounded-lg bg-neu-wash-green p-2 text-xs text-neu-ink-green overflow-x-auto max-h-40 overflow-y-auto">
                                     {JSON.stringify(parseValues(log.newValues), null, 2)}
                                   </pre>
                                 </div>
                               )}
                               {!log.oldValues && !log.newValues && (
-                                <p className="text-xs text-neu-faint">No change details recorded</p>
+                                <p className="text-xs text-neu-faint">{t("settings.auditNoChanges")}</p>
                               )}
                             </div>
                             {log.ipAddress && (
@@ -313,14 +326,14 @@ export default function AuditLogPage() {
         {totalPages > 1 && (
           <div className="flex items-center justify-between border-t border-neu-hairline px-4 py-3">
             <p className="text-sm text-neu-faint">
-              Page {page} of {totalPages}
+              {t("common.page")} {page} {t("common.of")} {totalPages}
             </p>
             <div className="flex gap-1">
               <Button variant="secondary" size="sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
-                Previous
+                {t("common.previous")}
               </Button>
               <Button variant="secondary" size="sm" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}>
-                Next
+                {t("common.next")}
               </Button>
             </div>
           </div>

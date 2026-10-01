@@ -1,10 +1,11 @@
 "use client";
 
 import * as React from "react";
+import { centsToMajorString } from "@/lib/money/money";
 import { formatCurrency, formatDate, formatTime, cn } from "@/lib/utils";
 import { ExportMenu, type ExportColumn } from "@/components/export/export-menu";
-import { printReport, fetchReportSettings } from "@/lib/print-report";
-import { lineQtyLabel, trimNumber, WHOLE_UNITS } from "@/lib/units";
+import { printReport, fetchReportSettings } from "@/lib/print/print-report";
+import { lineQtyLabel, trimNumber, WHOLE_UNITS } from "@/lib/products/units";
 import { useI18n } from "@/components/providers/i18n-provider";
 import { useStoreCurrency } from "@/components/providers/currency-provider";
 import { PageHeader } from "@/components/layout/page-header";
@@ -13,13 +14,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
+import { SortableTh } from "@/components/ui/sortable-th";
+import { useTableRowNav } from "@/hooks/use-table-row-nav";
 import { EmptyState } from "@/components/ui/empty-state";
 import { StatCard } from "@/components/ui/stat-card";
 import { SmartImage } from "@/components/ui/smart-image";
 import { toast } from "@/stores/toast-store";
 import { useResellFromOrder } from "@/hooks/use-resell-from-order";
-import { printRefundReceiptsForOrders } from "@/lib/print-receipt";
-import { printPOSReceipt, POSReceiptOrder, POSReceiptSettings } from "@/lib/print-pos-receipt";
+import { printRefundReceiptsForOrders } from "@/lib/receipts/print-receipt";
+import { printPOSReceipt, POSReceiptOrder, POSReceiptSettings } from "@/lib/receipts/print-pos-receipt";
 import {
   Dialog,
   DialogContent,
@@ -151,6 +154,13 @@ export default function OrdersPage() {
   useStoreCurrency();
   const { t, dir } = useI18n();
   const [orders, setOrders] = React.useState<Order[]>([]);
+
+  // Keyboard row navigation — Enter opens the order detail (same as a row
+  // click); index maps to the rendered (server-sorted) row order.
+  const tbodyRef = useTableRowNav<HTMLTableSectionElement>((i) => {
+    const o = orders[i];
+    if (o) viewDetail(o);
+  });
   const [loading, setLoading] = React.useState(true);
   const [loadError, setLoadError] = React.useState(false);
   const [search, setSearch] = React.useState("");
@@ -330,24 +340,24 @@ export default function OrdersPage() {
     { header: "cashier", value: (o) => o.user?.name ?? "", print: { muted: true } },
     { header: "date", value: (o) => new Date(o.createdAt).toISOString(), print: { label: "Date", width: "13%" } },
     { header: "items", value: (o) => String(o.fractional ? (o.lineCount ?? o.items?.length ?? 0) : (o.itemCount ?? o.items?.length ?? 0)), excelStyle: "int", print: { align: "right" } },
-    { header: "subtotal", value: (o) => (o.subtotal / 100).toFixed(2), excelStyle: "money", print: { align: "right", muted: true, total: (rows) => formatCurrency(rows.reduce((s, r) => s + r.subtotal, 0)) } },
-    { header: "discount", value: (o) => (o.discountAmount / 100).toFixed(2), excelStyle: "money", print: { align: "right", muted: true, total: (rows) => formatCurrency(rows.reduce((s, r) => s + r.discountAmount, 0)) } },
-    { header: "tax", value: (o) => (o.taxAmount / 100).toFixed(2), excelStyle: "money", print: { align: "right", muted: true, total: (rows) => formatCurrency(rows.reduce((s, r) => s + r.taxAmount, 0)) } },
+    { header: "subtotal", value: (o) => centsToMajorString(o.subtotal), excelStyle: "money", print: { align: "right", muted: true, total: (rows) => formatCurrency(rows.reduce((s, r) => s + r.subtotal, 0)) } },
+    { header: "discount", value: (o) => centsToMajorString(o.discountAmount), excelStyle: "money", print: { align: "right", muted: true, total: (rows) => formatCurrency(rows.reduce((s, r) => s + r.discountAmount, 0)) } },
+    { header: "tax", value: (o) => centsToMajorString(o.taxAmount), excelStyle: "money", print: { align: "right", muted: true, total: (rows) => formatCurrency(rows.reduce((s, r) => s + r.taxAmount, 0)) } },
     {
       header: "total",
-      value: (o) => (o.total / 100).toFixed(2),
+      value: (o) => centsToMajorString(o.total),
       excelStyle: "money",
       print: { align: "right", strong: true, total: (rows) => formatCurrency(rows.reduce((s, r) => s + r.total, 0)) },
     },
     {
       header: "paid",
-      value: (o) => ((o.paidAmount ?? 0) / 100).toFixed(2),
+      value: (o) => centsToMajorString(o.paidAmount ?? 0),
       excelStyle: "money",
       print: { align: "right", total: (rows) => formatCurrency(rows.reduce((s, r) => s + (r.paidAmount ?? 0), 0)) },
     },
     {
       header: "due",
-      value: (o) => ((o.dueAmount ?? 0) / 100).toFixed(2),
+      value: (o) => centsToMajorString(o.dueAmount ?? 0),
       excelStyle: "money",
       print: { align: "right", total: (rows) => formatCurrency(rows.reduce((s, r) => s + (r.dueAmount ?? 0), 0)) },
     },
@@ -462,6 +472,19 @@ export default function OrdersPage() {
   const { resellFromOrder, reselling } = useResellFromOrder();
 
   // Fetch orders
+  // Server-side sort in the shared "field.order" wire format — the API
+  // clamps it to its allow-list, so a hand-edited query can never throw
+  // inside Prisma's orderBy. Dates/money open high→low, numbers A→Z.
+  const [sort, setSort] = React.useState("createdAt.desc");
+  function toggleSort(field: string) {
+    setSort((s) => {
+      if (s.startsWith(`${field}.`)) {
+        return `${field}.${s.endsWith(".asc") ? "desc" : "asc"}`;
+      }
+      return `${field}.${field === "orderNumber" || field === "customer" || field === "cashier" ? "asc" : "desc"}`;
+    });
+  }
+
   const fetchOrders = React.useCallback(async () => {
     setLoading(true);
     const params = new URLSearchParams({ page: String(page), pageSize: String(PAGE_SIZE) });
@@ -470,6 +493,7 @@ export default function OrdersPage() {
     if (paymentFilter) params.set("paymentStatus", paymentFilter);
     if (dateFrom) params.set("dateFrom", dateFrom);
     if (dateTo) params.set("dateTo", dateTo);
+    params.set("sort", sort);
 
     setLoadError(false);
     try {
@@ -485,10 +509,10 @@ export default function OrdersPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, search, statusFilter, paymentFilter, dateFrom, dateTo]);
+  }, [page, search, statusFilter, paymentFilter, dateFrom, dateTo, sort]);
 
   React.useEffect(() => { fetchOrders(); }, [fetchOrders]);
-  React.useEffect(() => { setPage(1); }, [search, statusFilter, paymentFilter, dateFrom, dateTo]);
+  React.useEffect(() => { setPage(1); }, [search, statusFilter, paymentFilter, dateFrom, dateTo, sort]);
   React.useEffect(() => { clearSelection(); }, [page, search, statusFilter, paymentFilter, dateFrom, dateTo]);
 
   // Debounced search
@@ -966,7 +990,7 @@ export default function OrdersPage() {
               )}
             </div>
             {viewsOpen && (
-              <div className="absolute z-30 mt-2 w-80 max-w-[calc(100vw-2rem)] rounded-xl border border-neu-hairline bg-neu-bg p-1.5 shadow-xl">
+              <div className="neu-popover absolute z-30 mt-2 w-80 max-w-[calc(100vw-2rem)] rounded-xl border border-neu-hairline bg-neu-bg p-1.5">
                 {/* Built-ins */}
                 {[
                   { id: "builtin:all", label: t("orders.viewAll"), icon: "M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6h.008v.008H3.75V6zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.008v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-.375 5.25h.008v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" },
@@ -1309,17 +1333,17 @@ export default function OrdersPage() {
                     aria-label={t("orders.selectAll")}
                   />
                 </th>
-                <th className="whitespace-nowrap px-4 py-3 text-start text-xs font-semibold uppercase tracking-wider text-neu-faint">{t("orders.orderNumber")}</th>
-                <th className="whitespace-nowrap px-4 py-3 text-start text-xs font-semibold uppercase tracking-wider text-neu-faint">{t("orders.customer")}</th>
-                <th className="hidden whitespace-nowrap px-4 py-3 text-start text-xs font-semibold uppercase tracking-wider text-neu-faint lg:table-cell">{t("orders.cashier")}</th>
-                <th className="whitespace-nowrap px-4 py-3 text-start text-xs font-semibold uppercase tracking-wider text-neu-faint">{t("orders.date")}</th>
+                <SortableTh label={t("orders.orderNumber")} active={sort.startsWith("orderNumber.")} order={sort.endsWith(".asc") ? "asc" : "desc"} onClick={() => toggleSort("orderNumber")} />
+                <SortableTh label={t("orders.customer")} active={sort.startsWith("customer.")} order={sort.endsWith(".asc") ? "asc" : "desc"} onClick={() => toggleSort("customer")} />
+                <SortableTh label={t("orders.cashier")} className="hidden lg:table-cell" active={sort.startsWith("cashier.")} order={sort.endsWith(".asc") ? "asc" : "desc"} onClick={() => toggleSort("cashier")} />
+                <SortableTh label={t("orders.date")} active={sort.startsWith("createdAt.")} order={sort.endsWith(".asc") ? "asc" : "desc"} onClick={() => toggleSort("createdAt")} />
                 <th className="hidden whitespace-nowrap px-4 py-3 text-end text-xs font-semibold uppercase tracking-wider text-neu-faint xl:table-cell">{t("orders.items")}</th>
-                <th className="whitespace-nowrap px-4 py-3 text-end text-xs font-semibold uppercase tracking-wider text-neu-faint">{t("orders.total")}</th>
-                <th className="whitespace-nowrap px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-neu-faint">{t("orders.status")}</th>
+                <SortableTh label={t("orders.total")} align="end" active={sort.startsWith("total.")} order={sort.endsWith(".asc") ? "asc" : "desc"} onClick={() => toggleSort("total")} />
+                <SortableTh label={t("orders.status")} align="center" active={sort.startsWith("status.")} order={sort.endsWith(".asc") ? "asc" : "desc"} onClick={() => toggleSort("status")} />
                 <th className="hidden whitespace-nowrap px-4 py-3 text-end text-xs font-semibold uppercase tracking-wider text-neu-faint lg:table-cell">{t("orders.actions")}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neu-hairline">
+            <tbody ref={tbodyRef} className="divide-y divide-neu-hairline">
               {loading ? (
                 <TableSkeleton rows={8} />
               ) : loadError ? (
@@ -1342,7 +1366,7 @@ export default function OrdersPage() {
                     order.status !== "partially_refunded";
                   const checked = selectedIds.has(order.id);
                   return (
-                  <tr key={order.id} className={cn("hover:bg-neu-sunken/50 cursor-pointer", checked && "bg-neu-accent-wash/50")} onClick={() => viewDetail(order)}>
+                  <tr key={order.id} data-nav-row data-nav-label={`${order.customer?.name ?? ""} ${order.orderNumber}`} className={cn("hover:bg-neu-sunken/50 cursor-pointer", checked && "bg-neu-accent-wash/50")} onClick={() => viewDetail(order)}>
                     <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                       <input
                         type="checkbox"
@@ -1442,7 +1466,7 @@ export default function OrdersPage() {
 
       {/* ═══ ORDER DETAIL MODAL ═══ */}
       <Dialog open={Boolean(detailOrder)} onOpenChange={(o) => !o && setDetailOrder(null)}>
-        <DialogContent size="lg">
+        <DialogContent size="lg" height="tall">
           <DialogHeader>
             {detailOrder && !detailLoading ? (
               <div className="flex items-center justify-between w-full gap-3">

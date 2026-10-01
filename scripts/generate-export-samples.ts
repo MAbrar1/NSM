@@ -18,9 +18,10 @@
 
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { buildXlsx, buildStyledSheet, type ExcelSheet } from "@/lib/csv";
-import { buildReportHtml } from "@/lib/print-report";
-import { buildPurchaseOrderHtml } from "@/lib/print-purchase-order";
+import { buildXlsx, buildStyledSheet, type ExcelSheet } from "@/lib/files/csv";
+import { centsToMajorString } from "@/lib/money/money";
+import { buildReportHtml } from "@/lib/print/print-report";
+import { buildPurchaseOrderHtml } from "@/lib/print/print-purchase-order";
 
 const OUT_DIR = join(process.cwd(), "samples");
 mkdirSync(OUT_DIR, { recursive: true });
@@ -99,12 +100,12 @@ const sheets: ExcelSheet[] = [
     name: "Summary",
     headers: ["metric", "value"],
     rows: [
-      ["Total Revenue", { v: (summary.totalRevenue / 100).toFixed(2), style: "money" as const }],
-      ["Net Revenue", { v: (summary.netRevenue / 100).toFixed(2), style: "money" as const }],
+      ["Total Revenue", { v: centsToMajorString(summary.totalRevenue), style: "money" as const }],
+      ["Net Revenue", { v: centsToMajorString(summary.netRevenue), style: "money" as const }],
       ["Total Orders", { v: summary.totalOrders, style: "int" as const }],
-      ["Average Order Value", { v: (summary.averageOrderValue / 100).toFixed(2), style: "money" as const }],
-      ["Total Tax", { v: (summary.totalTax / 100).toFixed(2), style: "money" as const }],
-      ["Total Discounts", { v: (summary.totalDiscounts / 100).toFixed(2), style: "money" as const }],
+      ["Average Order Value", { v: centsToMajorString(summary.averageOrderValue), style: "money" as const }],
+      ["Total Tax", { v: centsToMajorString(summary.totalTax), style: "money" as const }],
+      ["Total Discounts", { v: centsToMajorString(summary.totalDiscounts), style: "money" as const }],
     ],
   },
   buildStyledSheet(
@@ -113,7 +114,7 @@ const sheets: ExcelSheet[] = [
       { header: "name", value: (p: (typeof topProducts)[number]) => p.name },
       { header: "sku", value: (p) => p.sku },
       { header: "qtySold", value: (p) => p.quantitySold, excelStyle: "int" },
-      { header: "revenue", value: (p) => (p.revenue / 100).toFixed(2), excelStyle: "money" },
+      { header: "revenue", value: (p) => centsToMajorString(p.revenue), excelStyle: "money" },
       { header: "orders", value: (p) => p.orderCount, excelStyle: "int" },
     ],
     topProducts,
@@ -127,7 +128,7 @@ const sheets: ExcelSheet[] = [
     headers: ["category", "revenue", "quantity", "items"],
     rows: categories.map((c) => [
       c.name,
-      { v: (c.revenue / 100).toFixed(2), style: "money" as const },
+      { v: centsToMajorString(c.revenue), style: "money" as const },
       { v: c.quantity, style: "int" as const },
       { v: c.items, style: "int" as const },
     ]),
@@ -161,7 +162,7 @@ const ltrHtml = buildReportHtml<SalesRow>(
     kpis: [
       { label: "Total Revenue", value: money(summary.totalRevenue), tone: "positive", hint: "▲ 8.4% vs prev period" },
       { label: "Net Revenue", value: money(summary.netRevenue) },
-      { label: "Total Orders", value: summary.totalOrders.toLocaleString(), hint: "1,253 transactions" },
+      { label: "Total Orders", value: summary.totalOrders.toLocaleString("en-US"), hint: "1,253 transactions" },
       { label: "Avg Order Value", value: money(summary.averageOrderValue), tone: "warning" },
     ],
     meta: [
@@ -178,7 +179,7 @@ const ltrHtml = buildReportHtml<SalesRow>(
           { label: "#", align: "center", width: "5%", value: (row) => String(topProducts.indexOf(row) + 1) },
           { label: "Product", width: "34%", strong: true, value: (row) => row.name },
           { label: "SKU", muted: true, width: "12%", value: (row) => row.sku },
-          { label: "Qty Sold", align: "right", value: (row) => row.quantitySold.toLocaleString() },
+          { label: "Qty Sold", align: "right", value: (row) => row.quantitySold.toLocaleString("en-US") },
           { label: "Revenue", align: "right", strong: true, value: (row) => money(row.revenue), total: () => money(summary.totalRevenue) },
           { label: "Orders", align: "right", value: (row) => String(row.orderCount) },
         ],
@@ -190,7 +191,7 @@ const ltrHtml = buildReportHtml<SalesRow>(
         columns: [
           { label: "Category", strong: true, value: (c: (typeof categories)[number]) => c.name },
           { label: "Revenue", align: "right", strong: true, value: (c: (typeof categories)[number]) => money(c.revenue), total: () => money(summary.totalRevenue) },
-          { label: "Qty", align: "right", value: (c: (typeof categories)[number]) => c.quantity.toLocaleString() },
+          { label: "Qty", align: "right", value: (c: (typeof categories)[number]) => c.quantity.toLocaleString("en-US") },
           { label: "Items", align: "right", value: (c: (typeof categories)[number]) => String(c.items) },
         ],
         rows: categories,

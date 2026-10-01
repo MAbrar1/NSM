@@ -1,13 +1,14 @@
 "use client";
 
 import * as React from "react";
+import { centsToMajorString } from "@/lib/money/money";
 import { formatCurrency, formatDate, formatNumber, cn, getInitials } from "@/lib/utils";
-import { downloadCsv } from "@/lib/csv";
+import { downloadCsv } from "@/lib/files/csv";
 import { ExportMenu, type ExportColumn } from "@/components/export/export-menu";
 import { ImportResultDialog, type ImportSummary } from "@/components/import/import-result-dialog";
-import { displayMajorToBaseCents, baseCentsToDisplayMajorStr } from "@/lib/currency-core";
-import { ensureRates, peekRates } from "@/lib/currency";
-import { printCustomerStatement } from "@/lib/print-customer-statement";
+import { displayMajorToBaseCents, baseCentsToDisplayMajorStr } from "@/lib/money/currency-core";
+import { ensureRates, peekRates } from "@/lib/money/currency";
+import { printCustomerStatement } from "@/lib/print/print-customer-statement";
 import { useI18n } from "@/components/providers/i18n-provider";
 import { useStoreCurrency } from "@/components/providers/currency-provider";
 import { PageHeader } from "@/components/layout/page-header";
@@ -16,6 +17,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
+import { SortableTh } from "@/components/ui/sortable-th";
+import { useTableRowNav } from "@/hooks/use-table-row-nav";
 import { StatCard } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "@/stores/toast-store";
@@ -75,53 +78,6 @@ interface CustomerDetail extends Customer {
   }>;
 }
 
-/** Sortable column header — the whole th stays clickable with a hover affordance. */
-function SortableTh({
-  label,
-  active,
-  order,
-  align = "start",
-  onClick,
-}: {
-  label: string;
-  active: boolean;
-  order: "asc" | "desc";
-  align?: "start" | "end";
-  onClick: () => void;
-}) {
-  return (
-    <th
-      aria-sort={active ? (order === "asc" ? "ascending" : "descending") : "none"}
-      className={cn("whitespace-nowrap px-4 py-3", align === "end" ? "text-end" : "text-start")}
-    >
-      <button
-        type="button"
-        onClick={onClick}
-        className={cn(
-          "group inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wider transition-colors",
-          active ? "text-neu-accent-ink" : "text-neu-faint hover:text-neu-primary",
-          align === "end" && "flex-row-reverse"
-        )}
-      >
-        {label}
-        <svg
-          className={cn("h-3 w-3 transition-opacity", active ? "opacity-100" : "opacity-0 group-hover:opacity-60")}
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2.5}
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d={order === "asc" ? "M4.5 15.75l7.5-7.5 7.5 7.5" : "M19.5 8.25l-7.5 7.5-7.5-7.5"}
-          />
-        </svg>
-      </button>
-    </th>
-  );
-}
-
 /** Compact loyalty chip used in the table + mobile cards. */
 function LoyaltyChip({ points }: { points: number }) {
   const tier = points >= 200;
@@ -150,6 +106,13 @@ export default function CustomersPage() {
   useStoreCurrency();
   const { t } = useI18n();
   const [customers, setCustomers] = React.useState<Customer[]>([]);
+
+  // Keyboard row navigation — Enter opens the customer detail (same as a
+  // row click); index maps to the rendered (server-sorted) row order.
+  const tbodyRef = useTableRowNav<HTMLTableSectionElement>((i) => {
+    const c = customers[i];
+    if (c) viewDetail(c);
+  });
   const [loading, setLoading] = React.useState(true);
   const [loadError, setLoadError] = React.useState(false);
   const [search, setSearch] = React.useState("");
@@ -225,7 +188,7 @@ export default function CustomersPage() {
     { header: "address", value: (c) => c.address ?? "" },
     { header: "loyaltyPoints", value: (c) => c.loyaltyPoints, excelStyle: "int", print: { align: "right" } },
     {
-      header: "totalSpent", value: (c) => (c.totalSpent / 100).toFixed(2), excelStyle: "money", print: { align: "right", total: (rows) => formatCurrency(rows.reduce((s, r) => s + (r.totalSpent ?? 0), 0)) },
+      header: "totalSpent", value: (c) => centsToMajorString(c.totalSpent), excelStyle: "money", print: { align: "right", total: (rows) => formatCurrency(rows.reduce((s, r) => s + (r.totalSpent ?? 0), 0)) },
     },
     { header: "orders", value: (c) => c.orderCount ?? c._count?.orders ?? 0, excelStyle: "int", print: { align: "right" } },
     { header: "since", value: (c) => new Date(c.createdAt).toISOString().split("T")[0], print: { align: "right" } },
@@ -824,7 +787,7 @@ export default function CustomersPage() {
                 <th className="whitespace-nowrap px-4 py-3 text-end text-xs font-semibold uppercase tracking-wider text-neu-faint">{t("customers.actions")}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neu-hairline">
+            <tbody ref={tbodyRef} className="divide-y divide-neu-hairline">
               {loading ? (
                 <TableSkeleton rows={6} />
               ) : loadError ? (
@@ -837,7 +800,7 @@ export default function CustomersPage() {
                 </tr>
               ) : (
                 customers.map((c) => (
-                  <tr key={c.id} className="cursor-pointer transition-colors hover:bg-neu-sunken/50" onClick={() => viewDetail(c)}>
+                  <tr key={c.id} data-nav-row data-nav-label={c.name} className="cursor-pointer transition-colors hover:bg-neu-sunken/50" onClick={() => viewDetail(c)}>
                     <td className="max-w-[240px] px-4 py-3">
                       <div className="flex items-center gap-3">
                         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-neu-accent-wash text-xs font-bold text-neu-accent-ink-strong">
@@ -953,7 +916,7 @@ export default function CustomersPage() {
 
       {/* ═══ CUSTOMER DETAIL MODAL ═══ */}
       <Dialog open={Boolean(detailCustomer)} onOpenChange={(o) => !o && setDetailCustomer(null)}>
-        <DialogContent size="lg">
+        <DialogContent size="lg" height="tall">
           <DialogHeader>
             {detailCustomer && !detailLoading ? (
               <div className="flex items-center gap-4 w-full">

@@ -1,8 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
-import { apiError, validationError } from "@/lib/api-errors";
+import { NextResponse } from "next/server";
+import { apiError, validationError } from "@/lib/api/api-errors";
 import { db } from "@/lib/db";
 import { warehouseSchema } from "@/lib/validations";
-import { requirePermission } from "@/lib/api-auth";
+import { requirePermission } from "@/lib/api/api-auth";
+import { withApiHandler } from "@/lib/api/api-handler";
 
 /* ═══════════════════════════════════════════════════════════════
    SINGLE WAREHOUSE API
@@ -11,15 +12,11 @@ import { requirePermission } from "@/lib/api-auth";
    DELETE /api/warehouses/:id — Soft-delete warehouse
    ═══════════════════════════════════════════════════════════════ */
 
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
+export const GET = withApiHandler<{ id: string }>("WAREHOUSE_GET", async (_request, ctx) => {
     const { response } = await requirePermission("inventory:view");
     if (response) return response;
 
-    const { id } = await params;
+    const { id } = await ctx.params;
     const warehouse = await db.warehouse.findUnique({
       where: { id },
       include: {
@@ -47,21 +44,13 @@ export async function GET(
     );
 
     return NextResponse.json({ warehouse: { ...warehouse, totalStockValue } });
-  } catch (error) {
-    console.error("[WAREHOUSE_GET]", error);
-    return apiError("Internal server error", 500);
-  }
-}
+  });
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
+export const PUT = withApiHandler<{ id: string }>("WAREHOUSE_PUT", async (request, ctx) => {
     const { response } = await requirePermission("settings:edit");
     if (response) return response;
 
-    const { id } = await params;
+    const { id } = await ctx.params;
     const body = await request.json();
     const result = warehouseSchema.safeParse(body);
 
@@ -104,21 +93,13 @@ export async function PUT(
     });
 
     return NextResponse.json({ warehouse });
-  } catch (error) {
-    console.error("[WAREHOUSE_PUT]", error);
-    return apiError("Internal server error", 500);
-  }
-}
+  });
 
-export async function DELETE(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
+export const DELETE = withApiHandler<{ id: string }>("WAREHOUSE_DELETE", async (_request, ctx) => {
     const { response } = await requirePermission("settings:edit");
     if (response) return response;
 
-    const { id } = await params;
+    const { id } = await ctx.params;
     const existing = await db.warehouse.findUnique({
       where: { id },
       include: {
@@ -145,8 +126,4 @@ export async function DELETE(
     await db.warehouse.delete({ where: { id } });
 
     return NextResponse.json({ message: "Warehouse deleted" });
-  } catch (error) {
-    console.error("[WAREHOUSE_DELETE]", error);
-    return apiError("Internal server error", 500);
-  }
-}
+  });
