@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { centsToMajorString } from "@/lib/money/money";
 import { formatCurrency, cn } from "@/lib/utils";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
@@ -141,14 +142,14 @@ export default function InventoryReportPage() {
     { header: "items", value: (c) => String(c.items), excelStyle: "int", print: { align: "right" } },
     { header: "units", value: (c) => String(c.quantity), excelStyle: "int", print: { align: "right" } },
     {
-      header: "costValue", value: (c) => (c.costValue / 100).toFixed(2), excelStyle: "money",
+      header: "costValue", value: (c) => centsToMajorString(c.costValue), excelStyle: "money",
       print: { align: "right", strong: true, total: (rows) => formatCurrency(rows.reduce((s, r) => s + r.costValue, 0)) },
     },
     {
-      header: "retailValue", value: (c) => (c.retailValue / 100).toFixed(2), excelStyle: "money",
+      header: "retailValue", value: (c) => centsToMajorString(c.retailValue), excelStyle: "money",
       print: { align: "right", total: (rows) => formatCurrency(rows.reduce((s, r) => s + r.retailValue, 0)) },
     },
-    { header: "margin", value: (c) => (c.margin / 100).toFixed(2), excelStyle: "money", print: { align: "right", muted: true } },
+    { header: "margin", value: (c) => centsToMajorString(c.margin), excelStyle: "money", print: { align: "right", muted: true } },
   ];
 
   // Turnover rows (CSV + Excel + printed analysis section)
@@ -161,7 +162,7 @@ export default function InventoryReportPage() {
     { header: "daysOfStock", value: (i) => (i.daysOfStock >= 999 ? "∞" : String(i.daysOfStock)), print: { label: "Days Left", align: "right" } },
     { header: "turnover", value: (i) => turnoverLabel(i.turnoverCategory), print: { label: "Turnover", align: "center" } },
     {
-      header: "stockValue", value: (i) => (i.stockValue / 100).toFixed(2), excelStyle: "money",
+      header: "stockValue", value: (i) => centsToMajorString(i.stockValue), excelStyle: "money",
       print: { label: "Stock Value", align: "right", total: (rows) => formatCurrency(rows.reduce((s, r) => s + r.stockValue, 0)) },
     },
   ];
@@ -173,7 +174,7 @@ export default function InventoryReportPage() {
     { header: "category", value: (i) => i.category },
     { header: "quantity", value: (i) => String(i.quantity), excelStyle: "int", print: { align: "right", total: (rows) => String(rows.reduce((s, r) => s + r.quantity, 0)) } },
     {
-      header: "valueAtRisk", value: (i) => (i.value / 100).toFixed(2), excelStyle: "money",
+      header: "valueAtRisk", value: (i) => centsToMajorString(i.value), excelStyle: "money",
       print: { label: "Value at Risk", align: "right", strong: true, total: (rows) => formatCurrency(rows.reduce((s, r) => s + r.value, 0)) },
     },
   ];
@@ -188,9 +189,9 @@ export default function InventoryReportPage() {
         rows: [
           ["totalProducts", { v: data.summary.totalProducts, style: "int" as const }],
           ["totalUnits", { v: data.summary.totalQuantity, style: "int" as const }],
-          ["totalCostValue", { v: (data.summary.totalCostValue / 100).toFixed(2), style: "money" as const }],
-          ["totalRetailValue", { v: (data.summary.totalRetailValue / 100).toFixed(2), style: "money" as const }],
-          ["potentialProfit", { v: (data.summary.totalPotentialProfit / 100).toFixed(2), style: "money" as const }],
+          ["totalCostValue", { v: centsToMajorString(data.summary.totalCostValue), style: "money" as const }],
+          ["totalRetailValue", { v: centsToMajorString(data.summary.totalRetailValue), style: "money" as const }],
+          ["potentialProfit", { v: centsToMajorString(data.summary.totalPotentialProfit), style: "money" as const }],
           ["profitMargin", { v: `${data.summary.profitMargin}%` }],
           ["lowStockCount", { v: data.summary.lowStockCount, style: "int" as const }],
           ["outOfStockCount", { v: data.summary.outOfStockCount, style: "int" as const }],

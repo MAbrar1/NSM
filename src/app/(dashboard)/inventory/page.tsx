@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { centsToMajorString } from "@/lib/money/money";
 import { cn, formatCurrency } from "@/lib/utils";
 import { lineQtyLabel, trimNumber, WHOLE_UNITS } from "@/lib/products/units";
 import { PageHeader } from "@/components/layout/page-header";
@@ -654,18 +655,18 @@ export default function InventoryPage() {
     },
     {
       header: "stockValue",
-      value: (i) => (i.stockValue / 100).toFixed(2),
+      value: (i) => centsToMajorString(i.stockValue),
       excelStyle: "money",
       print: { label: "Stock Value", align: "right", strong: true, total: (rows) => formatCurrency(rows.reduce((s, r) => s + r.stockValue, 0)) },
     },
     {
       header: "retailValue",
-      value: (i) => ((i.quantity * i.product.unitPrice) / 100).toFixed(2),
+      value: (i) => centsToMajorString(i.quantity * i.product.unitPrice),
       excelStyle: "money",
       print: { label: "Retail Value", align: "right", total: (rows) => formatCurrency(rows.reduce((s, r) => s + r.quantity * r.product.unitPrice, 0)) },
     },
-    { header: "costPrice", value: (i) => (i.product.costPrice / 100).toFixed(2), excelStyle: "money", omitPrint: true },
-    { header: "unitPrice", value: (i) => (i.product.unitPrice / 100).toFixed(2), excelStyle: "money", omitPrint: true },
+    { header: "costPrice", value: (i) => centsToMajorString(i.product.costPrice), excelStyle: "money", omitPrint: true },
+    { header: "unitPrice", value: (i) => centsToMajorString(i.product.unitPrice), excelStyle: "money", omitPrint: true },
   ];
 
   // Multi-sheet Excel: stock valuation + low-stock watchlist

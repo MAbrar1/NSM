@@ -19,6 +19,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { buildXlsx, buildStyledSheet, type ExcelSheet } from "@/lib/files/csv";
+import { centsToMajorString } from "@/lib/money/money";
 import { buildReportHtml } from "@/lib/print/print-report";
 import { buildPurchaseOrderHtml } from "@/lib/print/print-purchase-order";
 
@@ -99,12 +100,12 @@ const sheets: ExcelSheet[] = [
     name: "Summary",
     headers: ["metric", "value"],
     rows: [
-      ["Total Revenue", { v: (summary.totalRevenue / 100).toFixed(2), style: "money" as const }],
-      ["Net Revenue", { v: (summary.netRevenue / 100).toFixed(2), style: "money" as const }],
+      ["Total Revenue", { v: centsToMajorString(summary.totalRevenue), style: "money" as const }],
+      ["Net Revenue", { v: centsToMajorString(summary.netRevenue), style: "money" as const }],
       ["Total Orders", { v: summary.totalOrders, style: "int" as const }],
-      ["Average Order Value", { v: (summary.averageOrderValue / 100).toFixed(2), style: "money" as const }],
-      ["Total Tax", { v: (summary.totalTax / 100).toFixed(2), style: "money" as const }],
-      ["Total Discounts", { v: (summary.totalDiscounts / 100).toFixed(2), style: "money" as const }],
+      ["Average Order Value", { v: centsToMajorString(summary.averageOrderValue), style: "money" as const }],
+      ["Total Tax", { v: centsToMajorString(summary.totalTax), style: "money" as const }],
+      ["Total Discounts", { v: centsToMajorString(summary.totalDiscounts), style: "money" as const }],
     ],
   },
   buildStyledSheet(
@@ -113,7 +114,7 @@ const sheets: ExcelSheet[] = [
       { header: "name", value: (p: (typeof topProducts)[number]) => p.name },
       { header: "sku", value: (p) => p.sku },
       { header: "qtySold", value: (p) => p.quantitySold, excelStyle: "int" },
-      { header: "revenue", value: (p) => (p.revenue / 100).toFixed(2), excelStyle: "money" },
+      { header: "revenue", value: (p) => centsToMajorString(p.revenue), excelStyle: "money" },
       { header: "orders", value: (p) => p.orderCount, excelStyle: "int" },
     ],
     topProducts,
@@ -127,7 +128,7 @@ const sheets: ExcelSheet[] = [
     headers: ["category", "revenue", "quantity", "items"],
     rows: categories.map((c) => [
       c.name,
-      { v: (c.revenue / 100).toFixed(2), style: "money" as const },
+      { v: centsToMajorString(c.revenue), style: "money" as const },
       { v: c.quantity, style: "int" as const },
       { v: c.items, style: "int" as const },
     ]),

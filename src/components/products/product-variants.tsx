@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { centsToMajorString } from "@/lib/money/money";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -141,8 +142,8 @@ export function ProductVariants({
     setFormName("");
     setFormSku(`${parentSku}-`);
     setFormBarcode("");
-    setFormUnitPrice(String((parentUnitPrice / 100).toFixed(2)));
-    setFormCostPrice(String((parentCostPrice / 100).toFixed(2)));
+    setFormUnitPrice(String(centsToMajorString(parentUnitPrice)));
+    setFormCostPrice(String(centsToMajorString(parentCostPrice)));
     setFormOptions({});
     setOptionKey("");
     setOptionValue("");
@@ -155,8 +156,8 @@ export function ProductVariants({
     setFormName(v.name);
     setFormSku(v.sku);
     setFormBarcode(v.barcode ?? "");
-    setFormUnitPrice(String((v.unitPrice / 100).toFixed(2)));
-    setFormCostPrice(String((v.costPrice / 100).toFixed(2)));
+    setFormUnitPrice(String(centsToMajorString(v.unitPrice)));
+    setFormCostPrice(String(centsToMajorString(v.costPrice)));
     setFormOptions(parseOptions(v.options));
     setOptionKey("");
     setOptionValue("");

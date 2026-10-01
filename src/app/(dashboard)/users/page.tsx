@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { readApiError } from "@/lib/api/api-error";
+import { formatDateTime } from "@/lib/utils";
 import {
   Dialog,
   DialogBody,
@@ -290,7 +291,7 @@ export default function UsersPage() {
                       </Badge>
                     </td>
                     <td className="px-4 py-3 text-sm text-neu-faint hidden lg:table-cell">
-                      {u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString() : "—"}
+                      {u.lastLoginAt ? formatDateTime(u.lastLoginAt) : "—"}
                     </td>
                     <td className="px-4 py-3 text-end">
                       <div className="flex items-center justify-end gap-1">

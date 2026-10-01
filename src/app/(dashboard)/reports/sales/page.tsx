@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { centsToMajorString } from "@/lib/money/money";
 import { formatCurrency, cn, percentDelta } from "@/lib/utils";
 import { lineQtyLabel } from "@/lib/products/units";
 import { PageHeader } from "@/components/layout/page-header";
@@ -158,19 +159,19 @@ export default function SalesReportPage() {
     const summaryRows: Array<Array<string | number>> = [
       ["dateFrom", dateFrom ?? ""],
       ["dateTo", dateTo ?? ""],
-      ["totalRevenue", (data.summary.totalRevenue / 100).toFixed(2)],
-      ["netRevenue", (data.summary.netRevenue / 100).toFixed(2)],
+      ["totalRevenue", centsToMajorString(data.summary.totalRevenue)],
+      ["netRevenue", centsToMajorString(data.summary.netRevenue)],
       ["totalOrders", String(data.summary.totalOrders)],
-      ["averageOrderValue", (data.summary.averageOrderValue / 100).toFixed(2)],
-      ["totalTax", (data.summary.totalTax / 100).toFixed(2)],
-      ["totalDiscounts", (data.summary.totalDiscounts / 100).toFixed(2)],
+      ["averageOrderValue", centsToMajorString(data.summary.averageOrderValue)],
+      ["totalTax", centsToMajorString(data.summary.totalTax)],
+      ["totalDiscounts", centsToMajorString(data.summary.totalDiscounts)],
     ];
     const productRows: Array<Array<string | number>> = data.topProducts.map((p) => [
       p.name, p.sku, lineQtyLabel(p.quantitySold, p.unit) ?? "",
-      (p.revenue / 100).toFixed(2), String(p.orderCount),
+      centsToMajorString(p.revenue), String(p.orderCount),
     ]);
     const categoryRows: Array<Array<string | number>> = data.categories.map((c) => [
-      c.name, (c.revenue / 100).toFixed(2), String(c.quantity), String(c.items),
+      c.name, centsToMajorString(c.revenue), String(c.quantity), String(c.items),
     ]);
     return { summaryRows, productRows, categoryRows };
   }
@@ -225,7 +226,7 @@ export default function SalesReportPage() {
     { header: "qtySold", value: (p) => lineQtyLabel(p.quantitySold, p.unit) ?? "", excelStyle: "int", print: { label: "Qty Sold", align: "right" } },
     {
       header: "revenue",
-      value: (p) => (p.revenue / 100).toFixed(2),
+      value: (p) => centsToMajorString(p.revenue),
       excelStyle: "money",
       print: { align: "right", strong: true, total: (rows) => formatCurrency(rows.reduce((s, r) => s + r.revenue, 0)) },
     },

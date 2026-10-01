@@ -33,6 +33,8 @@ let displayCurrency: string | null = null; // null = follow base
 /** Synchronous rate-table supplier, registered by lib/currency.ts. */
 let rateLookup: () => Record<string, number> | null = () => null;
 
+import { centsToMajorString } from "./money";
+
 export function registerRateLookup(fn: () => Record<string, number> | null): void {
   rateLookup = fn;
 }
@@ -110,10 +112,10 @@ export function displayMajorToBaseCents(major: number, rates: Record<string, num
 export function baseCentsToDisplayMajorStr(cents: number, rates: Record<string, number> | null): string {
   if (!Number.isFinite(cents) || cents <= 0) return "";
   if (!displayCurrency || !rates || displayCurrency === defaultCurrency) {
-    return (cents / 100).toFixed(2); // identity: base major
+    return centsToMajorString(cents); // identity: base major
   }
   const converted = fxConvertCents(cents, defaultCurrency, displayCurrency, rates);
-  return (converted / 100).toFixed(2);
+  return centsToMajorString(converted);
 }
 
 /** True when the display currency differs from the store base (rates live). */

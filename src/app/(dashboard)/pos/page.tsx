@@ -1,9 +1,10 @@
 "use client";
 
 import { useSession } from "next-auth/react";
+import { centsToMajorString } from "@/lib/money/money";
 
 import * as React from "react";
-import { cn, formatCurrency } from "@/lib/utils";
+import { cn, formatCurrency, formatDateTime } from "@/lib/utils";
 import { displayMajorToBaseCents, baseCentsToDisplayMajorStr, isDisplayConverted, getDisplayCurrency } from "@/lib/money/currency-core";
 import { ensureRates, peekRates } from "@/lib/money/currency";
 import type { CartItem } from "@/types";
@@ -2715,7 +2716,7 @@ export default function POSPage() {
                   />
                   <button
                     type="button"
-                    onClick={() => setSettleInput((maxSettleCents / 100).toFixed(2))}
+                    onClick={() => setSettleInput(centsToMajorString(maxSettleCents))}
                     disabled={maxSettleCents <= 0}
                     className="shrink-0 rounded-lg border border-neu-ink-amber/35 bg-neu-bg px-2.5 py-1.5 text-[11px] font-semibold text-neu-ink-amber transition-colors hover:bg-neu-wash-amber disabled:cursor-not-allowed disabled:opacity-40"
                   >
@@ -2850,7 +2851,7 @@ export default function POSPage() {
                   )}
                   <button
                     type="button"
-                    onClick={() => setAmountPaid((finalTotal / 100).toFixed(2))}
+                    onClick={() => setAmountPaid(centsToMajorString(finalTotal))}
                     className="pos-cash-quick-btn border border-neu-accent-line bg-neu-accent-wash px-3 text-neu-accent-ink-strong"
                   >
                     {t("pos.exact")} · {baseCentsToDisplayMajorStr(finalTotal, fx)}
@@ -2979,7 +2980,7 @@ export default function POSPage() {
                     <p className="text-[10px] text-neu-faint">{storeReceipt.storePhone}</p>
                   )}
                   <p className="text-[10px] text-neu-faint">
-                    {new Date(completedOrder.createdAt).toLocaleString()}
+                    {formatDateTime(completedOrder.createdAt)}
                   </p>
                 </div>
                 {storeReceipt.receiptHeader && (

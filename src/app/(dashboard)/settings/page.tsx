@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { centsToMajorString } from "@/lib/money/money";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -270,8 +271,8 @@ export default function SettingsPage() {
           p.sku,
           p.barcode ?? "",
           p.categoryName ?? "",
-          (p.unitPrice / 100).toFixed(2),
-          (p.costPrice / 100).toFixed(2),
+          centsToMajorString(p.unitPrice),
+          centsToMajorString(p.costPrice),
           "active",
           String(p.totalStock ?? 0),
         ]),

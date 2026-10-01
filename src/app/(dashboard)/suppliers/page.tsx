@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { centsToMajorString } from "@/lib/money/money";
 import { useI18n } from "@/components/providers/i18n-provider";
 import { useStoreCurrency } from "@/components/providers/currency-provider";
 import { PageHeader } from "@/components/layout/page-header";
@@ -189,7 +190,7 @@ export default function SuppliersPage() {
     { header: "products", value: (s) => String(s._count?.products ?? 0), excelStyle: "int", print: { align: "right" } },
     {
       header: "totalSpent",
-      value: (s) => ((s.stats?.totalSpent ?? 0) / 100).toFixed(2),
+      value: (s) => centsToMajorString(s.stats?.totalSpent ?? 0),
       excelStyle: "money",
       print: { align: "right", strong: true, total: (rows) => formatCurrency(rows.reduce((a, r) => a + (r.stats?.totalSpent ?? 0), 0)) },
     },

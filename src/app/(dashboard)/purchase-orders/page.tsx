@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { centsToMajorString } from "@/lib/money/money";
 import { useI18n } from "@/components/providers/i18n-provider";
 import { useStoreCurrency } from "@/components/providers/currency-provider";
 import { PageHeader } from "@/components/layout/page-header";
@@ -448,12 +449,12 @@ export default function PurchaseOrdersPage() {
     { header: "warehouse", value: (o) => o.warehouse?.name ?? "", omitPrint: true },
     { header: "status", value: (o) => o.status, print: { align: "center" } },
     { header: "items", value: (o) => String(o._count?.items ?? o.items?.length ?? 0), excelStyle: "int", print: { align: "right" } },
-    { header: "subtotal", value: (o) => (o.subtotal / 100).toFixed(2), excelStyle: "money", print: { align: "right", muted: true } },
-    { header: "tax", value: (o) => (o.taxAmount / 100).toFixed(2), excelStyle: "money", print: { align: "right", muted: true } },
-    { header: "shipping", value: (o) => (o.shippingCost / 100).toFixed(2), excelStyle: "money", print: { align: "right", muted: true } },
+    { header: "subtotal", value: (o) => centsToMajorString(o.subtotal), excelStyle: "money", print: { align: "right", muted: true } },
+    { header: "tax", value: (o) => centsToMajorString(o.taxAmount), excelStyle: "money", print: { align: "right", muted: true } },
+    { header: "shipping", value: (o) => centsToMajorString(o.shippingCost), excelStyle: "money", print: { align: "right", muted: true } },
     {
       header: "total",
-      value: (o) => (o.total / 100).toFixed(2),
+      value: (o) => centsToMajorString(o.total),
       excelStyle: "money",
       print: { align: "right", strong: true, total: (rows) => formatCurrency(rows.reduce((s, r) => s + r.total, 0)) },
     },

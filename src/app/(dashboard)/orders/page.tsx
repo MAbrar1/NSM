@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { centsToMajorString } from "@/lib/money/money";
 import { formatCurrency, formatDate, formatTime, cn } from "@/lib/utils";
 import { ExportMenu, type ExportColumn } from "@/components/export/export-menu";
 import { printReport, fetchReportSettings } from "@/lib/print/print-report";
@@ -339,24 +340,24 @@ export default function OrdersPage() {
     { header: "cashier", value: (o) => o.user?.name ?? "", print: { muted: true } },
     { header: "date", value: (o) => new Date(o.createdAt).toISOString(), print: { label: "Date", width: "13%" } },
     { header: "items", value: (o) => String(o.fractional ? (o.lineCount ?? o.items?.length ?? 0) : (o.itemCount ?? o.items?.length ?? 0)), excelStyle: "int", print: { align: "right" } },
-    { header: "subtotal", value: (o) => (o.subtotal / 100).toFixed(2), excelStyle: "money", print: { align: "right", muted: true, total: (rows) => formatCurrency(rows.reduce((s, r) => s + r.subtotal, 0)) } },
-    { header: "discount", value: (o) => (o.discountAmount / 100).toFixed(2), excelStyle: "money", print: { align: "right", muted: true, total: (rows) => formatCurrency(rows.reduce((s, r) => s + r.discountAmount, 0)) } },
-    { header: "tax", value: (o) => (o.taxAmount / 100).toFixed(2), excelStyle: "money", print: { align: "right", muted: true, total: (rows) => formatCurrency(rows.reduce((s, r) => s + r.taxAmount, 0)) } },
+    { header: "subtotal", value: (o) => centsToMajorString(o.subtotal), excelStyle: "money", print: { align: "right", muted: true, total: (rows) => formatCurrency(rows.reduce((s, r) => s + r.subtotal, 0)) } },
+    { header: "discount", value: (o) => centsToMajorString(o.discountAmount), excelStyle: "money", print: { align: "right", muted: true, total: (rows) => formatCurrency(rows.reduce((s, r) => s + r.discountAmount, 0)) } },
+    { header: "tax", value: (o) => centsToMajorString(o.taxAmount), excelStyle: "money", print: { align: "right", muted: true, total: (rows) => formatCurrency(rows.reduce((s, r) => s + r.taxAmount, 0)) } },
     {
       header: "total",
-      value: (o) => (o.total / 100).toFixed(2),
+      value: (o) => centsToMajorString(o.total),
       excelStyle: "money",
       print: { align: "right", strong: true, total: (rows) => formatCurrency(rows.reduce((s, r) => s + r.total, 0)) },
     },
     {
       header: "paid",
-      value: (o) => ((o.paidAmount ?? 0) / 100).toFixed(2),
+      value: (o) => centsToMajorString(o.paidAmount ?? 0),
       excelStyle: "money",
       print: { align: "right", total: (rows) => formatCurrency(rows.reduce((s, r) => s + (r.paidAmount ?? 0), 0)) },
     },
     {
       header: "due",
-      value: (o) => ((o.dueAmount ?? 0) / 100).toFixed(2),
+      value: (o) => centsToMajorString(o.dueAmount ?? 0),
       excelStyle: "money",
       print: { align: "right", total: (rows) => formatCurrency(rows.reduce((s, r) => s + (r.dueAmount ?? 0), 0)) },
     },

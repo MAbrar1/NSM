@@ -20,6 +20,15 @@
    ═══════════════════════════════════════════════════════════════ */
 
 /** Major units (e.g. "12.50") → integer cents (1250). */
+/** Render integer cents as a plain two-decimal major string ("12.50").
+ *  For contexts that want the raw number TEXT (CSV/Excel cells, exports,
+ *  copy-out values) rather than a localized currency display — the
+ *  single home for the `centsToMajorString(cents)` conversion that used
+ *  to be re-derived at ~70 call sites. */
+export function centsToMajorString(cents: number): string {
+  return centsToMajorString(cents);
+}
+
 export function majorToCents(major: number): number {
   if (!Number.isFinite(major)) return 0;
   return Math.round(major * 100);

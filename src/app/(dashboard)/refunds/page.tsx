@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { centsToMajorString } from "@/lib/money/money";
 import { formatCurrency, formatDate, formatTime, cn } from "@/lib/utils";
 import { downloadCsv } from "@/lib/files/csv";
 import { ExportMenu, type ExportColumn } from "@/components/export/export-menu";
@@ -206,7 +207,7 @@ export default function RefundsPage() {
     { header: "items", value: (o) => String(o.fractional ? (o.lineCount ?? o.items?.length ?? 0) : trimNumber(o.itemCount ?? o.items?.length ?? 0)), excelStyle: "int", print: { align: "right" } },
     {
       header: "refundedAmount",
-      value: (o) => ((o.refundedAmount || (o.status === "refunded" ? o.total : 0)) / 100).toFixed(2),
+      value: (o) => centsToMajorString(o.refundedAmount || (o.status === "refunded" ? o.total : 0)),
       excelStyle: "money",
       print: { align: "right", strong: true, total: (rows) => formatCurrency(rows.reduce((s, r) => s + (r.refundedAmount || (r.status === "refunded" ? r.total : 0)), 0)) },
     },
@@ -444,7 +445,7 @@ export default function RefundsPage() {
       rows.map((r) => [
         reasonLabel(r.reason),
         r.count,
-        (r.total / 100).toFixed(2),
+        centsToMajorString(r.total),
         counted > 0 ? `${((r.count / counted) * 100).toFixed(1)}%` : "0.0%",
       ])
     );

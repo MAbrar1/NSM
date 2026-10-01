@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { centsToMajorString } from "@/lib/money/money";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -10,7 +11,7 @@ import { readApiError } from "@/lib/api/api-error";
 import { useUnsavedGuard } from "@/hooks/use-unsaved-guard";
 import { toast } from "@/stores/toast-store";
 import { useI18n } from "@/components/providers/i18n-provider";
-import { cn } from "@/lib/utils";
+import { cn, formatDateTime } from "@/lib/utils";
 
 /* ═══════════════════════════════════════════════════════════════
    RECEIPT SETTINGS PAGE
@@ -276,7 +277,7 @@ export default function ReceiptSettingsPage() {
               )}
             </div>
             <div className="text-center text-neu-faint">
-              <p>{new Date().toLocaleString()}</p>
+              <p>{formatDateTime(new Date())}</p>
               <p>{t("receiptSettings.receiptNo")} POS-0001</p>
             </div>
             {receiptHeader && (
@@ -289,7 +290,7 @@ export default function ReceiptSettingsPage() {
             </div>
             <div className="mt-2 border-t border-dashed border-neu-hairline pt-2 space-y-0.5">
               <div className="flex justify-between"><span>{t("pos.subtotal")}</span><span>26.94</span></div>
-              <div className="flex justify-between"><span>{t("pos.tax")} ({taxRate}%)</span><span>{(26.94 * taxRate / 100).toFixed(2)}</span></div>
+              <div className="flex justify-between"><span>{t("pos.tax")} ({taxRate}%)</span><span>{centsToMajorString(26.94 * taxRate)}</span></div>
               <div className="flex justify-between font-bold"><span>{t("pos.total")}</span><span>{(26.94 * (1 + taxRate / 100)).toFixed(2)}</span></div>
               <div className="flex justify-between"><span>{t("receiptSettings.paid")}</span><span>30.00</span></div>
               <div className="flex justify-between text-neu-ink-green"><span>{t("pos.change")}</span><span>{(30 - 26.94 * (1 + taxRate / 100)).toFixed(2)}</span></div>

@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { centsToMajorString } from "@/lib/money/money";
 import { formatCurrency, formatDate, formatNumber, cn, getInitials } from "@/lib/utils";
 import { downloadCsv } from "@/lib/files/csv";
 import { ExportMenu, type ExportColumn } from "@/components/export/export-menu";
@@ -187,7 +188,7 @@ export default function CustomersPage() {
     { header: "address", value: (c) => c.address ?? "" },
     { header: "loyaltyPoints", value: (c) => c.loyaltyPoints, excelStyle: "int", print: { align: "right" } },
     {
-      header: "totalSpent", value: (c) => (c.totalSpent / 100).toFixed(2), excelStyle: "money", print: { align: "right", total: (rows) => formatCurrency(rows.reduce((s, r) => s + (r.totalSpent ?? 0), 0)) },
+      header: "totalSpent", value: (c) => centsToMajorString(c.totalSpent), excelStyle: "money", print: { align: "right", total: (rows) => formatCurrency(rows.reduce((s, r) => s + (r.totalSpent ?? 0), 0)) },
     },
     { header: "orders", value: (c) => c.orderCount ?? c._count?.orders ?? 0, excelStyle: "int", print: { align: "right" } },
     { header: "since", value: (c) => new Date(c.createdAt).toISOString().split("T")[0], print: { align: "right" } },
