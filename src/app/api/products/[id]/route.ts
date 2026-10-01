@@ -140,11 +140,20 @@ export const DELETE = withApiHandler<{ id: string }>("PRODUCT_DELETE", async (_r
       return apiError("Product not found", 404);
     }
 
-    // Soft delete
-    await db.product.update({
-      where: { id },
-      data: { deletedAt: new Date() },
-    });
+    // Soft delete — and zero the product's stock rows in the same
+    // transaction: a deleted product must not own live stock, or the
+    // consistency verifier (and any stock-aware query joining through
+    // products) sees ghost inventory forever.
+    await db.$transaction([
+      db.product.update({
+        where: { id },
+        data: { deletedAt: new Date() },
+      }),
+      db.stockLevel.updateMany({
+        where: { productId: id },
+        data: { quantity: 0, reservedQuantity: 0 },
+      }),
+    ]);
 
     logAudit({
       userId: user.id,

@@ -23,6 +23,7 @@
     "clear:login-attempts": "tsx scripts/clear-login-attempts.ts",
     "samples": "tsx scripts/generate-export-samples.ts",
     "verify": "tsx scripts/verify-consistency.ts",
+    "verify:api": "node scripts/verify-api.mjs",
     "check:dev": "node scripts/check-dev-server.mjs",
     "audit:neu": "node scripts/audit-neu-theme.mjs",
     "audit:neu:pages": "node scripts/audit-neu-pages.mjs",

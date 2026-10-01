@@ -101,21 +101,27 @@ export async function verifyConsistency(
       `${tracked.length} tracked products all stocked`
     );
 
-    /* ── 2. No ghost stock for soft-deleted products ───────────── */
+    /* ── 2. No ghost stock for soft-deleted products ─────────────
+       Only rows still HOLDING stock count: product delete zeroes its
+       rows transactionally (api/products/[id] DELETE), so a remaining
+       0-quantity row is inert residue, not ghost inventory. */
     const deletedProducts = await prisma.product.findMany({
       where: { deletedAt: { not: null } },
       select: { id: true },
     });
     const deletedIds = deletedProducts.map((p) => p.id);
     const ghostRows = await prisma.stockLevel.findMany({
-      where: { productId: { in: deletedIds.length > 0 ? deletedIds : ["__none__"] } },
-      select: { id: true, quantity: true },
+      where: {
+        productId: { in: deletedIds.length > 0 ? deletedIds : ["__none__"] },
+        OR: [{ quantity: { gt: 0 } }, { reservedQuantity: { gt: 0 } }],
+      },
+      select: { id: true, quantity: true, reservedQuantity: true },
     });
     const problems2: VerifyRow[] = ghostRows.map((r) => ({
       label: `stock row ${r.id}`,
-      detail: `quantity ${r.quantity} on a deleted product`,
+      detail: `quantity ${r.quantity} (reserved ${r.reservedQuantity}) on a deleted product`,
     }));
-    report("No ghost stock rows", problems2, "soft-deleted products own no stock");
+    report("No ghost stock rows", problems2, "soft-deleted products hold no stock");
 
     /* ── 3. Reserved never exceeds on-hand ─────────────────────── */
     const badReserved = await prisma.stockLevel.findMany({
@@ -147,8 +153,12 @@ export async function verifyConsistency(
       const itemSub = o.items.reduce((s, it) => s + it.unitPrice * it.quantity, 0);
       const itemDisc = o.items.reduce((s, it) => s + (it.discountAmount || 0), 0);
       const itemTax = o.items.reduce((s, it) => s + (it.taxAmount || 0), 0);
+      // The app's money rule (cart-math/checkout-math):
+      //   total = (subtotal − discount) + tax — tax is ADDED.
+      // This check previously SUBTRACTED tax and passed only because
+      // seeded orders carried zero tax; every taxed sale was flagged.
       // ±2¢ tolerance per line aggregate for rounding
-      if (Math.abs(itemSub - itemDisc - itemTax - o.total) > o.items.length * 2 + 2) {
+      if (Math.abs(itemSub - itemDisc + itemTax - o.total) > o.items.length * 2 + 2) {
         problems4.push({
           label: o.orderNumber,
           detail: `items sum ${Math.round(itemSub - itemDisc - itemTax)} vs header ${o.total}`,
