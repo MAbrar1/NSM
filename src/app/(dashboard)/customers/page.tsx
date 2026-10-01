@@ -3,6 +3,7 @@
 import * as React from "react";
 import { centsToMajorString } from "@/lib/money/money";
 import { formatCurrency, formatDate, formatNumber, cn, getInitials } from "@/lib/utils";
+import { fetchListPayload } from "@/lib/api/list-fetch";
 import { downloadCsv } from "@/lib/files/csv";
 import { ExportMenu, type ExportColumn } from "@/components/export/export-menu";
 import { ImportResultDialog, type ImportSummary } from "@/components/import/import-result-dialog";
@@ -271,13 +272,17 @@ export default function CustomersPage() {
     const params = new URLSearchParams({ page: String(page), pageSize: "15", sortBy, sortOrder });
     if (search) params.set("search", search);
     try {
-      const res = await fetch(`/api/customers?${params}`);
-      const data = await res.json();
+      const data = await fetchListPayload<{
+        items?: Customer[];
+        total?: number;
+        totalPages?: number;
+        hasNext?: boolean;
+      }>(`/api/customers?${params}`);
       if (reqId !== customersReq.current) return; // stale response — drop it
       setCustomers(data.items ?? []);
-      setTotal(data.total);
-      setTotalPages(data.totalPages);
-      setHasNext(data.hasNext);
+      setTotal(data.total ?? 0);
+      setTotalPages(data.totalPages ?? 1);
+      setHasNext(data.hasNext ?? false);
     } catch (e) { console.error(e); setLoadError(true); }
     finally { if (reqId === customersReq.current) setLoading(false); }
   }, [page, search, sortBy, sortOrder]);

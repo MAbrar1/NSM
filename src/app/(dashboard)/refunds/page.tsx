@@ -3,6 +3,7 @@
 import * as React from "react";
 import { centsToMajorString } from "@/lib/money/money";
 import { formatCurrency, formatDate, formatTime, cn } from "@/lib/utils";
+import { fetchListPayload } from "@/lib/api/list-fetch";
 import { downloadCsv } from "@/lib/files/csv";
 import { ExportMenu, type ExportColumn } from "@/components/export/export-menu";
 import { fetchReportSettings, printReport } from "@/lib/print/print-report";
@@ -297,8 +298,7 @@ export default function RefundsPage() {
     params.set("sort", sort);
 
     try {
-      const res = await fetch(`/api/orders?${params}`);
-      const data: RefundsResponse = await res.json();
+      const data: RefundsResponse = await fetchListPayload<RefundsResponse>(`/api/orders?${params}`);
       if (reqId !== ordersReq.current) return; // stale response — drop it
       setOrders(data.orders ?? []);
       setTotal(data.total);

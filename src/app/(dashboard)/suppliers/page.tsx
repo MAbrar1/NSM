@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { readApiError } from "@/lib/api/api-error";
+import { fetchListPayload } from "@/lib/api/list-fetch";
 import {
   Dialog,
   DialogBody,
@@ -173,8 +174,9 @@ export default function SuppliersPage() {
   const fetchAllSuppliers = React.useCallback(async (): Promise<Supplier[]> => {
     const params = new URLSearchParams({ limit: "10000" });
     if (search) params.set("search", search);
-    const res = await fetch(`/api/suppliers?${params}`);
-    const data = await res.json();
+    const data = await fetchListPayload<{ suppliers?: Supplier[] }>(
+      `/api/suppliers?${params}`
+    );
     return data.suppliers ?? [];
   }, [search]);
 
@@ -263,8 +265,10 @@ export default function SuppliersPage() {
       const params = new URLSearchParams({ page: String(page), limit: "20" });
       if (search) params.set("search", search);
       params.set("sort", sort);
-      const res = await fetch(`/api/suppliers?${params}`);
-      const data = await res.json();
+      const data = await fetchListPayload<{
+        suppliers?: Supplier[];
+        pagination?: { totalPages?: number };
+      }>(`/api/suppliers?${params}`);
       setSuppliers(data.suppliers ?? []);
       setTotalPages(data.pagination?.totalPages ?? 1);
     } catch { setLoadError(true); }
@@ -443,15 +447,27 @@ export default function SuppliersPage() {
               ) : suppliers.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-4 py-0">
+                    {/* A page of nothing while the API still reports more pages
+                        means a fetch failed mid-cursor, not an empty store —
+                        offer Retry rather than the "add your first supplier"
+                        empty state (which would read as "your data is gone"). */}
                     <EmptyState
                       bare
+                      error={totalPages > 1}
                       icon={
                         <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
                         </svg>
                       }
-                      title={t("suppliers.noSuppliers")}
-                      description={t("suppliers.noSuppliersHint")}
+                      title={t(totalPages > 1 ? "common.loadFailed" : "suppliers.noSuppliers")}
+                      description={t(totalPages > 1 ? "common.loadFailedDesc" : "suppliers.noSuppliersHint")}
+                      action={
+                        totalPages > 1 ? (
+                          <Button variant="secondary" size="sm" onClick={fetchSuppliers}>
+                            {t("common.retry")}
+                          </Button>
+                        ) : undefined
+                      }
                     />
                   </td>
                 </tr>

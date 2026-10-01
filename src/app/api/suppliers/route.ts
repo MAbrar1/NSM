@@ -14,6 +14,11 @@ import { supplierPurchaseStats } from "@/lib/suppliers/supplier-stats";
    POST /api/suppliers       — Create new supplier
    ═══════════════════════════════════════════════════════════════ */
 
+/* Nullable supplier columns. Only these may use Prisma's
+ * `{ sort, nulls: "last" }` orderBy form; required columns get the bare
+ * SortOrder form (see the orderBy builder in GET). */
+const NULLABLE_SUPPLIER_SORT_FIELDS = ["email", "phone", "city", "country"];
+
 export async function GET(request: NextRequest) {
   try {
     const { response } = await requirePermission("suppliers:view");
@@ -51,14 +56,19 @@ export async function GET(request: NextRequest) {
           : sort.field;
 
     // Count columns sort on real relation counts (Prisma's _count syntax);
-    // everything else is a plain column, with nulls last so "—" rows don't
-    // bunch at the top of an ascending sort.
+    // everything else is a plain column. Required (NOT NULL) columns MUST
+    // use the bare SortOrder form — `{ sort, nulls }` is only valid for
+    // nullable columns and the generated client rejects it on required
+    // ones (Expected SortOrder, provided Object → 500 on every default
+    // load, rendered by the page as a quiet "no suppliers yet").
     const orderBy: Prisma.SupplierOrderByWithRelationInput =
       sortField === "products"
         ? { products: { _count: sort.order } }
         : sortField === "purchaseOrders"
           ? { purchaseOrders: { _count: sort.order } }
-          : { [sortField]: { sort: sort.order, nulls: "last" } };
+          : NULLABLE_SUPPLIER_SORT_FIELDS.includes(sortField)
+            ? { [sortField]: { sort: sort.order, nulls: "last" } }
+            : { [sortField]: sort.order };
 
     const [suppliers, total] = await Promise.all([
       db.supplier.findMany({

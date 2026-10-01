@@ -3,6 +3,7 @@
 import * as React from "react";
 import { centsToMajorString } from "@/lib/money/money";
 import { formatCurrency, formatDate, formatTime, cn } from "@/lib/utils";
+import { fetchListPayload } from "@/lib/api/list-fetch";
 import { ExportMenu, type ExportColumn } from "@/components/export/export-menu";
 import { printReport, fetchReportSettings } from "@/lib/print/print-report";
 import { lineQtyLabel, trimNumber, WHOLE_UNITS } from "@/lib/products/units";
@@ -497,8 +498,7 @@ export default function OrdersPage() {
 
     setLoadError(false);
     try {
-      const res = await fetch(`/api/orders?${params}`);
-      const data: OrdersResponse = await res.json();
+      const data: OrdersResponse = await fetchListPayload<OrdersResponse>(`/api/orders?${params}`);
       setOrders(data.orders ?? []);
       setTotal(data.total);
       setTotalPages(data.totalPages);
