@@ -1,7 +1,7 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { centsToMajorString } from "@/lib/money/money";
+import { centsToMajorString, majorToCents } from "@/lib/money/money";
 
 import * as React from "react";
 import { cn, formatCurrency, formatDateTime } from "@/lib/utils";
@@ -473,7 +473,7 @@ function UnitQuantityDialog({
                       <button
                         key={c}
                         type="button"
-                        onClick={() => setAmountStr(baseCentsToDisplayMajorStr(c * 100, fx))}
+                        onClick={() => setAmountStr(baseCentsToDisplayMajorStr(majorToCents(c), fx))}
                         className="pos-cash-quick-btn w-auto min-w-16 flex-none border border-neu-hairline bg-neu-bg px-3 tabular-nums text-neu-muted hover:bg-neu-sunken"
                       >
                         {/* Chip label = same VALUE the click types in (display
@@ -483,7 +483,7 @@ function UnitQuantityDialog({
                         {/* Chip label = same VALUE the click types in (display
                             currency), never a converted label over an unconverted
                             typed value. */}
-                        {baseCentsToDisplayMajorStr(c * 100, fx)}
+                        {baseCentsToDisplayMajorStr(majorToCents(c), fx)}
                       </button>
                     ))}
                   </div>

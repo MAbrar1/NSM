@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { percentToRatio } from "@/lib/money/money";
 
 /* ═══════════════════════════════════════════════════════════════
    DEMO SALES SEEDER
@@ -160,7 +161,7 @@ async function seed(): Promise<void> {
     const items = chosen.map((p) => {
       const quantity = randInt(1, 3);
       const lineTotal = p.unitPrice * quantity;
-      const taxAmount = Math.round((lineTotal * (p.taxRate ?? 0)) / 100);
+      const taxAmount = Math.round(lineTotal * percentToRatio(p.taxRate ?? 0));
       return {
         productId: p.id,
         productName: p.name,

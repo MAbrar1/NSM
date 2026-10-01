@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { centsToMajorString } from "@/lib/money/money";
+import { centsToMajor, centsToMajorString } from "@/lib/money/money";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -1238,8 +1238,8 @@ export default function ProductsPage() {
                 barcode: editProduct.barcode ?? "",
                 categoryId: editProduct.category.id,
                 brandId: editProduct.brand?.id ?? "",
-                unitPrice: editProduct.unitPrice / 100,
-                costPrice: editProduct.costPrice / 100,
+                unitPrice: centsToMajor(editProduct.unitPrice),
+                costPrice: centsToMajor(editProduct.costPrice),
                 taxRate: editProduct.taxRate ?? 0,
                 status: editProduct.status as "active" | "inactive" | "discontinued",
                 minStockLevel: editProduct.minStockLevel,

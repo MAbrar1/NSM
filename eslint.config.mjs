@@ -40,6 +40,14 @@ const eslintConfig = [
       // is how the 68-copy duplication crept in.
       "@local/no-raw-cents-format": "error",
 
+      // Cents SCALING has exactly one home too: majorToCents() /
+      // centsToMajor() in @/lib/money/money. A raw `x / 100` or `100 * x`
+      // on a money value skips the guards (non-finite → 0, integer
+      // results, Prisma-Int saturation) and is how silent money
+      // regressions ship. Percent idioms — (a / b) * 100, taxRate / 100 —
+      // stay legal; only the cent-scale shapes are banned.
+      "@local/no-raw-money-scale": "error",
+
       // Slug generation has exactly one home: slugify() in @/lib/utils.
       // Re-typing the lowercase/dash regex chain at create/update routes
       // is how 11 divergent copies appeared.
@@ -52,7 +60,7 @@ const eslintConfig = [
     },
   },
   {
-    ignores: ["node_modules/", ".next/", "dist/", "prisma/"],
+    ignores: ["node_modules/", ".next/", ".next-prod/", "dist/", "prisma/"],
   },
 ];
 
@@ -182,6 +190,45 @@ const dialogRulesPlugin = {
               message:
                 "Raw (cents / 100).toFixed(2) — use centsToMajorString() from @/lib/money/money so cents formatting has one home.",
             });
+          },
+        };
+      },
+    },
+    "no-raw-money-scale": {
+      meta: {
+        type: "problem",
+        docs: {
+          description:
+            "Cents scaling belongs to majorToCents()/centsToMajor() in @/lib/money/money — a raw `/ 100` or `100 *` skips the money guards (non-finite → 0, integer results, Int saturation). Percent math like (a / b) * 100 is not affected.",
+        },
+        schema: [],
+      },
+      create(context) {
+        // lib/money is the one legal home for the raw conversions.
+        const file = context.getFilename().replace(/\\/g, "/");
+        if (file.includes("/src/lib/money/")) return {};
+        const isHundred = (n) => n && n.type === "Literal" && n.value === 100;
+        return {
+          BinaryExpression(node) {
+            // money / 100 — the cents→major direction. (`x * 100` is NOT
+            // reported: (a / b) * 100 is the percent idiom used across
+            // the dashboard, and banning it would bury the signal.)
+            if (node.operator === "/" && isHundred(node.right)) {
+              context.report({
+                node,
+                message:
+                  "Raw ÷ 100 on a money value — use centsToMajor()/centsToMajorString() from @/lib/money/money so cents scaling keeps its guards. Percent math is exempt; if this is percent math, restructure so the reviewer can see it.",
+              });
+              return;
+            }
+            // 100 * x — the major→cents direction written raw.
+            if (node.operator === "*" && isHundred(node.left)) {
+              context.report({
+                node,
+                message:
+                  "Raw 100 × on a money value — use majorToCents() from @/lib/money/money so cents scaling keeps its guards.",
+              });
+            }
           },
         };
       },

@@ -10,7 +10,13 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { centsToMajorString, majorToCents, parseMoneyToCents } from "@/lib/money/money";
+import {
+  centsToMajorString,
+  clampToInt,
+  majorToCents,
+  parseMoneyToCents,
+  roundHalfUp,
+} from "@/lib/money/money";
 
 test("majorToCents: whole and decimal amounts", () => {
   assert.equal(majorToCents(0), 0);
@@ -59,6 +65,14 @@ test("parseMoneyToCents: negative cells are rejected, not negated", () => {
   assert.equal(parseMoneyToCents("-$12.00"), null);
 });
 
+test("parseMoneyToCents: huge and Infinity cells cannot poison a cents column", () => {
+  // A hand-edited CSV cell used to surface parseFloat()'s 1e13 * 100 float
+  // verbatim into an Int column; it now saturates like every other entry.
+  assert.equal(parseMoneyToCents("99999999999.99"), 2147483647);
+  assert.equal(parseMoneyToCents("Infinity"), null);
+  assert.equal(parseMoneyToCents("NaN"), null);
+});
+
 test("parseMoneyToCents and majorToCents agree on the same value", () => {
   assert.equal(parseMoneyToCents("12.50"), majorToCents(12.5));
   assert.equal(parseMoneyToCents("0.99"), majorToCents(0.99));
@@ -80,4 +94,45 @@ test("centsToMajorString is the inverse of majorToCents", () => {
   for (const cents of [0, 1, 99, 1250, 199999]) {
     assert.equal(majorToCents(Number(centsToMajorString(cents))), cents);
   }
+});
+
+test("centsToMajorString: non-finite input renders 0.00, never NaN text", () => {
+  // A poisoned cents value reaching the export path must not write
+  // "NaN" into an Excel money cell.
+  assert.equal(centsToMajorString(Number.NaN), "0.00");
+  assert.equal(centsToMajorString(Number.POSITIVE_INFINITY), "0.00");
+  assert.equal(centsToMajorString(Number.NEGATIVE_INFINITY), "0.00");
+});
+
+test("majorToCents: out-of-range conversions saturate at Prisma Int bounds", () => {
+  // 2^31-1 is the largest value an Int cents column accepts; beyond it
+  // the write would fail mid-transaction. Saturation beats a throw here
+  // because the alternative (silently wrapping the float) is worse.
+  assert.equal(majorToCents(1e12), 2147483647);
+  assert.equal(majorToCents(21474836.47), 2147483647);
+  assert.equal(majorToCents(-1e12), -2147483647);
+  // Just inside the bounds, conversion is exact.
+  assert.equal(majorToCents(21474836.46), 2147483646);
+});
+
+test("majorToCents: results are always integers", () => {
+  // Float residue (0.1 + 0.2) must never reach a cents column.
+  assert.equal(majorToCents(0.1 + 0.2), 30);
+  assert.equal(Number.isInteger(majorToCents(19.99)), true);
+});
+
+test("roundHalfUp: Math.round's rule, total over non-finite input", () => {
+  assert.equal(roundHalfUp(12.5), 13);
+  assert.equal(roundHalfUp(-12.5), -12);
+  assert.equal(roundHalfUp(12.4), 12);
+  assert.equal(roundHalfUp(Number.NaN), 0);
+  assert.equal(roundHalfUp(Number.POSITIVE_INFINITY), 0);
+});
+
+test("clampToInt: saturates at ±(2^31-1), NaN resolves to 0", () => {
+  assert.equal(clampToInt(3e9), 2147483647);
+  assert.equal(clampToInt(-3e9), -2147483647);
+  assert.equal(clampToInt(1234), 1234);
+  assert.equal(clampToInt(Number.NaN), 0);
+  assert.equal(clampToInt(Number.POSITIVE_INFINITY), 2147483647);
 });

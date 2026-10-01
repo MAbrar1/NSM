@@ -127,7 +127,9 @@ export const GET = withApiHandler("INVENTORY_REPORT", async (request) => {
           category: sl.product.category.name,
           currentStock: sl.quantity,
           soldLast30Days: sold30d,
-          dailyRate: Math.round(dailyRate * 100) / 100,
+          // 2dp display precision for a non-money rate — deliberately not
+          // a cents-scale ×100/÷100 pair.
+          dailyRate: Number(dailyRate.toFixed(2)),
           daysOfStock: daysOfStock === Infinity ? 999 : daysOfStock,
           turnoverCategory,
           stockValue: stockCostValue(sl.quantity, sl.product.costPrice),

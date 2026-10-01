@@ -23,6 +23,8 @@
    ═══════════════════════════════════════════════════════════════ */
 
 
+import { percentToRatio } from "@/lib/money/money";
+
 /** UTF-8 BOM — makes Excel decode the file as UTF-8. */
 const BOM = "\uFEFF";
 
@@ -386,7 +388,7 @@ function numericValue(text: string, style: XlsxStyle): number | null {
   if (s === "" || !/^-?\d+(\.\d+)?$/.test(s)) return null;
   const n = Number.parseFloat(s);
   if (!Number.isFinite(n)) return null;
-  return style === "percent" ? n / 100 : n;
+  return style === "percent" ? percentToRatio(n) : n;
 }
 
 function cellXml(ref: string, cell: NormalizedCell, forceStyle?: XlsxStyle): string {

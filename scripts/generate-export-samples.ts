@@ -19,7 +19,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { buildXlsx, buildStyledSheet, type ExcelSheet } from "@/lib/files/csv";
-import { centsToMajorString } from "@/lib/money/money";
+import { centsToMajor, centsToMajorString } from "@/lib/money/money";
 import { buildReportHtml } from "@/lib/print/print-report";
 import { buildPurchaseOrderHtml } from "@/lib/print/print-purchase-order";
 
@@ -90,7 +90,7 @@ const summary = {
 };
 
 function money(cents: number): string {
-  return `Rs ${ (cents / 100).toLocaleString("en-PK", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }`;
+  return `Rs ${ centsToMajor(cents).toLocaleString("en-PK", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }`;
 }
 
 /* ═══ 1. Multi-sheet styled .xlsx workbook ══════════════════════ */

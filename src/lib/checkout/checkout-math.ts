@@ -39,6 +39,8 @@ export interface ClientCheckoutLine {
   total: number; // cents claimed by the client
 }
 
+import { percentToRatio } from "@/lib/money/money";
+
 export type LineReconciliation =
   | {
       ok: true;
@@ -82,10 +84,10 @@ export function reconcileCheckoutLine(
   const subtotal = server.unitPrice * client.quantity;
   const discount =
     client.discountType === "percentage"
-      ? Math.round(subtotal * ((client.discountValue ?? 0) / 100))
+      ? Math.round(subtotal * percentToRatio(client.discountValue ?? 0))
       : (client.discountValue ?? 0) * client.quantity;
   const afterDiscount = Math.max(0, subtotal - discount);
-  const tax = Math.round(afterDiscount * (server.taxRate / 100));
+  const tax = Math.round(afterDiscount * percentToRatio(server.taxRate));
   const total = Math.round(afterDiscount + tax);
 
   if (
