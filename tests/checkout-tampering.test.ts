@@ -13,6 +13,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { percentToRatio } from "@/lib/money/money";
 import {
   MONEY_TOLERANCE,
   reconcileCheckoutLine,
@@ -42,10 +43,10 @@ function honestLine(
   const subtotal = unitPrice * quantity;
   const discount =
     discountType === "percentage"
-      ? Math.round(subtotal * ((discountValue ?? 0) / 100))
+      ? Math.round(subtotal * percentToRatio(discountValue ?? 0))
       : (discountValue ?? 0) * quantity;
   const afterDiscount = Math.max(0, subtotal - discount);
-  const tax = Math.round(afterDiscount * (server.taxRate / 100));
+  const tax = Math.round(afterDiscount * percentToRatio(server.taxRate));
   return {
     unitPrice,
     costPrice,

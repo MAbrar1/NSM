@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { centsToMajorString } from "@/lib/money/money";
+import { centsToMajorString, percentToRatio } from "@/lib/money/money";
 import { useI18n } from "@/components/providers/i18n-provider";
 import { useStoreCurrency } from "@/components/providers/currency-provider";
 import { PageHeader } from "@/components/layout/page-header";
@@ -360,7 +360,7 @@ export default function PurchaseOrdersPage() {
   }
 
   const poSubtotal = poItems.reduce((acc, i) => acc + i.quantity * i.unitCost, 0);
-  const poTax = poItems.reduce((acc, i) => acc + Math.round(i.quantity * i.unitCost * i.taxRate / 100), 0);
+  const poTax = poItems.reduce((acc, i) => acc + Math.round(i.quantity * i.unitCost * percentToRatio(i.taxRate)), 0);
   const poTotal = poSubtotal + poTax + poShipping;
 
   async function handleCreatePO() {
