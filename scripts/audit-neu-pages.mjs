@@ -81,6 +81,10 @@ function check(name, actual, pass) {
 
 let chrome = null, ws = null, msgId = 0;
 const pending = new Map();
+/* Console errors + uncaught exceptions, collected for the failure
+   diagnostics below ("not rendered" is useless if you can't see the
+   page's last words). */
+const cdpErrors = [];
 
 function send(method, params = {}) {
   return new Promise((resolve, reject) => {
@@ -1204,6 +1208,18 @@ async function probeDarkMode() {
       pending.delete(m.id);
       m.error ? p.reject(new Error(JSON.stringify(m.error))) : p.resolve(m.result);
     }
+    if (m.method === "Runtime.consoleAPICalled" && m.params?.type === "error") {
+      const text = (m.params.args ?? [])
+        .map((a) => (typeof a.value === "string" ? a.value : a.description ?? ""))
+        .join(" ")
+        .slice(0, 600);
+      if (text) cdpErrors.push(text);
+    }
+    if (m.method === "Runtime.exceptionThrown") {
+      cdpErrors.push(
+        String(m.params?.exceptionDetails?.exception?.description ?? m.params?.exceptionDetails?.text ?? "exception").slice(0, 600)
+      );
+    }
   };
   await send("Page.enable");
   await send("Runtime.enable");
@@ -1618,13 +1634,39 @@ async function probeDarkMode() {
     for (const page of PAGES) {
       for (const [w, h, mobile] of SHELL_WIDTHS) {
         await send("Emulation.setDeviceMetricsOverride", { width: w, height: h, deviceScaleFactor: 1, mobile });
+        cdpErrors.length = 0; // attribute the collected errors to this navigation only
         await send("Page.navigate", { url: BASE + page });
-        const ok = await waitFor(`document.readyState === 'complete' && !!document.querySelector('header')`);
-        if (!ok) { notRendered.push(`${page}@${w}`); continue; }
+        // The pathname guard keeps the wait honest across navigations:
+        // waitFor can observe the OLD document (complete, still holding its
+        // header) in the gap before the new document commits, and the
+        // measurement below would then run against a header that is about
+        // to be torn down (null crash).
+        const ok = await waitFor(
+          `document.readyState === 'complete' && !!document.querySelector('header') &&
+           location.pathname === ${JSON.stringify(page)}`
+        );
+        if (!ok) {
+          // Name the culprit instead of leaving "not rendered" to bisect:
+          // is the header actually missing, or is the load event stuck on
+          // some subresource while the shell is already up?
+          const why = await evalJs(
+            `(() => ({ rs: document.readyState, header: !!document.querySelector('header'),
+               path: location.pathname,
+               errOverlay: !!document.querySelector('nextjs-portal'),
+               bodyKids: document.body.children.length,
+               pending: performance.getEntriesByType('resource').filter((r) => !r.responseEnd)
+                 .map((r) => r.name.split('/').slice(-1)[0].slice(0, 48)).slice(0, 4) }))()`
+          ).catch(() => null);
+          notRendered.push(
+            `${page}@${w}: no ready header after 20s — ${JSON.stringify(why)}\n  console(${cdpErrors.length}): ${cdpErrors.slice(0, 2).join("\n  ")}`
+          );
+          continue;
+        }
         await sleep(700);
         const m = await evalJs(
           `(() => {
              const head = document.querySelector('header');
+             if (!head) return { header: 0, past: 0, page: 0, box: [], parts: [], cluster: null, spill: [] };
              const doc = document.documentElement;
              const box = head.getBoundingClientRect();
              const spill = Array.from(head.querySelectorAll('*'))
@@ -1991,15 +2033,23 @@ async function probeDarkMode() {
       const m = await evalJs(
         `(() => {
            const table = document.querySelector(${JSON.stringify(sel)});
+           /* Placeholder rows — a colspan filler (skeleton / empty cell) or an
+              EmptyState rendered inside the table — are not data rows: their
+              height is the placeholder's padding, not a row's. Excluding them
+              keeps the band check about DATA uniformity. */
+           const isDataRow = (r) =>
+             r.getClientRects().length > 0 &&
+             !r.querySelector('[colspan]') &&
+             !r.querySelector('.neu-empty-title');
            const rows = Array.from(table.querySelectorAll('tbody tr'))
-             .filter((r) => r.getClientRects().length > 0)
+             .filter(isDataRow)
              .map((r) => Math.round(r.getBoundingClientRect().height));
            const chip = document.querySelector('.filter-chip, .chip-btn');
            const bar = chip ? chip.parentElement : null;
            /* Why are they different heights? Report the tallest cell of the
               tallest and the shortest row — that names the culprit instead of
               leaving the next reader to bisect the markup by hand. */
-           const all = Array.from(table.querySelectorAll('tbody tr')).filter((r) => r.getClientRects().length > 0);
+           const all = Array.from(table.querySelectorAll('tbody tr')).filter(isDataRow);
            const describe = (row) => {
              if (!row) return null;
              const cells = Array.from(row.children).map(

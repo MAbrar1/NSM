@@ -26,7 +26,7 @@
  *  single home for the `centsToMajorString(cents)` conversion that used
  *  to be re-derived at ~70 call sites. */
 export function centsToMajorString(cents: number): string {
-  return centsToMajorString(cents);
+  return (cents / 100).toFixed(2);
 }
 
 export function majorToCents(major: number): number {

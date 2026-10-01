@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════
    MONEY — unit tests
-   Locks the single major→cents conversion and the CSV money-cell
+   Locks the single cents↔major conversions and the CSV money-cell
    parser shared by every product/variant route, both CSV importers,
    the bulk price adjuster and the export toolkit. Those sites used
    to re-type `Math.round(x * 100)` and a hand-rolled cell parser,
@@ -10,7 +10,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { majorToCents, parseMoneyToCents } from "@/lib/money/money";
+import { centsToMajorString, majorToCents, parseMoneyToCents } from "@/lib/money/money";
 
 test("majorToCents: whole and decimal amounts", () => {
   assert.equal(majorToCents(0), 0);
@@ -62,4 +62,22 @@ test("parseMoneyToCents: negative cells are rejected, not negated", () => {
 test("parseMoneyToCents and majorToCents agree on the same value", () => {
   assert.equal(parseMoneyToCents("12.50"), majorToCents(12.5));
   assert.equal(parseMoneyToCents("0.99"), majorToCents(0.99));
+});
+
+test("centsToMajorString: returns the major string, never recurses", () => {
+  // Regression: the dedup wave shipped this helper as
+  // `return centsToMajorString(cents)` — a self-call with no base case,
+  // so EVERY call was a guaranteed RangeError. POS cold navigation hit
+  // it through currency-core and the page died before the header
+  // rendered. If it ever recurses again, these calls throw.
+  assert.equal(centsToMajorString(12345), "123.45");
+  assert.equal(centsToMajorString(0), "0.00");
+  assert.equal(centsToMajorString(5), "0.05");
+  assert.equal(centsToMajorString(199999), "1999.99");
+});
+
+test("centsToMajorString is the inverse of majorToCents", () => {
+  for (const cents of [0, 1, 99, 1250, 199999]) {
+    assert.equal(majorToCents(Number(centsToMajorString(cents))), cents);
+  }
 });
