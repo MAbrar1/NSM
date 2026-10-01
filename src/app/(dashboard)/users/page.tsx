@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { readApiError } from "@/lib/api/api-error";
+import { fetchListPayload } from "@/lib/api/list-fetch";
 import { formatDateTime } from "@/lib/utils";
 import {
   Dialog,
@@ -109,8 +110,10 @@ export default function UsersPage() {
       if (search) params.set("search", search);
       if (roleFilter) params.set("role", roleFilter);
       params.set("sort", sort);
-      const res = await fetch(`/api/users?${params}`);
-      const data = await res.json();
+      const data = await fetchListPayload<{
+        users?: UserItem[];
+        pagination?: { totalPages?: number };
+      }>(`/api/users?${params}`);
       setUsers(data.users ?? []);
       setTotalPages(data.pagination?.totalPages ?? 1);
     } catch { setLoadError(true); }

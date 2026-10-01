@@ -14,6 +14,7 @@ import { useTableRowNav } from "@/hooks/use-table-row-nav";
 import { toast } from "@/stores/toast-store";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { readApiError } from "@/lib/api/api-error";
+import { fetchListPayload } from "@/lib/api/list-fetch";
 import { displayMajorToBaseCents, baseCentsToDisplayMajorStr } from "@/lib/money/currency-core";
 import { ensureRates, peekRates } from "@/lib/money/currency";
 import { WHOLE_UNITS } from "@/lib/products/units";
@@ -279,8 +280,10 @@ export default function PurchaseOrdersPage() {
       if (search) params.set("search", search);
       if (statusFilter) params.set("status", statusFilter);
       params.set("sort", sort);
-      const res = await fetch(`/api/purchase-orders?${params}`);
-      const data = await res.json();
+      const data = await fetchListPayload<{
+        orders?: PurchaseOrder[];
+        pagination?: { totalPages?: number };
+      }>(`/api/purchase-orders?${params}`);
       setOrders(data.orders ?? []);
       setTotalPages(data.pagination?.totalPages ?? 1);
     } catch { setLoadError(true); }
@@ -433,8 +436,9 @@ export default function PurchaseOrdersPage() {
       const params = new URLSearchParams({ page: String(pageNo), limit: "100" });
       if (search) params.set("search", search);
       if (statusFilter) params.set("status", statusFilter);
-      const res = await fetch(`/api/purchase-orders?${params}`);
-      const data = await res.json();
+      const data = await fetchListPayload<{ orders?: PurchaseOrder[]; pagination?: { totalPages?: number } }>(
+        `/api/purchase-orders?${params}`
+      );
       collected.push(...(data.orders ?? []));
       lastTotalPages = data.pagination?.totalPages ?? 1;
       pageNo += 1;

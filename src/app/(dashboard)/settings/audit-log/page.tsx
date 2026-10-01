@@ -10,6 +10,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { useI18n } from "@/components/providers/i18n-provider";
 import { SortableTh } from "@/components/ui/sortable-th";
 import { formatDate, formatTime } from "@/lib/utils";
+import { fetchListPayload } from "@/lib/api/list-fetch";
 
 /* ═══════════════════════════════════════════════════════════════
    AUDIT LOG PAGE
@@ -121,8 +122,11 @@ export default function AuditLogPage() {
       if (entityFilter) params.set("entity", entityFilter);
       if (actionFilter) params.set("action", actionFilter);
       params.set("sort", sort);
-      const res = await fetch(`/api/audit-log?${params}`);
-      const data = await res.json();
+      const data = await fetchListPayload<{
+        logs?: AuditLogEntry[];
+        total?: number;
+        totalPages?: number;
+      }>(`/api/audit-log?${params}`);
       setLogs(data.logs ?? []);
       setTotal(data.total ?? 0);
       setTotalPages(data.totalPages ?? 0);
