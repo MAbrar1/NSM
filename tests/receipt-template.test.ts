@@ -15,7 +15,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { renderReceiptBody, renderReceiptDocument, RECEIPT_TEMPLATE_VERSION } from "@/lib/print/receipt-template";
 import { buildReportHtml, type ReportDoc } from "@/lib/print/print-report";
-import { buildReceiptSnapshot, type ReceiptSnapshot } from "@/lib/receipts/receipt-snapshot";
+import { buildReceiptSnapshot, RECEIPT_TEMPLATE_VERSION as snapshotVersion, type ReceiptSnapshot } from "@/lib/receipts/receipt-snapshot";
 import { centsToMajorString } from "@/lib/money/money";
 
 const fmt = (cents: number) => `Rs ${centsToMajorString(cents)}`;
@@ -68,9 +68,8 @@ function snapshotWithItems(n: number): ReceiptSnapshot {
 test("template version constant matches the snapshot module", () => {
   // The snapshot module and the template must agree on the current
   // version — a mismatch would break hash verification on reprints.
-  const { RECEIPT_TEMPLATE_VERSION: snapshotVersion } = require("@/lib/receipts/receipt-snapshot") as {
-    RECEIPT_TEMPLATE_VERSION: number;
-  };
+  // A static import keeps the require() lint rule happy; the value is
+  // resolved lazily-equivalently (same module instance at runtime).
   assert.equal(snapshotVersion, RECEIPT_TEMPLATE_VERSION);
 });
 

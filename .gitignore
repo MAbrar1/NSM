@@ -82,6 +82,22 @@ css-badlines.txt
 .dbg-profile*/
 .dbg-profile-file*
 
+# History-rewrite backup bundles (pre-push safety net; several hundred MB
+# of build-cache blobs once made a push bounce — never commit one).
+*.bundle
+
+# Local lint/report artifacts from ad-hoc analysis runs
+lint-report.json
+lint-errors.json
+
+# Throwaway SQLite databases created at the repo root (CI simulation,
+# ad-hoc prisma db push against DATABASE_URL=file:./x.db)
+/*.db
+/*.db-journal
+
+# Agent/tooling state
+.freebuff/
+
 # Uploaded product images (served by /api/files) — keep the dir, ignore contents
 uploads/*
 !uploads/.gitkeep
