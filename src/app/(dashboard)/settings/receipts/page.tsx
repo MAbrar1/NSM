@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { centsToMajorString } from "@/lib/money/money";
+import { centsToMajorString, percentToRatio } from "@/lib/money/money";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -291,9 +291,9 @@ export default function ReceiptSettingsPage() {
             <div className="mt-2 border-t border-dashed border-neu-hairline pt-2 space-y-0.5">
               <div className="flex justify-between"><span>{t("pos.subtotal")}</span><span>26.94</span></div>
               <div className="flex justify-between"><span>{t("pos.tax")} ({taxRate}%)</span><span>{centsToMajorString(26.94 * taxRate)}</span></div>
-              <div className="flex justify-between font-bold"><span>{t("pos.total")}</span><span>{(26.94 * (1 + taxRate / 100)).toFixed(2)}</span></div>
+              <div className="flex justify-between font-bold"><span>{t("pos.total")}</span><span>{(26.94 * (1 + percentToRatio(taxRate))).toFixed(2)}</span></div>
               <div className="flex justify-between"><span>{t("receiptSettings.paid")}</span><span>30.00</span></div>
-              <div className="flex justify-between text-neu-ink-green"><span>{t("pos.change")}</span><span>{(30 - 26.94 * (1 + taxRate / 100)).toFixed(2)}</span></div>
+              <div className="flex justify-between text-neu-ink-green"><span>{t("pos.change")}</span><span>{(30 - 26.94 * (1 + percentToRatio(taxRate))).toFixed(2)}</span></div>
             </div>
             {receiptFooter && (
               <p className="mt-2 text-center text-neu-muted">{receiptFooter}</p>

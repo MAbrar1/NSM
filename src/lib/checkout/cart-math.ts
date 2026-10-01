@@ -15,6 +15,7 @@
    ═══════════════════════════════════════════════════════════════ */
 
 import type { CartItem, Currency } from "@/types";
+import { percentToRatio } from "@/lib/money/money";
 
 export interface LineTotals {
   discountAmount: Currency;
@@ -29,10 +30,10 @@ export function lineTotals(item: CartItem, taxRate: number): LineTotals {
   const lineSubtotal = item.unitPrice * item.quantity;
   const discount =
     item.discountType === "percentage"
-      ? Math.round(lineSubtotal * (item.discountValue / 100))
+      ? Math.round(lineSubtotal * percentToRatio(item.discountValue))
       : item.discountValue * item.quantity;
   const afterDiscount = Math.max(0, lineSubtotal - discount);
-  const tax = Math.round(afterDiscount * (taxRate / 100));
+  const tax = Math.round(afterDiscount * percentToRatio(taxRate));
   return {
     discountAmount: Math.round(discount),
     taxAmount: tax,

@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { logAudit } from "@/lib/audit-log";
-import { majorToCents } from "@/lib/money/money";
+import { majorToCents, percentToRatio } from "@/lib/money/money";
 
 /* ═══════════════════════════════════════════════════════════════
    PRODUCTS BULK SERVICE
@@ -130,7 +130,7 @@ export function validateBulkUpdateInput(body: unknown): BulkUpdateInput {
 function adjustPrice(cents: number, adj: PriceAdjust): number {
   const next =
     adj.mode === "percent"
-      ? Math.round(cents * (1 + adj.value / 100))
+      ? Math.round(cents * (1 + percentToRatio(adj.value)))
       : cents + majorToCents(adj.value);
   return Math.max(0, next);
 }

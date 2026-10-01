@@ -5,7 +5,7 @@
    POST /api/purchase-orders alone (once for the header totals, once
    again for the item rows it writes, which could drift apart) and
    again in the PO CSV importer. Kept Prisma/Next-free so the
-   rounding is unit-testable in isolation.
+   rounding is unit-testable   in isolation.
 
    Rules:
      lineTotal        = round(quantity × unitCost)
@@ -19,6 +19,8 @@
    product), so the tax the header reports equals the sum of the tax
    stored on each line.
    ═══════════════════════════════════════════════════════════════ */
+
+import { percentToRatio } from "@/lib/money/money";
 
 /** The pricing inputs of one PO line (fractional quantity allowed). */
 export interface PoLineInput {
@@ -39,7 +41,7 @@ export interface PoLineTotals {
 /** Price one PO line. */
 export function poLineTotals(line: PoLineInput): PoLineTotals {
   const lineTotal = Math.round(line.quantity * line.unitCost);
-  const lineTax = Math.round((lineTotal * (line.taxRate || 0)) / 100);
+  const lineTax = Math.round(lineTotal * percentToRatio(line.taxRate || 0));
   return { lineTotal, lineTax, lineTotalWithTax: lineTotal + lineTax };
 }
 
