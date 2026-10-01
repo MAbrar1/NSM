@@ -772,7 +772,8 @@ export default function PurchaseOrdersPage() {
               {/* Items Table */}
               {poItems.length > 0 && (
                 <div className="rounded-lg border border-neu-hairline overflow-hidden">
-                  <table className="w-full text-sm">
+                  <div className="overflow-x-auto">
+                  <table className="w-full text-sm whitespace-nowrap">
                     <thead>
                       <tr className="bg-neu-sunken border-b border-neu-hairline">
                         <th className="text-start px-3 py-2 font-medium text-neu-muted">{t("products.name")}</th>
@@ -815,6 +816,7 @@ export default function PurchaseOrdersPage() {
                       ))}
                     </tbody>
                   </table>
+                  </div>
                 </div>
               )}
 
@@ -893,7 +895,8 @@ export default function PurchaseOrdersPage() {
 
               {/* Items */}
               <div className="rounded-lg border border-neu-hairline overflow-hidden">
-                <table className="w-full text-sm">
+                <div className="overflow-x-auto">
+                <table className="w-full text-sm whitespace-nowrap">
                   <thead>
                     <tr className="bg-neu-sunken border-b border-neu-hairline">
                       <th className="text-start px-3 py-2 font-medium text-neu-muted">{t("products.name")}</th>
@@ -936,6 +939,7 @@ export default function PurchaseOrdersPage() {
                     ))}
                   </tbody>
                 </table>
+                </div>
               </div>
 
               {/* Totals */}

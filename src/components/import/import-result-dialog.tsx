@@ -118,7 +118,7 @@ export function ImportResultDialog({ open, onClose, result, title, entityLabel }
                       #{e.row}
                     </span>
                     <div className="min-w-0 flex-1">
-                      <div className="truncate font-medium text-neu-primary">{e.identifier}</div>
+                      <div className="truncate font-medium text-neu-primary" title={`${e.identifier}`}>{e.identifier}</div>
                       <div className="text-neu-ink-amber">{e.error}</div>
                     </div>
                   </li>

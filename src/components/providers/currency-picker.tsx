@@ -137,7 +137,7 @@ export function CurrencyPicker() {
               >
                 <span className="flex min-w-0 items-center gap-2">
                   <span className="w-9 shrink-0 font-mono text-xs">{opt.code ?? (baseCurrency || "—")}</span>
-                  <span className="truncate">{opt.label}</span>
+                  <span className="truncate" title={`${opt.label}`}>{opt.label}</span>
                 </span>
                 {active && (
                   <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>

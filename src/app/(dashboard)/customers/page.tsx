@@ -650,7 +650,7 @@ export default function CustomersPage() {
                   {receivables.customers.slice(0, 8).map((c) => (
                     <div key={c.customerId} className="flex items-center justify-between gap-3 px-3 py-2">
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-medium text-neu-primary">{c.name}</p>
+                        <p className="truncate text-sm font-medium text-neu-primary" title={`${c.name}`}>{c.name}</p>
                         <p className="text-[11px] text-neu-faint">
                           {c.orders} {t("customers.creditOrdersCount")}
                           {c.oldestDays > 60 ? ` · ${t("customers.oldestDebt").replace("{days}", String(c.oldestDays))}` : ""}
@@ -751,12 +751,12 @@ export default function CustomersPage() {
                     </span>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-start justify-between gap-2">
-                        <p className="truncate text-sm font-semibold text-neu-primary">{c.name}</p>
+                        <p className="truncate text-sm font-semibold text-neu-primary" title={`${c.name}`}>{c.name}</p>
                         <span className="shrink-0 text-sm font-semibold tabular-nums text-neu-primary">
                           {formatCurrency(c.totalSpent)}
                         </span>
                       </div>
-                      <p className="mt-0.5 truncate text-xs text-neu-faint">{c.phone || c.email || "—"}</p>
+                      <p className="mt-0.5 truncate text-xs text-neu-faint" title={`${c.phone || c.email || "—"}`}>{c.phone || c.email || "—"}</p>
                       <div className="mt-2 flex flex-wrap items-center gap-1.5">
                         <span className="text-[11px] tabular-nums text-neu-faint">
                           {c._count?.orders ?? c.orderCount} {t("customers.orders")}
@@ -812,16 +812,16 @@ export default function CustomersPage() {
                           {getInitials(c.name)}
                         </span>
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-medium text-neu-primary">{c.name}</p>
-                          <p className="truncate text-xs text-neu-faint">
+                          <p className="truncate text-sm font-medium text-neu-primary" title={`${c.name}`}>{c.name}</p>
+                          <p className="truncate text-xs text-neu-faint" title={`${t("customers.since")}${formatDate(c.createdAt, "short")}`}>
                             {t("customers.since")} {formatDate(c.createdAt, "short")}
                           </p>
                         </div>
                       </div>
                     </td>
                     <td className="hidden max-w-[200px] px-4 py-3 lg:table-cell">
-                      <p className="truncate text-sm text-neu-muted">{c.email || "—"}</p>
-                      <p className="truncate text-xs tabular-nums text-neu-faint">{c.phone || "—"}</p>
+                      <p className="truncate text-sm text-neu-muted" title={`${c.email || "—"}`}>{c.email || "—"}</p>
+                      <p className="truncate text-xs tabular-nums text-neu-faint" title={`${c.phone || "—"}`}>{c.phone || "—"}</p>
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-end text-sm tabular-nums text-neu-primary">
                       {c._count?.orders ?? c.orderCount}
@@ -1051,7 +1051,10 @@ export default function CustomersPage() {
                           <div className="flex items-center justify-between gap-3">
                             <div className="min-w-0">
                               <p className="font-mono text-[13px] font-semibold text-neu-primary">{order.orderNumber}</p>
-                              <p className="truncate text-xs text-neu-faint">
+                              <p
+                                className="truncate text-xs text-neu-faint"
+                                title={`${formatDate(order.createdAt, "medium")}${order.items.length > 0 ? ` · ${t("orders.itemsCount", { n: order.items.length })}` : ""}`}
+                              >
                                 {formatDate(order.createdAt, "medium")}
                                 {order.items.length > 0 && (
                                   <>

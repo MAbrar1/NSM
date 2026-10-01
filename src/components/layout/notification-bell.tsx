@@ -304,7 +304,9 @@ export function NotificationBell() {
           {/* ── Scope + channel summary ── */}
           {showChannels && (
             <div className="flex items-center justify-between gap-2 border-b border-neu-hairline bg-neu-sunken px-4 py-2">
-              <span className="truncate text-[11px] text-neu-faint">
+              <span className="truncate text-[11px] text-neu-faint" title={`${selectedWarehouse
+                  ? t("header.scopedTo").replace("{name}", selectedWarehouse.name)
+                  : t("dashboard.allWarehouses")}`}>
                 {selectedWarehouse
                   ? t("header.scopedTo").replace("{name}", selectedWarehouse.name)
                   : t("dashboard.allWarehouses")}

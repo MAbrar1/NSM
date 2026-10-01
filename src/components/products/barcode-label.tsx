@@ -134,7 +134,7 @@ export function BarcodeLabel({
     <div>
       <div ref={labelRef} className={`barcode-label-card ${sizeClasses[size]}`}>
         <div className="text-center">
-          <p className="product-name truncate">{productName}</p>
+          <p className="product-name truncate" title={`${productName}`}>{productName}</p>
           <BarcodeSVG value={barcodeValue} height={barHeight[size]} />
           <p className="sku">{sku}</p>
           {/* Printed label: always the store base price (printed artifacts
@@ -222,7 +222,7 @@ export function BarcodeLabelSheet({ items }: { items: LabelSheetItem[] }) {
       <div ref={sheetRef} className="grid grid-cols-3 gap-2">
         {items.map((item, i) => (
           <div key={i} className="text-center border border-surface-200 rounded p-2 bg-white">
-            <p className="name truncate text-[10px] font-bold">{item.name}</p>
+            <p className="name truncate text-[10px] font-bold" title={`${item.name}`}>{item.name}</p>
             <BarcodeSVG value={item.barcode || item.sku} height={35} />
             <p className="sku text-[8px]">{item.sku}</p>
             <p className="price text-xs font-bold">

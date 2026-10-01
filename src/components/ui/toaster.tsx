@@ -39,10 +39,13 @@ export function Toaster() {
   if (toasts.length === 0) return null;
 
   // `end-4`, so the stack docks to the shell's trailing edge — the LEFT one in
-  // Urdu, where a physical `right-4` put the toasts over the rail.
+  // Urdu, where a physical `right-4` put the toasts over the rail. On phones
+  // the stack spans the viewport minus margins so long bilingual titles and
+  // descriptions wrap instead of pushing the card past the screen edge
+  // (inset utilities track RTL the same way end-4 does).
   return (
     <div
-      className="fixed top-4 end-4 z-[var(--z-toast)] flex flex-col gap-1.5 pointer-events-none"
+      className="fixed top-4 end-4 z-[var(--z-toast)] flex max-w-[calc(100vw-2rem)] flex-col gap-1.5 pointer-events-none sm:max-w-sm"
       aria-live="polite"
       aria-relevant="additions removals"
     >
@@ -77,7 +80,7 @@ function ToastCard({ toast, onDismiss }: ToastCardProps) {
     <div
       role="status"
       className={cn(
-        "pointer-events-auto flex items-start gap-2.5 rounded-[var(--neu-radius-md)] " +
+        "pointer-events-auto flex w-full min-w-0 items-start gap-2.5 rounded-[var(--neu-radius-md)] " +
           "bg-neu-bg p-2.5 neu-elevated shadow-neu-toast " +
           "transition-opacity duration-150 ease-out",
         leaving ? "opacity-0" : "opacity-100"
@@ -99,9 +102,9 @@ function ToastCard({ toast, onDismiss }: ToastCardProps) {
       />
 
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold leading-none text-neu-primary">{toast.title}</p>
+        <p className="text-sm font-semibold leading-snug break-words text-neu-primary">{toast.title}</p>
         {toast.description && (
-          <p className="mt-0.5 text-xs leading-5 text-neu-muted">{toast.description}</p>
+          <p className="mt-0.5 break-words text-xs leading-5 text-neu-muted">{toast.description}</p>
         )}
       </div>
 

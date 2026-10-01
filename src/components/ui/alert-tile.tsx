@@ -57,7 +57,7 @@ export function AlertTile({
       />
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-2">
-          <span className="truncate text-sm font-medium text-neu-primary">
+          <span className="truncate text-sm font-medium text-neu-primary" title={`${alert.productName}`}>
             {alert.productName}
           </span>
           {isNew && (
@@ -66,10 +66,10 @@ export function AlertTile({
             </span>
           )}
         </span>
-        <span className="mt-0.5 block truncate text-xs text-neu-faint">
+        <span className="mt-0.5 block truncate text-xs text-neu-faint" title={`${alertMessage(alert, t)}`}>
           {alertMessage(alert, t)}
         </span>
-        <span className="mt-0.5 block truncate text-[10px] text-neu-faint">
+        <span className="mt-0.5 block truncate text-[10px] text-neu-faint" title={`${alert.warehouseName} · ${alert.sku}`}>
           {alert.warehouseName} · <span className="font-mono">{alert.sku}</span>
         </span>
       </span>
@@ -112,7 +112,7 @@ export function AlertTileInline({ alert, t }: { alert: StockAlert; t: (key: stri
       />
       <div className="min-w-0 flex-1">
         <div className="flex items-center justify-between gap-2">
-          <p className="truncate text-sm font-semibold text-neu-primary">
+          <p className="truncate text-sm font-semibold text-neu-primary" title={`${alert.productName}`}>
             {alert.productName}
           </p>
           <span className="shrink-0 rounded bg-neu-bg/70 px-1.5 py-0.5 text-[10px] font-semibold text-neu-muted tabular-nums">

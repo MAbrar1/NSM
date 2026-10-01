@@ -933,7 +933,7 @@ export default function ProductsPage() {
                             />
                           </button>
                           <div className="min-w-0">
-                            <p className="text-sm font-medium text-neu-primary truncate">
+                            <p className="text-sm font-medium text-neu-primary truncate" title={`${product.name}`}>
                               {product.name}
                             </p>
                             {/* The brand line is rendered even when it is empty.
@@ -944,7 +944,7 @@ export default function ProductsPage() {
                                 the densest view in the app. With the line always
                                 reserved and pinned to 14px, the row is set by
                                 the 40px thumbnail and every row matches. */}
-                            <p className="truncate text-xs leading-[14px] text-neu-faint">
+                            <p className="truncate text-xs leading-[14px] text-neu-faint" title={`${product.brand?.name ?? "\u00A0"}`}>
                               {product.brand?.name ?? "\u00A0"}
                             </p>
                           </div>
@@ -1307,7 +1307,7 @@ export default function ProductsPage() {
                     </svg>
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-neu-primary truncate">{barcodeProduct.name}</p>
+                    <p className="text-sm font-semibold text-neu-primary truncate" title={`${barcodeProduct.name}`}>{barcodeProduct.name}</p>
                     <p className="text-xs text-neu-faint font-mono">{barcodeProduct.sku}</p>
                   </div>
                 </div>

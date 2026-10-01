@@ -504,6 +504,16 @@
   :root { --neu-transition: 0ms; }
 }
 
+/* ═══ Layout safety net ═══
+   A single element wider than the viewport must never widen the PAGE:
+   tables inside scroll wrappers already scroll in place, so a page-level
+   horizontal scrollbar means a real bug (a missing wrapper, a rogue
+   fixed width). Clipping at the root surfaces it instead of silently
+   shifting every layout. Touch scrollbars stay reachable on mobile. */
+html {
+  overflow-x: clip;
+}
+
 @media (prefers-contrast: more) {
   :root {
     --neu-text-primary: #1e293b;
@@ -655,6 +665,11 @@
     box-shadow: var(--neu-shadow-raised);
     transition: box-shadow var(--neu-transition), color var(--neu-transition);
     cursor: pointer;
+    /* Kill the mobile double-tap-zoom delay + the grey tap flash: the
+       emboss press IS the feedback, and rapid register taps must land
+       as clicks, not zooms. */
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
     -webkit-appearance: none;
     appearance: none;
   }
@@ -1033,6 +1048,9 @@
   .neu-dialog-text {
     font-size: 14px;
     color: var(--neu-text-muted);
+    /* Long unbroken tokens (SKUs, URLs, paste errors) must wrap inside
+       the panel instead of stretching it past the viewport clamp. */
+    overflow-wrap: anywhere;
   }
 
   /* ─── Golden dialog tokens ───
@@ -1268,6 +1286,7 @@
   .neu-empty-body {
     font-size: 14px;
     color: var(--neu-text-muted);
+    overflow-wrap: anywhere;
   }
 
   /* ═══════════════════════════════════════════════════════════

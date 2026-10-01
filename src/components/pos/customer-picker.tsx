@@ -183,11 +183,11 @@ export function CustomerPicker({ value, onSelect, compact }: CustomerPickerProps
           {value.name.slice(0, 1).toUpperCase()}
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-xs font-semibold text-neu-primary">
+          <span className="block truncate text-xs font-semibold text-neu-primary" title={`${value.name}`}>
             {value.name}
           </span>
           {(value.phone || value.email) && (
-            <span className="block truncate text-[10px] text-neu-faint">
+            <span className="block truncate text-[10px] text-neu-faint" title={`${value.phone || value.email}`}>
               {value.phone || value.email}
             </span>
           )}
@@ -281,11 +281,11 @@ export function CustomerPicker({ value, onSelect, compact }: CustomerPickerProps
                 {customer.name.slice(0, 1).toUpperCase()}
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-xs font-medium text-neu-primary">
+                <span className="block truncate text-xs font-medium text-neu-primary" title={`${customer.name}`}>
                   {customer.name}
                 </span>
                 {(customer.phone || customer.email) && (
-                  <span className="block truncate text-[10px] text-neu-faint">
+                  <span className="block truncate text-[10px] text-neu-faint" title={`${customer.phone || customer.email}`}>
                     {customer.phone || customer.email}
                   </span>
                 )}
@@ -318,7 +318,7 @@ export function CustomerPicker({ value, onSelect, compact }: CustomerPickerProps
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                 </svg>
               </span>
-              <span className="min-w-0 flex-1 truncate text-xs font-medium text-neu-accent-ink-strong">
+              <span className="min-w-0 flex-1 truncate text-xs font-medium text-neu-accent-ink-strong" title={`${creating ? `${t("common.loading")}…` : `${t("pos.customerCreate")} "${trimmed}"`}`}>
                 {creating ? `${t("common.loading")}…` : `${t("pos.customerCreate")} "${trimmed}"`}
               </span>
             </button>

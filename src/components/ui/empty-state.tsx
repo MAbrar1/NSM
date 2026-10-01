@@ -62,7 +62,7 @@ export function EmptyState({
       )}
       style={{ minHeight: height }}
     >
-      <div>
+      <div className="max-w-md">
         {icon && (
           <div
             className={cn(              "neu-empty-icon mx-auto [&_svg]:h-7 [&_svg]:w-7",
@@ -72,8 +72,8 @@ export function EmptyState({
             {icon}
           </div>
         )}
-        <p className="neu-empty-title">{title}</p>
-        {description && <p className="neu-empty-body mt-1">{description}</p>}
+        <p className="neu-empty-title text-balance">{title}</p>
+        {description && <p className="neu-empty-body mt-1 text-pretty">{description}</p>}
         {action && <div className="mt-3">{action}</div>}
       </div>
     </div>

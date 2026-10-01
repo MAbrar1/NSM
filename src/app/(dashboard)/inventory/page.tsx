@@ -1031,7 +1031,7 @@ export default function InventoryPage() {
                             {item.product.name}
                           </p>
                           <p className="mt-0.5 flex items-center gap-1.5 text-xs text-neu-faint">
-                            <span className="max-w-[140px] truncate">{item.product.category.name}</span>
+                            <span className="max-w-[140px] truncate" title={`${item.product.category.name}`}>{item.product.category.name}</span>
                             <span aria-hidden>·</span>
                             <span className="font-mono">{item.product.sku}</span>
                           </p>
@@ -1116,8 +1116,8 @@ export default function InventoryPage() {
                 <div key={item.id} className="inventory-transfer-card p-4">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold text-neu-primary">{item.product.name}</p>
-                      <p className="mt-0.5 truncate text-xs text-neu-faint">
+                      <p className="truncate text-sm font-semibold text-neu-primary" title={`${item.product.name}`}>{item.product.name}</p>
+                      <p className="mt-0.5 truncate text-xs text-neu-faint" title={`${item.warehouse.name} · ${item.product.sku}`}>
                         {item.warehouse.name} · <span className="font-mono">{item.product.sku}</span>
                       </p>
                     </div>
@@ -1319,7 +1319,7 @@ export default function InventoryPage() {
                 <div key={m.id} className="inventory-transfer-card p-4">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold text-neu-primary">{m.product.name}</p>
+                      <p className="truncate text-sm font-semibold text-neu-primary" title={`${m.product.name}`}>{m.product.name}</p>
                       <p className="font-mono text-xs text-neu-faint">{m.product.sku}</p>
                     </div>
                     <span className={cn(
@@ -1345,7 +1345,7 @@ export default function InventoryPage() {
                     <span className="tabular-nums">{fmtDateTime(m.createdAt)}</span>
                   </div>
                   <div className="mt-1.5 flex items-center justify-between gap-2 text-xs text-neu-faint">
-                    <span className="truncate">{m.warehouse.name} · {m.performedBy.name}</span>
+                    <span className="truncate" title={`${m.warehouse.name}· ${m.performedBy.name}`}>{m.warehouse.name} · {m.performedBy.name}</span>
                     {m.notes && (
                       <span className="max-w-[40%] truncate" title={m.notes}>{m.notes}</span>
                     )}
@@ -1478,8 +1478,8 @@ export default function InventoryPage() {
                 <div className="rounded-xl border border-neu-hairline bg-neu-sunken p-3.5">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold text-neu-primary">{timelineProduct.product.name}</p>
-                      <p className="truncate font-mono text-xs text-neu-faint">{timelineProduct.product.sku}</p>
+                      <p className="truncate text-sm font-semibold text-neu-primary" title={`${timelineProduct.product.name}`}>{timelineProduct.product.name}</p>
+                      <p className="truncate font-mono text-xs text-neu-faint" title={`${timelineProduct.product.sku}`}>{timelineProduct.product.sku}</p>
                     </div>
                     <div className="shrink-0 text-end">
                       <p className="text-[11px] font-medium uppercase tracking-wider text-neu-faint">
@@ -1576,7 +1576,7 @@ export default function InventoryPage() {
               <div className="rounded-xl border border-neu-accent-line bg-neu-accent-wash p-3.5">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-neu-accent-ink-strong">
+                    <p className="truncate text-sm font-semibold text-neu-accent-ink-strong" title={`${adjustTarget.product.name}`}>
                       {adjustTarget.product.name}
                     </p>
                     <p className="font-mono text-xs text-neu-accent-ink">{adjustTarget.product.sku}</p>
@@ -1769,8 +1769,8 @@ export default function InventoryPage() {
                       className="flex w-full items-center justify-between gap-2 px-3 py-2.5 text-start transition-colors first:rounded-t-xl last:rounded-b-xl hover:bg-neu-sunken"
                     >
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium text-neu-primary">{p.name}</p>
-                        <p className="truncate font-mono text-xs text-neu-faint">{p.sku}</p>
+                        <p className="truncate text-sm font-medium text-neu-primary" title={`${p.name}`}>{p.name}</p>
+                        <p className="truncate font-mono text-xs text-neu-faint" title={`${p.sku}`}>{p.sku}</p>
                       </div>
                       {typeof p.available === "number" && (
                         <span
@@ -1794,10 +1794,10 @@ export default function InventoryPage() {
                     <Icon path={P.box} className="h-4 w-4" />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-neu-accent-ink-strong">
+                    <p className="truncate text-sm font-medium text-neu-accent-ink-strong" title={`${selectedTransferProduct.name}`}>
                       {selectedTransferProduct.name}
                     </p>
-                    <p className="truncate font-mono text-xs text-neu-accent-ink">
+                    <p className="truncate font-mono text-xs text-neu-accent-ink" title={`${selectedTransferProduct.sku}`}>
                       {selectedTransferProduct.sku}
                     </p>
                   </div>
@@ -1835,7 +1835,7 @@ export default function InventoryPage() {
                 onChange={(e) => setTransferQty(e.target.value)}
               />
               <div className="mt-1.5 flex items-center justify-between gap-2">
-                <p className="truncate text-xs text-neu-faint">{transferHint ?? ""}</p>
+                <p className="truncate text-xs text-neu-faint" title={`${transferHint ?? ""}`}>{transferHint ?? ""}</p>
                 {selectedTransferProduct && transferMax !== null && transferMax > 0 && (
                   <button
                     type="button"

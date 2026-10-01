@@ -811,7 +811,7 @@ export default function RefundsPage() {
                         <Badge variant="warning" size="sm">{t("orders.partiallyRefunded")}</Badge>
                       )}
                     </div>
-                    <p className="mt-1 truncate text-sm text-neu-muted">
+                    <p className="mt-1 truncate text-sm text-neu-muted" title={`${order.customer?.name ?? t("orders.walkIn")}· ${order.refundedBy?.name ?? order.user.name}`}>
                       {order.customer?.name ?? t("orders.walkIn")} · {order.refundedBy?.name ?? order.user.name}
                     </p>
                     <button
@@ -894,7 +894,7 @@ export default function RefundsPage() {
                             </svg>
                           </span>
                         )}
-                        <span className="truncate text-sm text-neu-primary">
+                        <span className="truncate text-sm text-neu-primary" title={`${order.customer?.name ?? t("orders.walkIn")}`}>
                           {order.customer?.name ?? t("orders.walkIn")}
                         </span>
                       </div>
@@ -1045,23 +1045,25 @@ export default function RefundsPage() {
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                   <div className="rounded-lg border border-neu-hairline bg-neu-sunken/60 p-3">
                     <p className="text-[11px] font-semibold uppercase tracking-wider text-neu-faint">{t("orders.customer")}</p>
-                    <p className="mt-0.5 truncate text-sm font-medium text-neu-primary">
+                    <p className="mt-0.5 truncate text-sm font-medium text-neu-primary" title={`${detailOrder.customer?.name ?? t("orders.walkInCustomer")}`}>
                       {detailOrder.customer?.name ?? t("orders.walkInCustomer")}
                     </p>
                     {(detailOrder.customer?.phone || detailOrder.customer?.email) && (
-                      <p className="mt-0.5 truncate text-xs text-neu-faint">
+                      <p className="mt-0.5 truncate text-xs text-neu-faint" title={`${[detailOrder.customer?.phone, detailOrder.customer?.email].filter(Boolean).join(" · ")}`}>
                         {[detailOrder.customer?.phone, detailOrder.customer?.email].filter(Boolean).join(" · ")}
                       </p>
                     )}
                   </div>
                   <div className="rounded-lg border border-neu-hairline bg-neu-sunken/60 p-3">
                     <p className="text-[11px] font-semibold uppercase tracking-wider text-neu-faint">{t("orders.cashier")}</p>
-                    <p className="mt-0.5 truncate text-sm font-medium text-neu-primary">{detailOrder.user.name}</p>
+                    <p className="mt-0.5 truncate text-sm font-medium text-neu-primary" title={`${detailOrder.user.name}`}>{detailOrder.user.name}</p>
                   </div>
                   <div className="rounded-lg border border-neu-hairline bg-neu-sunken/60 p-3">
                     <p className="text-[11px] font-semibold uppercase tracking-wider text-neu-faint">{t("refunds.refundedBy")}</p>
-                    <p className="mt-0.5 truncate text-sm font-medium text-neu-primary">{detailOrder.refundedBy?.name ?? "—"}</p>
-                    <p className="mt-0.5 truncate text-xs text-neu-faint">
+                    <p className="mt-0.5 truncate text-sm font-medium text-neu-primary" title={`${detailOrder.refundedBy?.name ?? "—"}`}>{detailOrder.refundedBy?.name ?? "—"}</p>
+                    <p className="mt-0.5 truncate text-xs text-neu-faint" title={`${detailOrder.refundedAt
+                        ? `${formatDate(detailOrder.refundedAt, "medium")} · ${formatTime(detailOrder.refundedAt)}`
+                        : "—"}`}>
                       {detailOrder.refundedAt
                         ? `${formatDate(detailOrder.refundedAt, "medium")} · ${formatTime(detailOrder.refundedAt)}`
                         : "—"}
@@ -1091,7 +1093,7 @@ export default function RefundsPage() {
                             zoomOnHover={false}
                           />
                           <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm font-medium text-neu-primary">{item.productName}</p>
+                            <p className="truncate text-sm font-medium text-neu-primary" title={`${item.productName}`}>{item.productName}</p>
                             <p className="text-xs tabular-nums text-neu-faint">
                               {formatCurrency(item.unitPrice)}
                               <span className="text-neu-faint">{perUnitSuffix(item.unit)}</span>

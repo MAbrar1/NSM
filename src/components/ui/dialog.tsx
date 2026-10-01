@@ -213,6 +213,15 @@ function DialogFooter({ className, ...props }: React.HTMLAttributes<HTMLDivEleme
         "border-t border-[color:var(--neu-shadow-dark)] bg-neu-sunken/40",
         // keep the buttons clear of the rounded panel corners
         "rounded-b-[inherit]",
+        // Mobile: a row of long bilingual labels ("واجبات ادا کریں" /
+        // "Record payment") either truncates or forces a horizontal
+        // squeeze. Stack full-width below sm, row back at sm+.
+        "max-sm:sticky max-sm:bottom-0 max-sm:flex-col-reverse max-sm:items-stretch max-sm:gap-2",
+        "[&>*]:max-sm:w-full",
+        // A sticky footer paints over body content while scrolling —
+        // keep it above the Body but BELOW the panel's close keycap
+        // (which the recipe parks at z-index 10) so ✕ never hides.
+        "relative z-[5]",
         className
       )}
       {...props}

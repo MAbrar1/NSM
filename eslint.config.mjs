@@ -48,6 +48,12 @@ const eslintConfig = [
       // stay legal; only the cent-scale shapes are banned.
       "@local/no-raw-money-scale": "error",
 
+      // `truncate` HIDES text with no recovery unless the element also
+      // exposes the full string via title/aria-label (browser tooltip,
+      // screen-reader announcement). Bilingual labels make this worse:
+      // an Urdu name plus an English SKU is the first thing to clip.
+      "@local/require-truncate-title": "error",
+
       // Slug generation has exactly one home: slugify() in @/lib/utils.
       // Re-typing the lowercase/dash regex chain at create/update routes
       // is how 11 divergent copies appeared.
@@ -240,6 +246,48 @@ const dialogRulesPlugin = {
             }
           },
         };
+      },
+    },
+    "require-truncate-title": {
+      meta: {
+        type: "suggestion",
+        docs: {
+          description:
+            "Any element using the `truncate` utility must also carry `title` (or `aria-label`) so the clipped text stays reachable — hover tooltip + assistive-tech announcement.",
+        },
+        schema: [],
+      },
+      create(context) {
+        const ts_isJsxElement = (n) => n.type === "JSXElement";
+        const ts_isJsxAttribute = (n) => n.type === "JSXAttribute";
+        function check(node) {
+          const attrs = ts_isJsxElement(node)
+            ? node.openingElement.attributes
+            : node.attributes;
+          if (!attrs || !Array.isArray(attrs.properties)) return;
+          let hasTruncate = false;
+          let hasEscape = false;
+          for (const attr of attrs.properties) {
+            if (!ts_isJsxAttribute(attr)) continue;
+            const name = attr.name?.name;
+            if (name === "title" || name === "aria-label") hasEscape = true;
+            if (
+              name === "className" &&
+              attr.initializer &&
+              attr.initializer.getText().includes("truncate")
+            ) {
+              hasTruncate = true;
+            }
+          }
+          if (hasTruncate && !hasEscape) {
+            context.report({
+              node,
+              message:
+                "`truncate` without `title`/`aria-label` — clipped text is unreachable. Add title={the same value} (see scripts/codemod-truncate-title.mjs).",
+            });
+          }
+        }
+        return { JSXElement: check, JSXSelfClosingElement: check };
       },
     },
     "no-raw-slugify": {

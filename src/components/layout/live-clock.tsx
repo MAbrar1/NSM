@@ -294,7 +294,7 @@ function DigitalReadout({ localeStr }: { localeStr: string }) {
 
       {/* Date + day-elapsed bar */}
       <div className="flex items-center gap-1.5">
-        <time dateTime={iso} className="truncate text-[10px] font-medium text-neu-faint">{date}</time>
+        <time dateTime={iso} className="truncate text-[10px] font-medium text-neu-faint" title={`${date}`}>{date}</time>
         <span
           className="hidden h-[3px] w-10 flex-1 overflow-hidden rounded-full bg-neu-sunken min-[480px]:block"
           title={t("clock.dayProgress")}

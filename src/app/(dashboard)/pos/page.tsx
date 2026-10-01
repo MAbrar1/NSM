@@ -420,7 +420,7 @@ function UnitQuantityDialog({
               <div className="flex items-center gap-3 rounded-lg border border-neu-hairline bg-neu-sunken p-3">
                 <ProductThumb src={product.imageUrl} name={product.name} className="h-11 w-11 rounded-lg" iconClassName="h-5 w-5" />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold text-neu-primary">{product.name}</p>
+                  <p className="truncate text-sm font-semibold text-neu-primary" title={`${product.name}`}>{product.name}</p>
                   <p className="text-xs tabular-nums text-neu-faint">
                     {formatCurrency(product.unitPrice)}
                     {perUnitSuffix(product.unit) && <span className="text-neu-faint">{perUnitSuffix(product.unit)}</span>}
@@ -610,7 +610,7 @@ function ProductDetailDialog({
             <ProductThumb src={product.imageUrl} name={product.name} className="h-16 w-16 rounded-xl ring-1 ring-inset ring-neu-hairline/60" iconClassName="h-7 w-7" />
             <div className="min-w-0 flex-1">
               <h3 className="text-base font-bold tracking-tight text-neu-primary">{product.name}</h3>
-              <p className="mt-0.5 truncate font-mono text-xs text-neu-faint">
+              <p className="mt-0.5 truncate font-mono text-xs text-neu-faint" title={`${product.sku}${product.barcode ? ` · ${product.barcode}` : ""}`}>
                 {product.sku}
                 {product.barcode ? ` · ${product.barcode}` : ""}
               </p>
@@ -735,7 +735,7 @@ function ProductDetailDialog({
                       )}
                     >
                       <span className="min-w-0">
-                        <span className="block max-w-[140px] truncate text-xs font-semibold text-neu-primary">
+                        <span className="block max-w-[140px] truncate text-xs font-semibold text-neu-primary" title={`${v.name}`}>
                           {v.name}
                         </span>
                         <span className="block font-mono text-[10px] text-neu-faint">
@@ -1735,10 +1735,10 @@ export default function POSPage() {
                 </svg>
               </span>
               <div className="min-w-0">
-                <h1 className="truncate text-base font-bold leading-tight tracking-tight text-neu-primary">
+                <h1 className="truncate text-base font-bold leading-tight tracking-tight text-neu-primary" title={`${t("nav.pos")}`}>
                   {t("nav.pos")}
                 </h1>
-                <p className="truncate text-[11px] leading-tight text-neu-faint">
+                <p className="truncate text-[11px] leading-tight text-neu-faint" title={`${t("pos.navigateHint")}`}>
                   {t("pos.navigateHint")}
                 </p>
               </div>
@@ -1805,7 +1805,7 @@ export default function POSPage() {
               <svg className="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
               </svg>
-              <span className="min-w-0 flex-1 truncate">{t("pos.scanNotFound", { code: scanNotFound })}</span>
+              <span className="min-w-0 flex-1 truncate" title={`${t("pos.scanNotFound", { code: scanNotFound })}`}>{t("pos.scanNotFound", { code: scanNotFound })}</span>
               <a
                 href={`/products?createWithBarcode=${encodeURIComponent(scanNotFound)}`}
                 className="shrink-0 rounded-md bg-neu-solid-red px-2 py-1 text-[11px] font-semibold text-white shadow-sm transition-colors"
@@ -1897,7 +1897,7 @@ export default function POSPage() {
                       >
                         <ProductThumb src={product.imageUrl} name={product.name} className="h-10 w-10 rounded-lg flex-shrink-0" />
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-medium text-neu-primary">{product.name}</p>
+                          <p className="truncate text-sm font-medium text-neu-primary" title={`${product.name}`}>{product.name}</p>
                           <p className="pos-caption-xs-mono mt-0.5 text-neu-faint">{product.sku}</p>
                         </div>
                         <div className="shrink-0 text-end">
@@ -2032,7 +2032,7 @@ export default function POSPage() {
                         className="flex items-center gap-2 rounded-lg border border-neu-hairline bg-neu-bg px-2.5 py-1.5"
                       >
                         <div className="min-w-0">
-                          <p className="max-w-[140px] truncate text-xs font-medium text-neu-primary">
+                          <p className="max-w-[140px] truncate text-xs font-medium text-neu-primary" title={`${p.name}`}>
                             {p.name}
                           </p>
                           <p
@@ -2150,8 +2150,8 @@ export default function POSPage() {
                               <div className="flex min-w-0 items-center gap-3">
                                 <ProductThumb src={product.imageUrl} name={product.name} className="h-9 w-9 rounded-lg flex-shrink-0" iconClassName="h-4 w-4" />
                                 <div className="min-w-0">
-                                  <p className="truncate text-sm font-medium text-neu-primary">{product.name}</p>
-                                  <p className="truncate pos-caption-xs-mono mt-0.5 text-neu-faint">
+                                  <p className="truncate text-sm font-medium text-neu-primary" title={`${product.name}`}>{product.name}</p>
+                                  <p className="truncate pos-caption-xs-mono mt-0.5 text-neu-faint" title={`${product.sku}${product.barcode ? ` · ${product.barcode}` : ""}`}>
                                     {product.sku}
                                     {product.barcode ? ` · ${product.barcode}` : ""}
                                   </p>
@@ -2282,7 +2282,7 @@ export default function POSPage() {
                       </div>
                       <div className="flex flex-1 flex-col gap-0.5 p-3">
                         <p className="line-clamp-2 min-h-[2.5em] text-[13px] font-medium leading-snug text-neu-primary">{product.name}</p>
-                        <p className="truncate pos-caption-xs-mono text-neu-faint">{product.sku}</p>
+                        <p className="truncate pos-caption-xs-mono text-neu-faint" title={`${product.sku}`}>{product.sku}</p>
                         <div className="mt-auto flex items-end justify-between gap-1 pt-1.5">
                           <span className="whitespace-nowrap text-sm font-bold tabular-nums text-neu-accent-ink">
                             {formatCurrency(product.unitPrice)}
@@ -2375,7 +2375,7 @@ export default function POSPage() {
 
                   {/* Details */}
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium leading-snug text-neu-primary">{item.productName}</p>
+                    <p className="truncate text-sm font-medium leading-snug text-neu-primary" title={`${item.productName}`}>{item.productName}</p>
                     <p className="mt-0.5 text-xs tabular-nums text-neu-faint">
                       {formatCurrency(item.unitPrice)}
                       {perUnitSuffix(item.unit) && <span className="text-neu-faint">{perUnitSuffix(item.unit)}</span>}
@@ -2486,7 +2486,7 @@ export default function POSPage() {
                   </span>
                 )}
               </div>
-              <span className="truncate text-sm font-semibold text-neu-primary">
+              <span className="truncate text-sm font-semibold text-neu-primary" title={`${cart.itemCount}${t("pos.items")}`}>
                 {cart.itemCount} {t("pos.items")}
               </span>
               <svg className={cn("h-3.5 w-3.5 shrink-0 text-neu-faint transition-transform", mobileCartOpen && "rotate-180")} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -2551,9 +2551,9 @@ export default function POSPage() {
                     {pickedCustomer.name.slice(0, 1).toUpperCase()}
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-xs font-semibold text-neu-primary">{pickedCustomer.name}</span>
+                    <span className="block truncate text-xs font-semibold text-neu-primary" title={`${pickedCustomer.name}`}>{pickedCustomer.name}</span>
                     {pickedCustomer.loyaltyPoints !== undefined && pickedCustomer.loyaltyPoints > 0 && (
-                      <span className="flex items-center gap-1 truncate text-[10px] text-neu-accent-ink">
+                      <span className="flex items-center gap-1 truncate text-[10px] text-neu-accent-ink" title={`${pickedCustomer.loyaltyPoints} ${t("pos.customerLoyaltyPoints")}`}>
                         <StarIcon className="h-2.5 w-2.5 shrink-0" /> {pickedCustomer.loyaltyPoints} {t("pos.customerLoyaltyPoints")}
                       </span>
                     )}
@@ -2583,7 +2583,7 @@ export default function POSPage() {
                     <div key={item.id} className="flex items-center gap-3 py-3">
                       <ProductThumb src={item.imageUrl} name={item.productName} className="h-10 w-10 rounded-lg flex-shrink-0" iconClassName="h-5 w-5" />
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium text-neu-primary">{item.productName}</p>
+                        <p className="truncate text-sm font-medium text-neu-primary" title={`${item.productName}`}>{item.productName}</p>
                         <p className="mt-0.5 text-xs tabular-nums text-neu-faint">
                           {formatCurrency(item.unitPrice)}
                           {perUnitSuffix(item.unit) && <span className="text-neu-faint">{perUnitSuffix(item.unit)}</span>}
@@ -2801,7 +2801,7 @@ export default function POSPage() {
                   className={cn("pos-pay-tile", paymentMethod === id && "pos-pay-tile-active")}
                 >
                   <PaymentMethodIcon id={id} className="h-5 w-5 shrink-0" />
-                  <span className="truncate">{t(`pos.paymentMethod.${id}`)}</span>
+                  <span className="truncate" title={`${t(`pos.paymentMethod.${id}`)}`}>{t(`pos.paymentMethod.${id}`)}</span>
                 </button>
               ))}
             </div>
@@ -2991,7 +2991,7 @@ export default function POSPage() {
                 {completedOrder.items.map((item, i) => (
                   <div key={i} className="py-0.5">
                     <div className="flex justify-between text-xs">
-                      <span className="me-2 truncate">{item.productName}</span>
+                      <span className="me-2 truncate" title={`${item.productName}`}>{item.productName}</span>
                       <span className="shrink-0 tabular-nums text-neu-primary">
                         {formatCurrency(item.total)}
                       </span>
@@ -3253,7 +3253,7 @@ export default function POSPage() {
               </div>
               <div className="min-w-0">
                 <p className="text-xs font-medium text-neu-faint uppercase tracking-wide">{t("pos.cashier")}</p>
-                <p className="text-sm font-semibold text-neu-primary truncate">
+                <p className="text-sm font-semibold text-neu-primary truncate" title={`${session?.user?.name ?? t("pos.notLoggedIn")}`}>
                   {session?.user?.name ?? t("pos.notLoggedIn")}
                 </p>
               </div>
@@ -3313,7 +3313,7 @@ export default function POSPage() {
                 {shiftNote && (
                   <div className="flex justify-between">
                     <span className="text-neu-faint">{t("pos.shiftNote")}</span>
-                    <span className="truncate font-medium text-neu-primary">{shiftNote}</span>
+                    <span className="truncate font-medium text-neu-primary" title={`${shiftNote}`}>{shiftNote}</span>
                   </div>
                 )}
               </div>

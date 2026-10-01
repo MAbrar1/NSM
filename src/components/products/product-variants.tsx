@@ -312,7 +312,7 @@ export function ProductVariants({
               <div key={v.id} className={cn("flex items-center gap-3 px-3 py-2.5 transition-colors", !v.isActive && "opacity-60")}>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <p className="truncate text-sm font-medium text-neu-primary">{v.name}</p>
+                    <p className="truncate text-sm font-medium text-neu-primary" title={`${v.name}`}>{v.name}</p>
                     {!v.isActive && (
                       <Badge variant="warning" size="sm">{t("products.inactive")}</Badge>
                     )}

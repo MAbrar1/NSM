@@ -187,7 +187,7 @@ function NavGroup({
               />
             )}
             <NavIcon name={item.icon} isActive={active} />
-            {collapsed ? null : <span className="truncate max-lg:hidden">{label(item)}</span>}
+            {collapsed ? null : <span className="truncate max-lg:hidden" title={`${label(item)}`}>{label(item)}</span>}
           </Link>
         );
       })}
@@ -576,7 +576,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </span>
           </span>
           {!sidebarCollapsed && (
-            <span className="truncate text-lg font-bold tracking-tight text-neu-primary max-lg:hidden">
+            <span className="truncate text-lg font-bold tracking-tight text-neu-primary max-lg:hidden" title={`${APP_NAME}`}>
               {APP_NAME}
             </span>
           )}
@@ -613,7 +613,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               {/* Hidden when the rail is icon-only — the same rule the nav
                   rows follow. Without the `collapsed` guard the full label
                   rendered inside the 72px rail and clipped against the icon. */}
-              {!sidebarCollapsed && <span className="truncate max-lg:hidden">{t("palette.newSale")}</span>}
+              {!sidebarCollapsed && <span className="truncate max-lg:hidden" title={`${t("palette.newSale")}`}>{t("palette.newSale")}</span>}
             </Link>
           </div>
         )}
@@ -672,7 +672,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </span>
               {!sidebarCollapsed && (
                 <span className="min-w-0 flex-1 max-lg:hidden">
-                  <span className="block truncate text-sm font-semibold text-neu-primary">
+                  <span className="block truncate text-sm font-semibold text-neu-primary" title={`${session.user.name ?? "User"}`}>
                     {session.user.name ?? "User"}
                   </span>
                   {session.user.role && (
@@ -793,7 +793,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </svg>
               </span>
             </span>
-            <span className="truncate text-lg font-bold tracking-tight text-neu-primary">
+            <span className="truncate text-lg font-bold tracking-tight text-neu-primary" title={`${APP_NAME}`}>
               {APP_NAME}
             </span>
           </div>
@@ -906,7 +906,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <span aria-hidden className="h-3.5 w-px shrink-0 self-center bg-neu-hairline" />
               </>
             )}
-            <span className="truncate text-sm font-semibold text-neu-primary">
+            <span className="truncate text-sm font-semibold text-neu-primary" title={`${pageContext.title}`}>
               {pageContext.title}
             </span>
           </div>
@@ -930,7 +930,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
               />
             </svg>
-            <span className="flex-1 truncate text-start">{t("header.searchPlaceholder")}</span>
+            <span className="flex-1 truncate text-start" title={`${t("header.searchPlaceholder")}`}>{t("header.searchPlaceholder")}</span>
             <kbd className="neu-raised-sm rounded-md px-1.5 py-0.5 font-mono text-[10px] font-medium text-neu-faint">
               ⌘K
             </kbd>
@@ -971,6 +971,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 className="neu-inset-sm neu-focus hidden h-9 max-w-[8.5rem] items-center gap-2 truncate rounded-[var(--neu-radius-sm)] border border-neu-hairline bg-neu-bg px-3 text-sm text-neu-muted transition-colors sm:flex"
                 value={selectedWarehouseId ?? ""}
                 onChange={(e) => selectWarehouse(e.target.value)}
+                // Native selects clip their selected label; expose the full
+                // selected warehouse name via the title tooltip.
+                title={warehouses.find((w) => w.id === selectedWarehouseId)?.name}
               >
                 {warehouses.map((w) => (
                   <option key={w.id} value={w.id}>
@@ -1057,10 +1060,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   className="neu-elevated absolute end-0 top-full z-50 mt-2 w-64 max-w-[calc(100vw-1rem)] overflow-hidden rounded-xl border border-neu-hairline animate-scale-in"
                 >
                   <div className="border-b border-neu-hairline px-4 py-3">
-                    <p className="truncate text-sm font-semibold text-neu-primary">
+                    <p className="truncate text-sm font-semibold text-neu-primary" title={`${session?.user?.name ?? "User"}`}>
                       {session?.user?.name ?? "User"}
                     </p>
-                    <p className="truncate text-xs text-neu-faint">{session?.user?.email}</p>
+                    <p className="truncate text-xs text-neu-faint" title={`${session?.user?.email}`}>{session?.user?.email}</p>
                     {session?.user?.role && (
                       <span
                         className={cn(
@@ -1257,7 +1260,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                           <path strokeLinecap="round" strokeLinejoin="round" d={recent.icon} />
                         </svg>
                       </div>
-                      <span className="flex-1 truncate text-sm font-medium text-neu-primary">
+                      <span className="flex-1 truncate text-sm font-medium text-neu-primary" title={`${recent.label}`}>
                         {recent.label}
                       </span>
                       <svg
@@ -1306,7 +1309,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                           <path strokeLinecap="round" strokeLinejoin="round" d={action.icon} />
                         </svg>
                       </div>
-                      <span className="flex-1 truncate text-sm font-medium text-neu-primary">
+                      <span className="flex-1 truncate text-sm font-medium text-neu-primary" title={`${action.label}`}>
                         {action.label}
                       </span>
                       <kbd className="rounded border border-neu-hairline bg-neu-sunken px-1.5 py-0.5 text-[10px] font-medium text-neu-faint">
@@ -1336,10 +1339,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         className="flex w-full items-center gap-3 px-4 py-2.5 text-start transition-colors hover:bg-neu-accent-wash/60 border-b border-neu-hairline last:border-0"
                       >
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-medium text-neu-primary">
+                          <p className="truncate text-sm font-medium text-neu-primary" title={`${item.title}`}>
                             {item.title}
                           </p>
-                          <p className="truncate text-xs text-neu-faint">{item.subtitle}</p>
+                          <p className="truncate text-xs text-neu-faint" title={`${item.subtitle}`}>{item.subtitle}</p>
                         </div>
                         {item.badge && (
                           <span

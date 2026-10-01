@@ -741,10 +741,10 @@ export default function DashboardPage() {
                   <StatIcon name={action.icon} className="h-5 w-5" />
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-semibold text-neu-primary">
+                  <span className="block truncate text-sm font-semibold text-neu-primary" title={`${action.label}`}>
                     {action.label}
                   </span>
-                  <span className="mt-0.5 block truncate text-xs text-neu-faint">
+                  <span className="mt-0.5 block truncate text-xs text-neu-faint" title={`${action.description}`}>
                     {action.description}
                   </span>
                 </span>
@@ -971,7 +971,13 @@ export default function DashboardPage() {
                       </svg>
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-xs text-neu-primary">
+                      <p
+                        className="truncate text-xs text-neu-primary"
+                        title={activityTemplate(t, ev.action)
+                          .replace("{user}", ev.user?.name ?? "—")
+                          .replace("{entity}", ev.entityName || ev.entity)
+                          .replace("{action}", ev.action ?? "")}
+                      >
                         <ActivitySentence
                           template={activityTemplate(t, ev.action)}
                           user={ev.user?.name ?? "—"}
@@ -1074,7 +1080,7 @@ export default function DashboardPage() {
                     <div key={w.warehouseId} className="group">
                       <div className="flex items-baseline justify-between gap-2">
                         <p className="flex min-w-0 items-center gap-2 text-sm font-medium text-neu-primary">
-                          <span className="min-w-0 truncate">{w.name}</span>
+                          <span className="min-w-0 truncate" title={`${w.name}`}>{w.name}</span>
                           {isLeader && (
                             <Badge variant="success" size="sm">
                               #1
@@ -1207,7 +1213,7 @@ export default function DashboardPage() {
                 {refundReasons.slice(0, 5).map((r) => (
                   <div key={r.reason ?? "__none__"} className="group">
                     <div className="flex items-baseline justify-between gap-2">
-                      <p className="min-w-0 truncate text-sm font-medium text-neu-primary">
+                      <p className="min-w-0 truncate text-sm font-medium text-neu-primary" title={`${r.reason || t("refunds.noReason")}`}>
                         {r.reason || t("refunds.noReason")}
                       </p>
                       <p className="shrink-0 text-sm font-bold tabular-nums text-neu-ink-red">
@@ -1407,8 +1413,8 @@ export default function DashboardPage() {
                       className="flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-neu-sunken"
                     >
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold text-neu-primary">{order.orderNumber}</p>
-                        <p className="mt-0.5 truncate text-xs text-neu-faint">
+                        <p className="truncate text-sm font-semibold text-neu-primary" title={`${order.orderNumber}`}>{order.orderNumber}</p>
+                        <p className="mt-0.5 truncate text-xs text-neu-faint" title={`${order.customer?.name ?? t("orders.walkIn")} · ${timeAgo(order.createdAt, t)}`}>
                           {order.customer?.name ?? t("orders.walkIn")}
                           <span className="mx-1 text-neu-faint">·</span>
                           {timeAgo(order.createdAt, t)}
@@ -1489,7 +1495,7 @@ export default function DashboardPage() {
                           <div className="flex items-baseline justify-between gap-2">
                             {/* name gives way, money never: min-w-0 + truncate on
                                 the label, whole amount on the trailing side */}
-                            <p className="min-w-0 truncate text-sm font-medium text-neu-primary">{product.name}</p>
+                            <p className="min-w-0 truncate text-sm font-medium text-neu-primary" title={`${product.name}`}>{product.name}</p>
                             <p className="shrink-0 text-sm font-bold text-neu-primary tabular-nums">
                               {formatCurrency(product.revenue)}
                             </p>
@@ -1579,7 +1585,7 @@ export default function DashboardPage() {
                         </span>
                       </span>
                       <div className="min-w-0 flex-1">
-                        <p className="min-w-0 truncate text-sm font-medium text-neu-primary">{customer.name}</p>
+                        <p className="min-w-0 truncate text-sm font-medium text-neu-primary" title={`${customer.name}`}>{customer.name}</p>
                         <p className="text-[11px] text-neu-faint">
                           {customer.orders} {t("dashboard.orders")}
                         </p>

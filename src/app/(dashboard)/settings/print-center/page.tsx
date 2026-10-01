@@ -97,7 +97,7 @@ export default function PrintCenterPage() {
                 return (
                   <div key={p.id} className="flex items-center justify-between rounded-lg border border-neu-hairline p-3">
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-neu-primary">{p.name}</p>
+                      <p className="truncate text-sm font-medium text-neu-primary" title={`${p.name}`}>{p.name}</p>
                       <p className="text-xs text-neu-faint">
                         {p.paperWidthMm}mm · {p.printableDots} dots · {p.connectionType}
                         {h.lastError ? ` · ${h.lastError.code}` : ""}
