@@ -1059,7 +1059,7 @@
     align-items: flex-start;
     gap: 10px;
     border-radius: var(--neu-radius-md);
-    padding: 12px 16px;
+    padding: 14px 18px;
     animation: neuToastIn 150ms ease both;
   }
   .neu-toast-icon { flex-shrink: 0; }
@@ -1071,7 +1071,7 @@
   .neu-toast-icon-info { color: var(--neu-ink-cyan); }
 
   /* ─── Toast card (used by Toaster) ───
-     Compact neumorphic tile: radius-md, 12/16 padding, elevated
+     Compact neumorphic tile: radius-md, 14/18 padding, elevated
      shadow, row layout with 10px gap, inline 18px ink icon + caption.
      Entrance is opacity + translateY(8px→0); exit is a quick opacity
      fade. The stack itself is a flex column; each card is a flex row.
@@ -1096,7 +1096,7 @@
      as Neu (glyph = ink, dot = solid gold) so the card still reads as one
      compact tile and never as gold paint. */
   .golden .neu-toast-icon-success { color: var(--gold-ink-brass); }
-  .golden .neu-toast-icon-danger  { color: var(--gold-ink-rose); }
+  .golden .neu-toast-icon-danger  { color: var(--gold-ink-red); }
   .golden .neu-toast-icon-warning { color: var(--gold-ink-amber); }
   .golden .neu-toast-icon-info    { color: var(--gold-ink-gold); }
   .golden .text-neu-primary {
@@ -1121,12 +1121,12 @@
   .golden .bg-neu-solid-cyan { background-color: var(--gold-solid-gold); }
   .golden .bg-neu-solid-green { background-color: var(--gold-solid-brass); }
   .golden .bg-neu-solid-amber { background-color: var(--gold-solid-amber); }
-  .golden .bg-neu-solid-red   { background-color: var(--gold-solid-rose); }
+  .golden .bg-neu-solid-red   { background-color: var(--gold-solid-red); }
 
   .golden .border-neu-solid-cyan { border-color: var(--gold-solid-gold); }
   .golden .border-neu-solid-green { border-color: var(--gold-solid-brass); }
   .golden .border-neu-solid-amber { border-color: var(--gold-solid-amber); }
-  .golden .border-neu-solid-red   { border-color: var(--gold-solid-rose); }
+  .golden .border-neu-solid-red   { border-color: var(--gold-solid-red); }
 
   .golden .shadow-neu-toast { box-shadow: var(--neu-shadow-elevated); }
 
@@ -1212,14 +1212,14 @@
     box-shadow: 0 8px 20px rgb(var(--gold-amber-rgb) / 0.35);
   }
   .golden .neu-status-badge-danger {
-    background: var(--gold-solid-rose);
+    background: var(--gold-solid-red);
     box-shadow: 0 8px 20px rgb(var(--gold-red-rgb) / 0.35);
   }
   .golden .neu-status-heading-success { color: var(--gold-ink-brass); }
   .golden .neu-status-heading-warning { color: var(--gold-ink-amber); }
-  .golden .neu-status-heading-danger { color: var(--gold-ink-rose); }
+  .golden .neu-status-heading-danger { color: var(--gold-ink-red); }
   .golden .neu-delta-up { color: var(--gold-ink-brass); }
-  .golden .neu-delta-down { color: var(--gold-ink-rose); }
+  .golden .neu-delta-down { color: var(--gold-ink-red); }
   .golden .neu-badge-solid {
     background: var(--gold-text-primary);
     color: var(--gold-bg);
@@ -1237,7 +1237,7 @@
     color: var(--gold-solid-ink);
   }
   .golden .neu-badge-solid.neu-badge-danger {
-    background: var(--gold-solid-rose);
+    background: var(--gold-solid-red);
     color: var(--gold-solid-ink);
   }
 
@@ -1259,7 +1259,7 @@
   }
   .neu-empty-icon svg { width: 28px; height: 28px; }
   .neu-empty-icon-error { color: var(--neu-ink-red); }
-  .golden .neu-empty-icon-error-gold { color: var(--gold-ink-rose); }
+  .golden .neu-empty-icon-error-gold { color: var(--gold-ink-red); }
   .neu-empty-title {
     font-size: 16px;
     font-weight: 700;
@@ -1375,49 +1375,95 @@
    ═══════════════════════════════════════════════════════════════ */
 
 :root.golden {
-  --gold-bg: #fbf7ef;
-  --gold-text-primary: #3b3226;
-  --gold-text-muted: #6a5c49;
-  --gold-text-faint: #8a775f;
+  /* Signature gradient + its mode-stable ink; champagne tints accents. */
+  --gold-gradient: linear-gradient(135deg, #f3e0a4, #ddbb62 48%, #c9a24b);
+  --gold-on-gold: #3b2f1c;
+  --gold-accent-champagne: #e8d5a3;
 
-  --gold-shadow-dark: #cdbb9c;
+  /* The gold palette speaks "-red/-brass/-amber/-gold" (matching the spec
+     doc and the audit); Neu re-points through -red. (An earlier draft used
+     "-rose" naming before this theme ever shipped its raw layer.) */
+
+  /* Raw --neu-* re-pointing: the shared recipes (cards, buttons, inputs,
+     body) read THIS layer, so golden maps it through --gold-* — re-pointing
+     only the @theme aliases would tint utilities but leave every surface on
+     the blue-grey Neu palette. .dark.golden redefines only --gold-*;
+     everything here re-derives for free. */
+  --neu-bg: var(--gold-bg);
+  --neu-sunken: var(--gold-sunken);
+  --neu-hairline: var(--gold-hairline);
+  --neu-shadow-dark: var(--gold-shadow-dark);
+  --neu-shadow-light: var(--gold-shadow-light);
+  --neu-text-primary: var(--gold-text-primary);
+  --neu-text-muted: var(--gold-text-muted);
+  --neu-text-faint: var(--gold-text-faint);
+  --neu-ink-cyan: var(--gold-ink-gold);
+  --neu-ink-green: var(--gold-ink-brass);
+  --neu-ink-amber: var(--gold-ink-amber);
+  --neu-ink-red: var(--gold-ink-red);
+  --neu-ink-violet: var(--gold-ink-violet);
+  --neu-accent-cyan: var(--gold-accent-gold);
+  --neu-accent-green: var(--gold-accent-brass);
+  --neu-accent-amber: var(--gold-accent-amber);
+  --neu-accent-red: var(--gold-accent-red);
+  --neu-accent-tint: var(--gold-accent-champagne);
+  --neu-accent-solid-strong: var(--gold-accent-ink-strong);
+  --neu-solid-ink: var(--gold-solid-ink);
+  --neu-solid-cyan: var(--gold-solid-gold);
+  --neu-solid-green: var(--gold-solid-brass);
+  --neu-solid-amber: var(--gold-solid-amber);
+  --neu-solid-red: var(--gold-solid-red);
+  --neu-focus-ring: var(--gold-focus-ring);
+  --neu-focus-rgb: var(--gold-focus-rgb);
+  --neu-cyan-rgb: var(--gold-cyan-rgb);
+  --neu-red-rgb: var(--gold-red-rgb);
+  --neu-green-rgb: var(--gold-green-rgb);
+  --neu-amber-rgb: var(--gold-amber-rgb);
+  --neu-scrim-rgb: var(--gold-scrim-rgb);
+
+  --gold-bg: #fbf6ec;
+  --gold-text-primary: #3b2f1c;
+  --gold-text-muted: #6f5e43;
+  --gold-text-faint: #7d6a4c;
+
+  --gold-shadow-dark: #c8b794;
   --gold-shadow-light: #ffffff;
 
-  --gold-accent-gold: #c9a227;
-  --gold-accent-brass: #9a7b14;
-  --gold-accent-amber: #8a5a1c;
-  --gold-accent-rose: #9c3a2a;
+  --gold-accent-gold: #a8871f;
+  --gold-accent-brass: #8a6d3b;
+  --gold-accent-amber: #a87a1f;
+  --gold-accent-red: #c9524a;
 
-  --gold-ink-gold: #5a4611;
+  --gold-ink-gold: #6a4f16;
   --gold-ink-brass: #4a3a0e;
-  --gold-ink-amber: #4a2f0a;
-  --gold-ink-rose: #7a2418;
-  --gold-ink-violet: #5b3a8a;
+  --gold-ink-amber: #6a4a12;
+  --gold-ink-red: #8a2a22;
+  --gold-ink-violet: #563a8a;
 
   --gold-solid-ink: #fffaf0;
-  --gold-solid-gold: #9a7b14;
+  --gold-solid-gold: #8a6d0f;
   --gold-solid-brass: #6a4f0c;
   --gold-solid-amber: #8a5a1c;
-  --gold-solid-rose: #7a2418;
+  --gold-solid-red: #7a2418;
 
   --gold-focus-ring: #8a6a14;
   --gold-focus-rgb: 138 106 20;
 
-  --gold-accent-ink: #5a4611;
-  --gold-accent-ink-strong: #3a2d0a;
+  --gold-accent-ink: var(--gold-ink-gold);
+  --gold-accent-ink-strong: #4a3810;
   --gold-accent-line: var(--gold-focus-ring);
   --gold-accent-wash: color-mix(in srgb, var(--gold-focus-ring) 12%, var(--gold-bg));
 
   --gold-wash-gold: color-mix(in srgb, var(--gold-accent-gold) 8%, var(--gold-bg));
   --gold-wash-brass: color-mix(in srgb, var(--gold-accent-brass) 8%, var(--gold-bg));
   --gold-wash-amber: color-mix(in srgb, var(--gold-accent-amber) 8%, var(--gold-bg));
-  --gold-wash-rose: color-mix(in srgb, var(--gold-accent-rose) 8%, var(--gold-bg));
+  --gold-wash-red: color-mix(in srgb, var(--gold-accent-red) 8%, var(--gold-bg));
 
-  --gold-cyan-rgb: 201 162 39;
-  --gold-red-rgb: 156 58 42;
-  --gold-green-rgb: 122 98 18;
-  --gold-amber-rgb: 138 90 28;
-  --gold-scrim-rgb: 59 50 38;
+  --gold-cyan-rgb: 168 135 31;
+  --gold-red-rgb: 201 82 74;
+  --gold-green-rgb: 63 145 104;
+  --gold-amber-rgb: 168 122 31;
+  --gold-scrim-rgb: 59 47 34;
 
   --gold-hairline: var(--gold-shadow-dark);
   --gold-sunken: color-mix(in srgb, var(--gold-shadow-dark) 22%, var(--gold-bg));
@@ -1456,11 +1502,11 @@
   --color-neu-cyan: var(--gold-accent-gold);
   --color-neu-green: var(--gold-accent-brass);
   --color-neu-amber: var(--gold-accent-amber);
-  --color-neu-red: var(--gold-accent-rose);
+  --color-neu-red: var(--gold-accent-red);
   --color-neu-ink-cyan: var(--gold-ink-gold);
   --color-neu-ink-green: var(--gold-ink-brass);
   --color-neu-ink-amber: var(--gold-ink-amber);
-  --color-neu-ink-red: var(--gold-ink-rose);
+  --color-neu-ink-red: var(--gold-ink-red);
   --color-neu-ink-violet: var(--gold-ink-violet);
   --color-neu-hairline: var(--gold-hairline);
   --color-neu-sunken: var(--gold-sunken);
@@ -1469,7 +1515,7 @@
   --color-neu-solid-cyan: var(--gold-solid-gold);
   --color-neu-solid-green: var(--gold-solid-brass);
   --color-neu-solid-amber: var(--gold-solid-amber);
-  --color-neu-solid-red: var(--gold-solid-rose);
+  --color-neu-solid-red: var(--gold-solid-red);
   --color-neu-accent-ink: var(--gold-accent-ink);
   --color-neu-accent-ink-strong: var(--gold-accent-ink-strong);
   --color-neu-accent-line: var(--gold-accent-line);
@@ -1479,27 +1525,85 @@
   --color-neu-wash-cyan: var(--gold-wash-gold);
   --color-neu-wash-green: var(--gold-wash-brass);
   --color-neu-wash-amber: var(--gold-wash-amber);
-  --color-neu-wash-red: var(--gold-wash-rose);
+  --color-neu-wash-red: var(--gold-wash-red);
+}
+
+/* ── Golden signature wiring ──
+   The gold-gradient primary CTA (sheen site 1), the card hover sheen
+   (site 2) and the near-invisible fixed grain. Everything is scoped under
+   .golden: in Neu light/dark there is no .neu-btn-solid rule and no sheen
+   or grain, so those surfaces are untouched. --neu-sheen-gradient and
+   --neu-transition-slow exist only to feed the two sheen sites. */
+:root {
+  --neu-transition-slow: 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.neu-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  background: var(--neu-sheen-gradient);
+  transition: opacity var(--neu-transition-slow);
+}
+.golden {
+  --neu-sheen-gradient: linear-gradient(
+    115deg,
+    transparent 20%,
+    rgba(241, 217, 138, 0.18) 45%,
+    transparent 65%
+  );
+}
+.golden .neu-btn-solid {
+  position: relative;
+  background: var(--gold-gradient);
+  color: var(--gold-on-gold);
+}
+.golden .neu-btn-solid::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  background: var(--neu-sheen-gradient);
+  transition: opacity var(--neu-transition-slow);
+}
+.golden .neu-btn-solid:hover::before {
+  opacity: 1;
+}
+.golden .neu-card:hover::after {
+  opacity: 1;
+}
+.golden .golden-grains {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
+  background-size: 140px 140px;
 }
 
 /* Golden dark mode — re-derived from the gold pair, same contract as Neu. */
 .dark.golden {
-  --gold-bg: #241d15;
+  --gold-bg: #241d14;
   --gold-text-primary: #f6efde;
   --gold-text-muted: #cdbb9c;
   --gold-text-faint: #b8a17a;
-  --gold-shadow-dark: #100c07;
+  --gold-shadow-dark: #0f0b07;
   --gold-shadow-light: #3a2f20;
 
   --gold-accent-gold: #e8c64f;
   --gold-accent-brass: #c9a227;
   --gold-accent-amber: #b87714;
-  --gold-accent-rose: #c94a2a;
+  --gold-accent-red: #e85a3a;
 
   --gold-ink-gold: #f2d76b;
   --gold-ink-brass: #e8c64f;
   --gold-ink-amber: #f0b836;
-  --gold-ink-rose: #e85a3a;
+  --gold-ink-red: #e85a3a;
   --gold-ink-violet: #b896e0;
 
   --gold-focus-ring: #e8c64f;
@@ -1513,8 +1617,9 @@
   --gold-wash-gold: color-mix(in srgb, var(--gold-accent-gold) 10%, var(--gold-bg));
   --gold-wash-brass: color-mix(in srgb, var(--gold-accent-brass) 10%, var(--gold-bg));
   --gold-wash-amber: color-mix(in srgb, var(--gold-accent-amber) 10%, var(--gold-bg));
-  --gold-wash-rose: color-mix(in srgb, var(--gold-accent-rose) 10%, var(--gold-bg));
+  --gold-wash-red: color-mix(in srgb, var(--gold-accent-red) 10%, var(--gold-bg));
 
+  --gold-accent-champagne: #f4e3b3;
   --gold-hairline: var(--gold-shadow-light);
   --gold-sunken: color-mix(in srgb, var(--gold-shadow-light) 30%, var(--gold-bg));
 
@@ -1525,11 +1630,11 @@
   --color-neu-cyan: var(--gold-accent-gold);
   --color-neu-green: var(--gold-accent-brass);
   --color-neu-amber: var(--gold-accent-amber);
-  --color-neu-red: var(--gold-accent-rose);
+  --color-neu-red: var(--gold-accent-red);
   --color-neu-ink-cyan: var(--gold-ink-gold);
   --color-neu-ink-green: var(--gold-ink-brass);
   --color-neu-ink-amber: var(--gold-ink-amber);
-  --color-neu-ink-red: var(--gold-ink-rose);
+  --color-neu-ink-red: var(--gold-ink-red);
   --color-neu-ink-violet: var(--gold-ink-violet);
   --color-neu-hairline: var(--gold-hairline);
   --color-neu-sunken: var(--gold-sunken);
@@ -1538,7 +1643,7 @@
   --color-neu-solid-cyan: var(--gold-solid-gold);
   --color-neu-solid-green: var(--gold-solid-brass);
   --color-neu-solid-amber: var(--gold-solid-amber);
-  --color-neu-solid-red: var(--gold-solid-rose);
+  --color-neu-solid-red: var(--gold-solid-red);
   --color-neu-accent-ink: var(--gold-accent-ink);
   --color-neu-accent-ink-strong: var(--gold-accent-ink-strong);
   --color-neu-accent-line: var(--gold-accent-line);
@@ -1548,7 +1653,7 @@
   --color-neu-wash-cyan: var(--gold-wash-gold);
   --color-neu-wash-green: var(--gold-wash-brass);
   --color-neu-wash-amber: var(--gold-wash-amber);
-  --color-neu-wash-red: var(--gold-wash-rose);
+  --color-neu-wash-red: var(--gold-wash-red);
 }
 
 /* ═══════════════════════════════════════════════════════════════

@@ -918,6 +918,9 @@ const FIXTURE = `<!doctype html><html><head><meta charset="utf-8"><title>neu</ti
   const PRINT_PAPER = [
     "src/components/products/barcode-label.tsx",
     "src/components/print/print-preview.tsx",
+    // The printer-profile inspector renders receipt HTML in a sandboxed
+    // iframe — its white background is paper, same as print-preview.
+    "src/app/(dashboard)/settings/printers/page.tsx",
   ];
   const tsx = readdirSync("src", { recursive: true, withFileTypes: true })
     .filter((e) => e.isFile() && e.name.endsWith(".tsx"))
