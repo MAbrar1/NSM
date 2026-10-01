@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import { readFileSync, existsSync } from "fs";
+import { readFileSync, existsSync, readdirSync, statSync } from "fs";
 import { join } from "path";
 
 /* ═══════════════════════════════════════════════════════════════
@@ -131,7 +131,6 @@ async function main(): Promise<void> {
 
 /** Sorted directory names (timestamped prefixes give apply order). */
 function readdirSorted(dir: string): string[] {
-  const { readdirSync, statSync } = require("fs") as typeof import("fs");
   return readdirSync(dir)
     .filter((name) => statSync(join(dir, name)).isDirectory())
     .sort();

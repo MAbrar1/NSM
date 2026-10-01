@@ -60,6 +60,15 @@ const eslintConfig = [
     },
   },
   {
+    // next-env.d.ts is machine-written by `next dev`/`next build` (its own
+    // header says "should not be edited"); the routes reference it emits is
+    // a triple-slash by Next's design, so the rule can never pass there.
+    files: ["next-env.d.ts"],
+    rules: {
+      "@typescript-eslint/triple-slash-reference": "off",
+    },
+  },
+  {
     ignores: ["node_modules/", ".next/", ".next-prod/", "dist/", "prisma/"],
   },
 ];
