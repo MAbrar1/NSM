@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { requirePermission } from "@/lib/api/api-auth";
 import { parsePagination } from "@/lib/api/pagination";
 import { parseSortParam } from "@/lib/table-sort";
+import { slugify } from "@/lib/utils";
 import { supplierPurchaseStats } from "@/lib/suppliers/supplier-stats";
 
 /* ═══════════════════════════════════════════════════════════════
@@ -109,10 +110,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check for duplicate slug
-    const slug = name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)/g, "");
+    const slug = slugify(name);
 
     const existing = await db.supplier.findUnique({ where: { slug } });
     if (existing) {

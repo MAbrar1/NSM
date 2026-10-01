@@ -7,6 +7,7 @@ import { withApiHandler } from "@/lib/api/api-handler";
 import { logAudit } from "@/lib/audit-log";
 import { sumStockRows } from "@/lib/inventory/stock-status";
 import { majorToCents } from "@/lib/money/money";
+import { slugify } from "@/lib/utils";
 
 /* ═══════════════════════════════════════════════════════════════
    SINGLE PRODUCT API
@@ -68,10 +69,7 @@ export const PUT = withApiHandler<{ id: string }>("PRODUCT_PUT", async (request,
 
     const data = result.data;
 
-    let slug = data.name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)/g, "");
+    let slug = slugify(data.name);
     const slugConflict = await db.product.findFirst({
       where: { slug, id: { not: id } },
     });

@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { brandSchema } from "@/lib/validations";
 import { requirePermission } from "@/lib/api/api-auth";
 import { withApiHandler } from "@/lib/api/api-handler";
+import { slugify } from "@/lib/utils";
 
 /* ═══════════════════════════════════════════════════════════════
    BRANDS API
@@ -39,10 +40,7 @@ export const POST = withApiHandler("BRANDS_POST", async (request) => {
     const data = result.data;
 
     // Generate slug from name
-    let slug = data.name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)/g, "");
+    let slug = slugify(data.name);
 
     // Check for slug collision
     const existingSlug = await db.brand.findUnique({ where: { slug } });

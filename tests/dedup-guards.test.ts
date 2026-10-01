@@ -2,12 +2,13 @@
    DEDUP GUARDS — the one-home rules
    Pins the invariants the deduplication wave established:
 
-   1. eslint.config.mjs declares `no-raw-cents-format` as an error
-      (with the lib/money exemption), so the 68-copy duplication of
-      `(cents / 100).toFixed(2)` cannot quietly return.
-   2. No source outside lib/money actually contains the raw pattern
-      — the file-tree scan twin of the ui-consistency tests, so the
-      guard holds even before eslint runs.
+   1. eslint.config.mjs declares `no-raw-cents-format`,
+      `no-raw-slugify`, and `no-raw-datetime` as errors (each with
+      its canonical-home exemption), so the duplicated formatting
+      chains cannot quietly return.
+   2. No source outside the canonical homes actually contains the
+      raw patterns — the file-tree scan twin of the ui-consistency
+      tests, so the guard holds even before eslint runs.
    3. The canonical helpers exist where everything now points.
    Run: npx tsx --test tests/dedup-guards.test.ts
    ═══════════════════════════════════════════════════════════════ */
@@ -19,13 +20,23 @@ import { join } from "node:path";
 
 const ROOT = process.cwd();
 
-test("eslint declares no-raw-cents-format as an error with the lib/money exemption", () => {
+test("eslint declares the no-raw-* one-home rules as errors with canonical exemptions", () => {
   const cfg = readFileSync(join(ROOT, "eslint.config.mjs"), "utf8");
   assert.match(cfg, /"@local\/no-raw-cents-format": "error"/);
-  // The exemption reads: if (file.includes("/src/lib/money/")) return {};
+  assert.match(cfg, /"@local\/no-raw-slugify": "error"/);
+  assert.match(cfg, /"@local\/no-raw-datetime": "error"/);
+  // Each exemption reads: if (file.includes("<canonical home>")) return {};
   assert.ok(
     cfg.includes('file.includes("/src/lib/money/")'),
-    "rule must exempt the canonical home"
+    "cents rule must exempt the canonical home"
+  );
+  assert.ok(
+    cfg.includes('file.includes("/src/lib/utils.ts")'),
+    "slugify rule must exempt the canonical home"
+  );
+  assert.ok(
+    cfg.includes('file.includes("/src/components/layout/live-clock.tsx")'),
+    "datetime rule must exempt the self-managed live clock"
   );
 });
 
@@ -39,6 +50,46 @@ test("no source outside lib/money still contains (x / 100).toFixed(2)", () => {
         const rel = p.replace(/\\/g, "/").slice(ROOT.length + 1);
         if (rel.startsWith("src/lib/money/")) continue;
         if (/\/ 100\)\.toFixed\(2\)/.test(readFileSync(p, "utf8"))) offenders.push(rel);
+      }
+    }
+  };
+  walk(join(ROOT, "src"));
+  walk(join(ROOT, "scripts"));
+  assert.deepEqual(offenders, []);
+});
+
+test("no source outside lib/utils still contains the raw slug regex chain", () => {
+  const offenders: string[] = [];
+  const walk = (dir: string) => {
+    for (const name of readdirSync(dir)) {
+      const p = join(dir, name);
+      if (statSync(p).isDirectory()) walk(p);
+      else if (/\.(tsx?|mjs)$/.test(name)) {
+        const rel = p.replace(/\\/g, "/").slice(ROOT.length + 1);
+        if (rel === "src/lib/utils.ts") continue;
+        if (/\[\^a-z0-9\]\+\/g/.test(readFileSync(p, "utf8"))) offenders.push(rel);
+      }
+    }
+  };
+  walk(join(ROOT, "src"));
+  walk(join(ROOT, "scripts"));
+  assert.deepEqual(offenders, []);
+});
+
+test("no source outside the deliberate homes still calls locale-less toLocale*", () => {
+  const offenders: string[] = [];
+  const exempt = new Set(["src/components/layout/live-clock.tsx"]);
+  const walk = (dir: string) => {
+    for (const name of readdirSync(dir)) {
+      const p = join(dir, name);
+      if (statSync(p).isDirectory()) walk(p);
+      else if (/\.(tsx?|mjs)$/.test(name)) {
+        const rel = p.replace(/\\/g, "/").slice(ROOT.length + 1);
+        if (exempt.has(rel)) continue;
+        const text = readFileSync(p, "utf8");
+        const matches =
+          text.match(/\.toLocale(String|DateString|TimeString)\(\s*\)/g) ?? [];
+        offenders.push(...matches.map(() => rel));
       }
     }
   };

@@ -162,7 +162,7 @@ const ltrHtml = buildReportHtml<SalesRow>(
     kpis: [
       { label: "Total Revenue", value: money(summary.totalRevenue), tone: "positive", hint: "▲ 8.4% vs prev period" },
       { label: "Net Revenue", value: money(summary.netRevenue) },
-      { label: "Total Orders", value: summary.totalOrders.toLocaleString(), hint: "1,253 transactions" },
+      { label: "Total Orders", value: summary.totalOrders.toLocaleString("en-US"), hint: "1,253 transactions" },
       { label: "Avg Order Value", value: money(summary.averageOrderValue), tone: "warning" },
     ],
     meta: [
@@ -179,7 +179,7 @@ const ltrHtml = buildReportHtml<SalesRow>(
           { label: "#", align: "center", width: "5%", value: (row) => String(topProducts.indexOf(row) + 1) },
           { label: "Product", width: "34%", strong: true, value: (row) => row.name },
           { label: "SKU", muted: true, width: "12%", value: (row) => row.sku },
-          { label: "Qty Sold", align: "right", value: (row) => row.quantitySold.toLocaleString() },
+          { label: "Qty Sold", align: "right", value: (row) => row.quantitySold.toLocaleString("en-US") },
           { label: "Revenue", align: "right", strong: true, value: (row) => money(row.revenue), total: () => money(summary.totalRevenue) },
           { label: "Orders", align: "right", value: (row) => String(row.orderCount) },
         ],
@@ -191,7 +191,7 @@ const ltrHtml = buildReportHtml<SalesRow>(
         columns: [
           { label: "Category", strong: true, value: (c: (typeof categories)[number]) => c.name },
           { label: "Revenue", align: "right", strong: true, value: (c: (typeof categories)[number]) => money(c.revenue), total: () => money(summary.totalRevenue) },
-          { label: "Qty", align: "right", value: (c: (typeof categories)[number]) => c.quantity.toLocaleString() },
+          { label: "Qty", align: "right", value: (c: (typeof categories)[number]) => c.quantity.toLocaleString("en-US") },
           { label: "Items", align: "right", value: (c: (typeof categories)[number]) => String(c.items) },
         ],
         rows: categories,

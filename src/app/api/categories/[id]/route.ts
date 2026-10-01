@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { categorySchema } from "@/lib/validations";
 import { requirePermission } from "@/lib/api/api-auth";
 import { withApiHandler } from "@/lib/api/api-handler";
+import { slugify } from "@/lib/utils";
 
 /* ═══════════════════════════════════════════════════════════════
    SINGLE CATEGORY API
@@ -57,10 +58,7 @@ export const PUT = withApiHandler<{ id: string }>("CATEGORY_PUT", async (request
     // Regenerate slug if name changed
     let slug = existing.slug;
     if (data.name !== existing.name) {
-      slug = data.name
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/(^-|-$)/g, "");
+      slug = slugify(data.name);
       const slugConflict = await db.category.findFirst({
         where: { slug, id: { not: id } },
       });

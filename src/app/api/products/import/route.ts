@@ -6,6 +6,7 @@ import { withApiHandler } from "@/lib/api/api-handler";
 import { logAudit } from "@/lib/audit-log";
 import { parseMoneyToCents } from "@/lib/money/money";
 import { ensureStockRow } from "@/lib/inventory/inventory-service";
+import { slugify } from "@/lib/utils";
 
 /* ═══════════════════════════════════════════════════════════════
    PRODUCT CSV IMPORT API
@@ -76,10 +77,6 @@ function parseCsv(text: string): string[][] {
   if (row.some((c) => c.trim() !== "")) rows.push(row);
 
   return rows;
-}
-
-function slugify(text: string): string {
-  return text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 }
 
 export const POST = withApiHandler("PRODUCTS_IMPORT", async (request) => {

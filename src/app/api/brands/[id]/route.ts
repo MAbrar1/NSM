@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { brandSchema } from "@/lib/validations";
 import { requirePermission } from "@/lib/api/api-auth";
 import { withApiHandler } from "@/lib/api/api-handler";
+import { slugify } from "@/lib/utils";
 
 /* ═══════════════════════════════════════════════════════════════
    SINGLE BRAND API
@@ -59,10 +60,7 @@ export const PUT = withApiHandler<{ id: string }>("BRAND_PUT", async (request, c
     // Regenerate slug if name changed
     let slug = existing.slug;
     if (data.name !== existing.name) {
-      slug = data.name
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/(^-|-$)/g, "");
+      slug = slugify(data.name);
       const slugConflict = await db.brand.findFirst({
         where: { slug, id: { not: id } },
       });

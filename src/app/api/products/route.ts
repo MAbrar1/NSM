@@ -9,6 +9,7 @@ import { parsePagination } from "@/lib/api/pagination";
 import { sumBaseStock, stockStatus } from "@/lib/inventory/stock-status";
 import { majorToCents } from "@/lib/money/money";
 import { ensureStockRow } from "@/lib/inventory/inventory-service";
+import { slugify } from "@/lib/utils";
 
 /* ═══════════════════════════════════════════════════════════════
    PRODUCTS API
@@ -147,10 +148,7 @@ export const POST = withApiHandler("PRODUCTS_POST", async (request) => {
     }
 
     // Generate slug from name (append SKU suffix to avoid collisions)
-    let slug = data.name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)/g, "");
+    let slug = slugify(data.name);
     const existingSlug = await db.product.findUnique({ where: { slug } });
     if (existingSlug) {
       slug = `${slug}-${data.sku.toLowerCase()}`;

@@ -12,7 +12,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { SortableTh } from "@/components/ui/sortable-th";
 import { useTableRowNav } from "@/hooks/use-table-row-nav";
 import { toast } from "@/stores/toast-store";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatDate } from "@/lib/utils";
 import { readApiError } from "@/lib/api/api-error";
 import { displayMajorToBaseCents, baseCentsToDisplayMajorStr } from "@/lib/money/currency-core";
 import { ensureRates, peekRates } from "@/lib/money/currency";
@@ -509,8 +509,8 @@ export default function PurchaseOrdersPage() {
   const poPrintPayload = (po: PurchaseOrder) => ({
     poNumber: po.orderNumber,
     status: po.status,
-    orderDate: new Date(po.createdAt).toLocaleDateString(),
-    expectedDate: po.expectedDate ? new Date(po.expectedDate).toLocaleDateString() : null,
+    orderDate: formatDate(po.createdAt),
+    expectedDate: po.expectedDate ? formatDate(po.expectedDate) : null,
     supplier: { name: po.supplier?.name ?? "" },
     createdBy: po.createdBy?.name ?? null,
     notes: po.notes,
@@ -663,9 +663,9 @@ export default function PurchaseOrdersPage() {
                     <tr key={po.id} data-nav-row data-nav-label={`${po.orderNumber} ${po.supplier.name}`} className="hover:bg-neu-sunken transition-colors cursor-pointer" onClick={() => { setShowDetail(po); setReceiveQuantities({}); }}>
                       <td className="px-4 py-3 font-medium text-neu-primary">{po.orderNumber}</td>
                       <td className="px-4 py-3 text-neu-muted">{po.supplier.name}</td>
-                      <td className="px-4 py-3 text-neu-faint hidden md:table-cell">{new Date(po.createdAt).toLocaleDateString()}</td>
+                      <td className="px-4 py-3 text-neu-faint hidden md:table-cell">{formatDate(po.createdAt)}</td>
                       <td className="px-4 py-3 text-neu-faint hidden lg:table-cell">
-                        {po.expectedDate ? new Date(po.expectedDate).toLocaleDateString() : "—"}
+                        {po.expectedDate ? formatDate(po.expectedDate) : "—"}
                       </td>
                       <td className="px-4 py-3 text-end font-medium text-neu-primary">{formatCurrency(po.total)}</td>
                       <td className="px-4 py-3 text-center"><Badge variant={(st?.variant ?? "default") as "success" | "warning" | "danger" | "info" | "default"}>{t(`purchaseOrders.${st?.key ?? "draft"}`)}</Badge></td>
@@ -883,7 +883,7 @@ export default function PurchaseOrdersPage() {
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
                 <div><p className="text-neu-faint">{t("purchaseOrders.supplier")}</p><p className="font-medium">{showDetail.supplier.name}</p></div>
                 <div><p className="text-neu-faint">{t("inventory.warehouse")}</p><p className="font-medium">{showDetail.warehouse.name}</p></div>
-                <div><p className="text-neu-faint">{t("purchaseOrders.date")}</p><p className="font-medium">{new Date(showDetail.createdAt).toLocaleDateString()}</p></div>
+                <div><p className="text-neu-faint">{t("purchaseOrders.date")}</p><p className="font-medium">{formatDate(showDetail.createdAt)}</p></div>
                 <div><p className="text-neu-faint">{t("common.createdBy")}</p><p className="font-medium">{showDetail.createdBy.name}</p></div>
               </div>
 

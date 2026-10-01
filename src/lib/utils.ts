@@ -99,9 +99,9 @@ export function slugify(text: string): string {
 
 /**
  * Format a date+time in one string, pinned to the app's display locale
- * (en-US). The single home for what used to be hand-rolled
- * `new Date(x).toLocaleString()` calls — which silently followed each
- * browser's locale instead of the app's format.
+ * (en-US). The single home for what used to be hand-rolled locale-less
+ * `toLocaleString` calls — which silently followed each browser's
+ * locale instead of the app's format.
  */
 export function formatDateTime(date: Date | string): string {
   const d = typeof date === "string" ? new Date(date) : date;

@@ -3,6 +3,7 @@ import { apiError, fieldError } from "@/lib/api/api-errors";
 import { db } from "@/lib/db";
 import { requirePermission } from "@/lib/api/api-auth";
 import { supplierPurchaseStats } from "@/lib/suppliers/supplier-stats";
+import { slugify } from "@/lib/utils";
 
 /* ═══════════════════════════════════════════════════════════════
    SINGLE SUPPLIER API
@@ -82,10 +83,7 @@ export async function PUT(
     // Regenerate slug if name changed
     let slug = existing.slug;
     if (name && name !== existing.name) {
-      slug = name
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/(^-|-$)/g, "");
+      slug = slugify(name);
       const dupSlug = await db.supplier.findFirst({
         where: { slug, id: { not: id } },
       });
