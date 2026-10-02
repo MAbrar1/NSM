@@ -157,7 +157,7 @@ Component classes: `.neu-btn` / `-sm` / `-icon` / `-icon-sm` / `-icon-lg` /
 `-block` / `-plain` / `-danger`, `.neu-input` / `-otp`, `.neu-select`,
 `.neu-label`, `.neu-separator-h` / `-v`, `.neu-badge` + colour variants +
 `-solid`, `.neu-skeleton` (alias `.skeleton`), `.neu-chart-grid` / `-axis` /
-`-value` / `-baseline`, `.neu-image-frame`, `.neu-dialog-overlay` / `-panel` /
+`-value` / `-baseline` / `-bar-enter`, `.neu-image-frame`, `.neu-dialog-overlay` / `-panel` /
 `-title` / `-text`, `.neu-toast` + icon tones, `.neu-empty-icon` / `-title` /
 `-body`, `.neu-stat-value` / `-label`, `.neu-delta-up` / `-down`,
 `.neu-status-badge` / `-success` / `-warning` / `-danger` + `.neu-status-heading`
@@ -177,6 +177,12 @@ still win at the call site.
   pressed swaps to the inset shadows; disabled `.neu-disabled`; `--sm` 36px/13px;
   `--icon` 44px with a 20px muted glyph; danger hovers to **red ink** (5.43:1).
 * **Badge** — 24px, `0 10px` padding, 12px radius, 12px/600, `.neu-inset-sm`.
+* **Chart** — flat token fills (the shadow lives on the container, never the
+  data). Measured real-pixel SVG (no viewBox text scaling); x-labels wrap
+  (≤ 2 lines) then step, never truncate; dense series scroll under a sticky
+  y-gutter; hover/focus shows an elevated tooltip plus a wash column; bars
+  grow once via `.neu-chart-bar-enter` (transform-only, disabled under
+  `prefers-reduced-motion`).
   Colour variants are **ink** (`text-neu-ink-*`), so the 12px labels clear AA.
   `.neu-badge-solid` is the filled escape hatch: accent fill + near-black same-hue
   ink (4.97–11.90:1).

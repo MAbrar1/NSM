@@ -33,7 +33,7 @@ let displayCurrency: string | null = null; // null = follow base
 /** Synchronous rate-table supplier, registered by lib/currency.ts. */
 let rateLookup: () => Record<string, number> | null = () => null;
 
-import { centsToMajorString } from "./money";
+import { centsToMajor, centsToMajorString } from "./money";
 
 export function registerRateLookup(fn: () => Record<string, number> | null): void {
   rateLookup = fn;
@@ -158,6 +158,32 @@ export function formatCurrency(
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(d.cents / 100);
+}
+
+/** Compact money for dense chart axis/value labels: 123456 cents →
+ *  "$1.2K", 1250000 → "$12.5K", 1_500_000_00 → "$1.5M". Below the
+ *  compact threshold the exact amount renders instead — compact
+ *  notation would round $9.99 up to "$10", and a chart label that
+ *  misstates money is worse than a longer one. Follows the same
+ *  display-currency conversion as formatCurrency, so a compact axis
+ *  label and the full tooltip value always agree on the unit.
+ *  Charts must use THIS — formatting raw cents with a bare compact
+ *  formatter (the old chart.tsx behaviour) mislabels 1,234.56 as
+ *  "123.5K", i.e. 100× the real amount. */
+export function formatCurrencyCompact(
+  amount: number,
+  currency: string = defaultCurrency,
+  locale: string = defaultLocale
+): string {
+  const d = resolveDisplay(Number.isFinite(amount) ? amount : 0, currency, locale);
+  const major = centsToMajor(d.cents);
+  return new Intl.NumberFormat(d.loc, {
+    style: "currency",
+    currency: d.code,
+    notation: "compact",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: Math.abs(major) >= 1000 ? 1 : 2,
+  }).format(major);
 }
 
 /** Format strictly in the store's BASE currency — no display conversion.

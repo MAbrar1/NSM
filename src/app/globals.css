@@ -544,6 +544,13 @@
   from { opacity: 0; scale: 0.96; }
   to   { opacity: 1; scale: 1; }
 }
+/* Chart bars grow from the baseline once on mount. Transform-only —
+   no opacity/height tween — so the hover opacity attribute stays
+   authoritative after the animation ends. */
+@keyframes neuChartBarGrow {
+  from { transform: scaleY(0.04); }
+  to   { transform: scaleY(1); }
+}
 
 @layer components {
 
@@ -967,6 +974,12 @@
     fill: var(--neu-text-primary);
     font-variant-numeric: tabular-nums;
   }
+  /* Bar entrance — scaleY from the baseline (keyframes above). */
+  .neu-chart-bar-enter {
+    transform-box: fill-box;
+    transform-origin: bottom;
+    animation: neuChartBarGrow 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
 
   /* ─── Golden overrides for shared chart primitives ───
      The chart recipes read --neu-* tokens, so Golden just re-points the
@@ -1352,7 +1365,8 @@
   .neu-toast,
   .neu-dialog-panel,
   .is-success,
-  .is-status-in { animation: none; }
+  .is-status-in,
+  .neu-chart-bar-enter { animation: none; }
 }
 
 /* ═══════════════════════════════════════════════════════════════

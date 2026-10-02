@@ -31,6 +31,7 @@ export {
   fxConvertCents,
   registerRateLookup,
   formatCurrency,
+  formatCurrencyCompact,
   formatAmount,
 } from "@/lib/money/currency-core";
 

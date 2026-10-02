@@ -1,23 +1,94 @@
 "use client";
 
 import * as React from "react";
-import { cn, formatCurrency } from "@/lib/utils";
+import { cn, formatCurrency, formatCurrencyCompact } from "@/lib/utils";
 import { useI18n } from "@/components/providers/i18n-provider";
+import { niceTicks, planXLabels, selectLabelIndices } from "@/lib/charts/layout";
 
 /* ═══════════════════════════════════════════════════════════════
    CHART COMPONENTS
-   Lightweight SVG-based charts. No external charting library needed.
+   Lightweight SVG charts. No external charting library needed.
+
+   Layout contract — why this file measures before it draws:
+   • The plot is measured with a ResizeObserver and rendered in real
+     CSS pixels (explicit width/height, no viewBox scaling), so SVG
+     text is never stretched, shrunk or distorted by the container.
+   • A label is NEVER truncated. When x-labels do not fit their slot
+     they wrap (≤ 2 lines), then step, then the plot scrolls — the
+     full string stays on screen and in the hover tooltip.
+   • Dense series (30+ buckets) scroll horizontally; the y-axis
+     gutter is a separate sticky column that never scrolls away.
+   • Money labels go through formatCurrency / formatCurrencyCompact,
+     so compact axis text ("Rs 1.2K") and the full tooltip value
+     always agree on the unit.
    ═══════════════════════════════════════════════════════════════ */
+
+// ─── Shared layout constants ───
+const MIN_SLOT = 20; // px per bar below which the plot scrolls
+const MAX_BAR_W = 56; // px cap so few-bar charts stay elegant
+const BAR_GAP = 6; // px between bars inside a slot
+const GUTTER_MIN = 34;
+const GUTTER_MAX = 140;
+const PLOT_TOP = 16; // head-room for the tallest bar's value label
+const MAX_VISIBLE_X_LABELS = 24;
+const TOOLTIP_MAX_W = 240;
+
+const useIsomorphicLayoutEffect =
+  typeof window !== "undefined" ? React.useLayoutEffect : React.useEffect;
+
+/* ─── Text measurement ───
+   Canvas measureText when a DOM exists; a deliberately wide per-char
+   estimate on the server. Over-measuring gives a label more room —
+   under-measuring would clip it, which this module forbids. */
+function estimateTextWidth(text: string, weight: number, size: number): number {
+  const wide = /[^\u0000-\u007f]/.test(text); // Arabic/Urdu glyphs run wider
+  return text.length * size * (wide ? 0.62 : 0.56) * (weight >= 600 ? 1.04 : 1) + 2;
+}
+
+function useTextMeasure(): (text: string, weight?: number, size?: number) => number {
+  const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
+  const cacheRef = React.useRef(new Map<string, number>());
+
+  return React.useCallback((text: string, weight = 400, size = 12) => {
+    const key = `${weight}|${size}|${text}`;
+    const cached = cacheRef.current.get(key);
+    if (cached !== undefined) return cached;
+
+    let width: number;
+    if (typeof document === "undefined") {
+      width = estimateTextWidth(text, weight, size);
+    } else {
+      const canvas = (canvasRef.current ??= document.createElement("canvas"));
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        width = estimateTextWidth(text, weight, size);
+      } else {
+        ctx.font = `${weight} ${size}px "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif`;
+        width = ctx.measureText(text).width;
+      }
+    }
+    cacheRef.current.set(key, width);
+    return width;
+  }, []);
+}
+
+/** Bar with rounded top corners only — grounded on the baseline. */
+function roundedTopRect(x: number, y: number, w: number, h: number): string {
+  const r = Math.max(0, Math.min(5, w / 2, h));
+  return [
+    `M ${x} ${y + h}`,
+    `L ${x} ${y + r}`,
+    r > 0 ? `Q ${x} ${y} ${x + r} ${y}` : `L ${x} ${y}`,
+    `L ${x + w - r} ${y}`,
+    r > 0 ? `Q ${x + w} ${y} ${x + w} ${y + r}` : `L ${x + w} ${y}`,
+    `L ${x + w} ${y + h}`,
+    "Z",
+  ].join(" ");
+}
 
 // ─── Bar Chart ───
 // Rows may carry extra metadata (e.g. a raw month key) for drill-down.
 type BarRow = { label: string; value: number; [key: string]: unknown };
-
-/** Compact number for dense chart labels (12345 → "12.3K"). */
-const compactNumber = new Intl.NumberFormat("en-US", {
-  notation: "compact",
-  maximumFractionDigits: 1,
-});
 
 interface BarChartProps {
   data: BarRow[];
@@ -39,129 +110,287 @@ export function BarChart({
   onBarClick,
   className,
 }: BarChartProps) {
-  if (data.length === 0) return <EmptyChart height={height} className={className} />;
+  const measure = useTextMeasure();
+  const wrapRef = React.useRef<HTMLDivElement | null>(null);
+  const scrollRef = React.useRef<HTMLDivElement | null>(null);
+  const [containerWidth, setContainerWidth] = React.useState(0);
+  const [hover, setHover] = React.useState<number | null>(null);
 
-  const maxVal = Math.max(...data.map((d) => d.value), 1);
-  const gutterLeft = 44;
-  const barWidth = Math.max(8, Math.floor(600 / data.length) - 4);
-  const svgWidth = Math.max(data.length * (barWidth + 4) + gutterLeft + 8, 300);
-  const plotBottom = height - 30;
-  const plotHeight = height - 40;
-  const formatLabel = compactValueLabels
-    ? (v: number) => compactNumber.format(v)
-    : formatValue;
+  useIsomorphicLayoutEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+    const update = () => setContainerWidth(el.clientWidth);
+    update();
+    if (typeof ResizeObserver === "undefined") {
+      window.addEventListener("resize", update);
+      return () => window.removeEventListener("resize", update);
+    }
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  // A range/length change invalidates which bar the pointer was over.
+  React.useEffect(() => {
+    setHover(null);
+  }, [data.length]);
+
+  const plan = React.useMemo(() => {
+    if (data.length === 0) return null;
+    const n = data.length;
+    const formatLabel = (v: number) =>
+      compactValueLabels ? formatCurrencyCompact(v) : formatValue(v);
+
+    const maxVal = data.reduce((m, d) => (Number.isFinite(d.value) ? Math.max(m, d.value) : m), 0);
+    const { ticks, niceMax } = niceTicks(maxVal, 4);
+    const scaleMax = Math.max(1, niceMax);
+
+    // The gutter is sized from the widest tick label so y-axis money
+    // text can never be clipped by the plot edge.
+    const tickLabels = ticks.map(formatLabel);
+    const gutter = Math.min(
+      GUTTER_MAX,
+      Math.max(GUTTER_MIN, (tickLabels.length > 0 ? Math.max(...tickLabels.map((l) => measure(l))) : 0) + 12)
+    );
+
+    const width = containerWidth || 640; // SSR / pre-measure fallback
+    const plotViewport = Math.max(80, width - gutter);
+    const slot = Math.max(MIN_SLOT, plotViewport / n);
+    const plotW = Math.max(plotViewport, n * MIN_SLOT);
+    const scrolls = plotW > plotViewport + 1;
+
+    const xPlan = planXLabels(
+      data.map((d) => d.label),
+      slot,
+      (t) => measure(t),
+      { allowWrap: n <= 16, maxLabelCount: MAX_VISIBLE_X_LABELS }
+    );
+    const shownLabels = new Set(selectLabelIndices(n, xPlan.step));
+
+    const xAxisH = xPlan.lines ? 32 : 20;
+    const plotBottom = height - xAxisH;
+    const plotH = Math.max(10, plotBottom - PLOT_TOP);
+    const barW = Math.min(MAX_BAR_W, Math.max(4, slot - BAR_GAP));
+
+    // Value labels are all-or-nothing: a label must fit its own slot.
+    const valueLabelsFit =
+      n <= 80 &&
+      data.reduce((w, d) => (d.value > 0 ? Math.max(w, measure(formatLabel(d.value), 600)) : w), 0) + 8 <=
+        slot;
+
+    const ariaLabel =
+      n <= 20
+        ? data.map((d) => `${d.label}: ${formatValue(d.value)}`).join(", ")
+        : `Bar chart with ${n} points, from ${data[0]!.label} to ${data[n - 1]!.label}`;
+
+    return {
+      n,
+      formatLabel,
+      ticks,
+      scaleMax,
+      gutter,
+      slot,
+      plotW,
+      scrolls,
+      xPlan,
+      shownLabels,
+      plotBottom,
+      plotH,
+      barW,
+      valueLabelsFit,
+      ariaLabel,
+      width,
+    };
+  }, [data, containerWidth, height, compactValueLabels, formatValue, measure]);
+
+  if (data.length === 0) return <EmptyChart height={height} className={className} />;
+  const p = plan!;
+
+  const hoveredRow = hover !== null ? data[hover] : undefined;
+  const scrollLeft = scrollRef.current?.scrollLeft ?? 0;
+  const tipWidth = Math.min(TOOLTIP_MAX_W, Math.max(120, p.width - 16));
+  const tipHalf = tipWidth / 2 + 4;
+  const tipLeft =
+    hover !== null
+      ? Math.min(
+          Math.max(p.gutter + hover * p.slot + p.slot / 2 - scrollLeft, tipHalf),
+          Math.max(tipHalf, p.width - tipHalf)
+        )
+      : 0;
+  const hoverBarH =
+    hoveredRow && hoveredRow.value > 0 ? Math.max(2, (p.plotH * hoveredRow.value) / p.scaleMax) : 0;
+  const hoverBarTop = p.plotBottom - hoverBarH;
+  const tipAbove = hoverBarTop > 84;
+  const yFor = (value: number) => p.plotBottom - (p.plotH * value) / p.scaleMax;
 
   return (
-    <div className={cn("overflow-x-auto", className)}>
-      <svg
-        width={svgWidth}
-        height={height}
-        viewBox={`0 0 ${svgWidth} ${height}`}
-        className="w-full"
-        role="img"
-        aria-label={data.map((d) => `${d.label}: ${formatValue(d.value)}`).join(", ")}
-      >
-        {/* Grid lines + compact y-axis reference labels.
-            The ink comes from .neu-chart-grid / .neu-chart-axis, which
-            are the only place these colours are declared. */}
-        {[0.25, 0.5, 0.75, 1].map((pct) => {
-          const y = plotBottom - plotHeight * pct;
-          return (
-            <g key={pct} aria-hidden>
-              <line
-                x1={gutterLeft}
-                y1={y}
-                x2={svgWidth - 4}
-                y2={y}
-                className="neu-chart-grid"
-                strokeDasharray="4"
-              />
-              <text
-                x={gutterLeft - 6}
-                y={y + 3}
-                textAnchor="end"
-                className="neu-chart-axis"
-              >
-                {formatLabel(maxVal * pct)}
-              </text>
-            </g>
-          );
-        })}
-        {/* Baseline */}
-        <line
-          x1={gutterLeft}
-          y1={plotBottom}
-          x2={svgWidth - 4}
-          y2={plotBottom}
-          className="neu-chart-baseline"
-          aria-hidden
-        />
-
-        {/* Bars */}
-        {data.map((d, i) => {
-          const barHeight = Math.max(2, (plotHeight * d.value) / maxVal);
-          const x = gutterLeft + 4 + i * (barWidth + 4);
-          const y = plotBottom - barHeight;
-
-          return (
-            <g
-              key={i}
-              className={onBarClick ? "cursor-pointer" : undefined}
-              role={onBarClick ? "button" : undefined}
-              tabIndex={onBarClick ? 0 : undefined}
-              onClick={onBarClick ? () => onBarClick(d) : undefined}
-              onKeyDown={
-                onBarClick
-                  ? (e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        onBarClick(d);
-                      }
-                    }
-                  : undefined
-              }
-              aria-label={onBarClick ? `${d.label}: ${formatValue(d.value)}` : undefined}
-            >
-              {/* Flat semantic fill — no box-shadow, no gradient, so the
-                  data never carries the emboss. */}
-              <rect
-                x={x}
-                y={y}
-                width={barWidth}
-                height={barHeight}
-                rx={4}
-                fill={color}
-                className="opacity-90 transition-opacity hover:opacity-100"
-              >
-                <title>{`${d.label}: ${formatValue(d.value)}`}</title>
-              </rect>
-              {/* Value label on top */}
-              {data.length <= 15 && (
-                <text
-                  x={x + barWidth / 2}
-                  y={y - 4}
-                  textAnchor="middle"
-                  fontWeight="600"
-                  className="neu-chart-axis"
-                >
-                  {d.value > 0 ? formatLabel(d.value) : ""}
-                </text>
-              )}
-              {/* X-axis label */}
-              {data.length <= 15 && (
-                <text
-                  x={x + barWidth / 2}
-                  y={height - 14}
-                  textAnchor="middle"
-                  className="neu-chart-axis"
-                >
-                  {d.label.length > 6 ? d.label.slice(0, 6) + "…" : d.label}
-                </text>
-              )}
-            </g>
-          );
-        })}
+    <div ref={wrapRef} className={cn("relative flex", className)}>
+      {/* Sticky y-axis gutter — never scrolls with the plot */}
+      <svg width={p.gutter} height={height} aria-hidden className="shrink-0">
+        {p.ticks.map((tick) => (
+          <text
+            key={tick}
+            x={p.gutter - 8}
+            y={yFor(tick) + 4}
+            textAnchor="end"
+            className="neu-chart-axis"
+          >
+            {p.formatLabel(tick)}
+          </text>
+        ))}
       </svg>
+
+      {/* Scrolling plot */}
+      <div
+        ref={scrollRef}
+        className="min-w-0 flex-1 overflow-x-auto overscroll-x-contain [scrollbar-width:thin]"
+        style={{ height: height + (p.scrolls ? 12 : 0) }}
+        onScroll={() => setHover(null)}
+      >
+        <svg
+          width={p.plotW}
+          height={height}
+          role={onBarClick ? "group" : "img"}
+          aria-label={p.ariaLabel}
+        >
+          {/* Grid lines + baseline (horizontal — unaffected by scrolling) */}
+          {p.ticks.map((tick) => (
+            <line
+              key={tick}
+              x1={0}
+              x2={p.plotW}
+              y1={yFor(tick)}
+              y2={yFor(tick)}
+              className="neu-chart-grid"
+              strokeDasharray="4"
+              aria-hidden
+            />
+          ))}
+          <line
+            x1={0}
+            x2={p.plotW}
+            y1={p.plotBottom}
+            y2={p.plotBottom}
+            className="neu-chart-baseline"
+            aria-hidden
+          />
+
+          {data.map((d, i) => {
+            const slotX = i * p.slot;
+            const cx = slotX + p.slot / 2;
+            const barH = d.value > 0 ? Math.max(2, (p.plotH * d.value) / p.scaleMax) : 0;
+            const barX = cx - p.barW / 2;
+            const barY = p.plotBottom - barH;
+            const isHovered = hover === i;
+            const valueText = d.value > 0 ? p.formatLabel(d.value) : "";
+            const lines = p.xPlan.lines?.[i] ?? [d.label];
+
+            return (
+              <g key={i}>
+                {isHovered && (
+                  <rect
+                    x={slotX + 1}
+                    y={PLOT_TOP - 6}
+                    width={Math.max(2, p.slot - 2)}
+                    height={p.plotH + 6}
+                    rx={8}
+                    fill={color}
+                    opacity={0.08}
+                    aria-hidden
+                  />
+                )}
+                {barH > 0 && (
+                  <path
+                    d={roundedTopRect(barX, barY, p.barW, barH)}
+                    fill={color}
+                    className="neu-chart-bar-enter transition-opacity duration-150"
+                    style={{ animationDelay: `${Math.min(i * 24, 360)}ms` }}
+                    opacity={hover === null || isHovered ? 0.92 : 0.45}
+                    aria-hidden
+                  />
+                )}
+                {p.valueLabelsFit && valueText && (
+                  <text
+                    x={cx}
+                    y={barY - 5}
+                    textAnchor="middle"
+                    fontWeight={600}
+                    className="neu-chart-axis"
+                    aria-hidden
+                  >
+                    {valueText}
+                  </text>
+                )}
+                {p.shownLabels.has(i) && (
+                  <text x={cx} y={p.plotBottom + 13} textAnchor="middle" className="neu-chart-axis">
+                    <title>{d.label}</title>
+                    {lines.map((line, li) => (
+                      <tspan key={li} x={cx} dy={li === 0 ? 0 : 12}>
+                        {line}
+                      </tspan>
+                    ))}
+                  </text>
+                )}
+                {/* Full-slot hover/click target — works even for zero bars */}
+                <rect
+                  x={slotX}
+                  y={PLOT_TOP}
+                  width={p.slot}
+                  height={p.plotH + 8}
+                  fill="transparent"
+                  pointerEvents="all"
+                  className={cn("neu-focus", onBarClick && "cursor-pointer")}
+                  role={onBarClick ? "button" : undefined}
+                  tabIndex={onBarClick ? 0 : undefined}
+                  aria-label={onBarClick ? `${d.label}: ${formatValue(d.value)}` : undefined}
+                  onMouseEnter={() => setHover(i)}
+                  onMouseLeave={() => setHover((h) => (h === i ? null : h))}
+                  onFocus={onBarClick ? () => setHover(i) : undefined}
+                  onBlur={onBarClick ? () => setHover((h) => (h === i ? null : h)) : undefined}
+                  onClick={onBarClick ? () => onBarClick(d) : undefined}
+                  onKeyDown={
+                    onBarClick
+                      ? (e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            onBarClick(d);
+                          }
+                        }
+                      : undefined
+                  }
+                >
+                  <title>{`${d.label}: ${formatValue(d.value)}`}</title>
+                </rect>
+              </g>
+            );
+          })}
+        </svg>
+      </div>
+
+      {/* Tooltip — anchored to the hovered/focused bar, clamped in-view */}
+      {hoveredRow && (
+        <div
+          className="pointer-events-none absolute z-10"
+          style={{
+            left: tipLeft,
+            top: tipAbove ? hoverBarTop - 8 : hoverBarTop + 10,
+            transform: tipAbove ? "translate(-50%, -100%)" : "translate(-50%, 0)",
+          }}
+          aria-hidden
+        >
+          <div
+            className="neu-elevated rounded-[var(--neu-radius-md)] bg-neu-bg px-2.5 py-1.5"
+            style={{ maxWidth: TOOLTIP_MAX_W }}
+          >
+            <p className="break-words text-xs font-semibold leading-4 text-neu-primary">
+              {hoveredRow.label}
+            </p>
+            <p className="mt-0.5 text-xs tabular-nums leading-4 text-neu-muted">
+              {formatValue(hoveredRow.value)}
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -192,70 +421,224 @@ interface DonutChartProps {
   };
 }
 
+const DONUT_GAP_DEG = 1; // visual separation between segments
+const DONUT_POP = 3; // px a hovered segment lifts outwards
+
 export function DonutChart({ data, size = 160, className, center }: DonutChartProps) {
-  const total = data.reduce((sum, d) => sum + d.value, 0);
+  const measure = useTextMeasure();
+  const wrapRef = React.useRef<HTMLDivElement | null>(null);
+  const [hover, setHover] = React.useState<number | null>(null); // data index
+  const [tip, setTip] = React.useState<{ x: number; y: number; above: boolean } | null>(null);
+
+  const percent = React.useMemo(
+    () => new Intl.NumberFormat("en-US", { style: "percent", maximumFractionDigits: 1 }),
+    []
+  );
+
+  const positive = data.filter((d) => Number.isFinite(d.value) && d.value > 0);
+  const total = positive.reduce((sum, d) => sum + d.value, 0);
+
   if (total === 0) return <EmptyChart height={size} className={className} />;
 
   const radius = size / 2 - 10;
   const innerRadius = radius * 0.6;
   const cx = size / 2;
   const cy = size / 2;
+  const toRad = (deg: number) => ((deg - 90) * Math.PI) / 180;
 
-  let cumulative = 0;
+  // Angular gap instead of a stroke, so segments read cleanly on any
+  // background (cards, sunken wells, Golden theme).
+  const gapDeg = positive.length > 1 ? DONUT_GAP_DEG : 0;
+  let cursor = 0;
+  const arcs = data.flatMap((item, dataIndex) => {
+    if (!Number.isFinite(item.value) || item.value <= 0) return [];
+    const sweep = (item.value / total) * 360;
+    const start = cursor + gapDeg / 2;
+    cursor += sweep;
+    const drawSweep = Math.max(0.6, sweep - gapDeg);
+    const mid = start + drawSweep / 2;
+
+    const a0 = toRad(start);
+    const a1 = toRad(start + drawSweep);
+    const x1 = cx + radius * Math.cos(a0);
+    const y1 = cy + radius * Math.sin(a0);
+    const x2 = cx + radius * Math.cos(a1);
+    const y2 = cy + radius * Math.sin(a1);
+    const ix1 = cx + innerRadius * Math.cos(a0);
+    const iy1 = cy + innerRadius * Math.sin(a0);
+    const ix2 = cx + innerRadius * Math.cos(a1);
+    const iy2 = cy + innerRadius * Math.sin(a1);
+    const largeArc = drawSweep > 180 ? 1 : 0;
+
+    const path = [
+      `M ${x1} ${y1}`,
+      `A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2}`,
+      `L ${ix2} ${iy2}`,
+      `A ${innerRadius} ${innerRadius} 0 ${largeArc} 0 ${ix1} ${iy1}`,
+      "Z",
+    ].join(" ");
+
+    return [{ item, dataIndex, path, mid }];
+  });
+
+  const valueTextFor = (value: number) => (center ? String(value) : formatCurrency(value));
+  const pctTextFor = (value: number) => (value > 0 ? percent.format(value / total) : "0%");
+
+  // Legend rows map to their segment by DATA index; zero-value rows stay
+  // listed (with 0%) but are not hoverable.
+  const legendItems = data.map((item, dataIndex) => ({
+    item,
+    dataIndex:
+      Number.isFinite(item.value) && item.value > 0 ? dataIndex : null,
+  }));
+
+  // Center text shrinks to fit the donut hole instead of overflowing it.
+  const centerValue = center?.value ?? formatCurrency(total);
+  const centerLabel = center?.label ?? "Total";
+  const hole = innerRadius * 2;
+  const fitFont = (text: string, maxW: number, base: number, min: number, weight: number) => {
+    const per100 = measure(text, weight, 100);
+    if (per100 <= 0) return base;
+    return Math.max(min, Math.min(base, (maxW / per100) * 100));
+  };
+  const centerValueFont = fitFont(centerValue, hole - 6, 18, 9, 700);
+  const centerLabelFont = fitFont(centerLabel, hole + 8, 12, 8, 400);
+
+  function handleSegmentMove(e: React.MouseEvent) {
+    const rect = wrapRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const margin = Math.min(90, rect.width / 2);
+    setTip({
+      x: Math.min(Math.max(e.clientX - rect.left, margin), Math.max(margin, rect.width - margin)),
+      y: Math.max(e.clientY - rect.top, 8),
+      above: e.clientY - rect.top >= 96,
+    });
+  }
+
+  const hoveredItem = hover !== null ? data[hover] : undefined;
 
   return (
-    <div className={cn("flex flex-col items-center gap-5 sm:flex-row sm:items-center sm:gap-6", className)}>
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="shrink-0">
-        {data.map((d, i) => {
-          const startAngle = (cumulative / total) * 2 * Math.PI - Math.PI / 2;
-          cumulative += d.value;
-          const endAngle = (cumulative / total) * 2 * Math.PI - Math.PI / 2;
-          const largeArc = d.value / total > 0.5 ? 1 : 0;
-
-          const x1 = cx + radius * Math.cos(startAngle);
-          const y1 = cy + radius * Math.sin(startAngle);
-          const x2 = cx + radius * Math.cos(endAngle);
-          const y2 = cy + radius * Math.sin(endAngle);
-          const ix1 = cx + innerRadius * Math.cos(startAngle);
-          const iy1 = cy + innerRadius * Math.sin(startAngle);
-          const ix2 = cx + innerRadius * Math.cos(endAngle);
-          const iy2 = cy + innerRadius * Math.sin(endAngle);
-
-          const path = [
-            `M ${x1} ${y1}`,
-            `A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2}`,
-            `L ${ix2} ${iy2}`,
-            `A ${innerRadius} ${innerRadius} 0 ${largeArc} 0 ${ix1} ${iy1}`,
-            "Z",
-          ].join(" ");
-
+    <div
+      ref={wrapRef}
+      className={cn(
+        "relative flex flex-col items-center gap-5 sm:flex-row sm:items-center sm:gap-6",
+        className
+      )}
+    >
+      <svg
+        width={size}
+        height={size}
+        viewBox={`0 0 ${size} ${size}`}
+        className="shrink-0"
+        role="img"
+        aria-label={data
+          .map((d) => `${d.label}: ${valueTextFor(d.value)} (${pctTextFor(d.value)})`)
+          .join(", ")}
+      >
+        {arcs.map((arc) => {
+          const isHovered = hover === arc.dataIndex;
+          const rad = toRad(arc.mid);
+          const dx = Math.cos(rad) * DONUT_POP;
+          const dy = Math.sin(rad) * DONUT_POP;
           return (
-            <path key={i} d={path} fill={d.color}>
-              <title>{`${d.label}: ${d.value}`}</title>
+            <path
+              key={arc.dataIndex}
+              d={arc.path}
+              fill={arc.item.color}
+              opacity={hover === null || isHovered ? 1 : 0.5}
+              style={{
+                transform: isHovered ? `translate(${dx}px, ${dy}px)` : undefined,
+                transition: "transform 150ms ease, opacity 150ms ease",
+              }}
+              onMouseEnter={() => setHover(arc.dataIndex)}
+              onMouseLeave={() => {
+                setHover((h) => (h === arc.dataIndex ? null : h));
+                setTip(null);
+              }}
+              onMouseMove={handleSegmentMove}
+            >
+              <title>{`${arc.item.label}: ${valueTextFor(arc.item.value)} (${pctTextFor(arc.item.value)})`}</title>
             </path>
           );
         })}
         {/* Center content */}
-        <text x={cx} y={cy - 2} textAnchor="middle" fontSize="18" fontWeight="bold" className="neu-chart-value">
-          {center?.value ?? formatCurrency(total)}
+        <text
+          x={cx}
+          y={cy - 3}
+          textAnchor="middle"
+          fontSize={centerValueFont}
+          fontWeight={700}
+          className="neu-chart-value"
+        >
+          {centerValue}
         </text>
-        <text x={cx} y={cy + 14} textAnchor="middle" className="neu-chart-axis">
-          {center?.label ?? "Total"}
+        <text x={cx} y={cy + 13} textAnchor="middle" fontSize={centerLabelFont} className="neu-chart-axis">
+          {centerLabel}
         </text>
       </svg>
 
-      {/* Legend — full width on mobile, side-by-side on sm+ */}
-      <div className="w-full space-y-1.5 sm:w-auto">
-        {data.map((d, i) => (
-          <div key={i} className="flex items-center gap-2 text-xs">
-            <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: d.color }} />
-            <span className="text-neu-muted">{d.label}</span>
-            <span className="ms-auto font-semibold tabular-nums text-neu-primary sm:ms-3">
-              {center ? String(d.value) : formatCurrency(d.value)}
-            </span>
-          </div>
-        ))}
+      {/* Legend — full width on mobile, side-by-side on sm+.
+          Labels wrap; values and percentages stay right-aligned. */}
+      <div className="w-full min-w-0 space-y-1 sm:w-auto sm:flex-1">
+        {legendItems.map(({ item, dataIndex }, index) => {
+          const isHovered = dataIndex !== null && hover === dataIndex;
+          return (
+            <div
+              key={`${item.label}-${index}`}
+              className={cn(
+                "flex items-start gap-2 rounded-[var(--neu-radius-sm)] px-1.5 py-0.5 text-xs transition-colors",
+                isHovered && "bg-neu-sunken/60"
+              )}
+              onMouseEnter={dataIndex !== null ? () => setHover(dataIndex) : undefined}
+              onMouseLeave={
+                dataIndex !== null
+                  ? () => setHover((h) => (h === dataIndex ? null : h))
+                  : undefined
+              }
+            >
+              <span
+                className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full"
+                style={{ backgroundColor: item.color }}
+              />
+              <span className="min-w-0 flex-1 break-words leading-4 text-neu-muted">{item.label}</span>
+              <span className="shrink-0 text-end tabular-nums leading-4 text-neu-primary">
+                <span className="font-semibold">{valueTextFor(item.value)}</span>
+                <span className="ms-1.5 text-neu-faint">{pctTextFor(item.value)}</span>
+              </span>
+            </div>
+          );
+        })}
       </div>
+
+      {/* Tooltip */}
+      {hoveredItem && tip && (
+        <div
+          className="pointer-events-none absolute z-10"
+          style={{
+            left: tip.x,
+            top: tip.y,
+            transform: tip.above ? "translate(-50%, calc(-100% - 10px))" : "translate(-50%, 12px)",
+          }}
+          aria-hidden
+        >
+          <div
+            className="neu-elevated rounded-[var(--neu-radius-md)] bg-neu-bg px-2.5 py-1.5"
+            style={{ maxWidth: TOOLTIP_MAX_W }}
+          >
+            <p className="flex items-start gap-1.5 break-words text-xs font-semibold leading-4 text-neu-primary">
+              <span
+                className="mt-1 h-2 w-2 shrink-0 rounded-full"
+                style={{ backgroundColor: hoveredItem.color }}
+              />
+              {hoveredItem.label}
+            </p>
+            <p className="mt-0.5 text-xs tabular-nums leading-4 text-neu-muted">
+              {valueTextFor(hoveredItem.value)}{" "}
+              <span className="text-neu-faint">({pctTextFor(hoveredItem.value)})</span>
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -276,6 +659,7 @@ export function LineChart({
   color = "var(--neu-accent-line)",
   className,
 }: LineChartProps) {
+  const gradientId = React.useId().replace(/:/g, "");
   if (data.length === 0) return null;
 
   const max = Math.max(...data, 1);
@@ -285,15 +669,36 @@ export function LineChart({
   const points = data.map((val, i) => {
     const x = (i / Math.max(data.length - 1, 1)) * width;
     const y = height - ((val - min) / range) * (height - 4) - 2;
-    return `${x},${y}`;
+    return { x, y };
   });
-
-  const fillPoints = [`0,${height}`, ...points, `${width},${height}`].join(" ");
+  const pointStr = points.map((p) => `${p.x},${p.y}`).join(" ");
+  const fillPoints = [`0,${height}`, ...points.map((p) => `${p.x},${p.y}`), `${width},${height}`].join(" ");
+  const last = points[points.length - 1]!;
 
   return (
-    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} className={className}>
-      <polygon points={fillPoints} fill={color} opacity={0.1} />
-      <polyline points={points.join(" ")} fill="none" stroke={color} strokeWidth={1.5} strokeLinejoin="round" />
+    <svg
+      width={width}
+      height={height}
+      viewBox={`0 0 ${width} ${height}`}
+      className={className}
+      aria-hidden
+    >
+      <defs>
+        <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity={0.22} />
+          <stop offset="100%" stopColor={color} stopOpacity={0.02} />
+        </linearGradient>
+      </defs>
+      <polygon points={fillPoints} fill={`url(#${gradientId})`} />
+      <polyline
+        points={pointStr}
+        fill="none"
+        stroke={color}
+        strokeWidth={1.75}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle cx={last.x} cy={last.y} r={2.25} fill={color} />
     </svg>
   );
 }
