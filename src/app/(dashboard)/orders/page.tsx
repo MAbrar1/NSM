@@ -197,6 +197,26 @@ export default function OrdersPage() {
     setDateTo(isoDay(now));
   }
 
+  // Honours drill-down links (e.g. clicking a day bar on the sales report)
+  // and the global search deep-links:
+  //   /orders?from=YYYY-MM-DD&to=YYYY-MM-DD  pre-selects that range
+  //   /orders?search=NNN                     pre-fills the order search
+  React.useEffect(() => {
+    const sp = new URLSearchParams(window.location.search);
+    const from = sp.get("from") ?? "";
+    const to = sp.get("to") ?? "";
+    const initialSearch = sp.get("search") ?? "";
+    if (from || to) {
+      setDateFrom(from);
+      setDateTo(to);
+      setDatePreset("custom");
+    }
+    if (initialSearch) {
+      setSearch(initialSearch);
+      setSearchInput(initialSearch);
+    }
+  }, []);
+
   // Export dataset (all rows, not just the current page). Kept fresh on
   // every filter change so the KPI cards, export KPIs and the printed
   // ledger never show a previous filter's numbers.

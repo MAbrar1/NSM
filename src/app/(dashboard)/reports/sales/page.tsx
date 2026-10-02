@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { centsToMajorString } from "@/lib/money/money";
 import { formatCurrency, cn, percentDelta } from "@/lib/utils";
 import { lineQtyLabel } from "@/lib/products/units";
@@ -84,6 +85,7 @@ export default function SalesReportPage() {
   // Re-render (and re-format amounts) when the store currency syncs or changes.
   useStoreCurrency();
   const { t, dir } = useI18n();
+  const router = useRouter();
   const [data, setData] = React.useState<SalesData | null>(null);
   const [prevSummary, setPrevSummary] = React.useState<SalesData["summary"] | null>(null);
   const [loading, setLoading] = React.useState(true);
@@ -293,10 +295,12 @@ export default function SalesReportPage() {
     );
   };
 
-  // Prepare chart data
+  // Prepare chart data. Rows keep their raw date so a bar click can drill
+  // into that day's orders (see the onBarClick wiring below).
   const trendData = (data?.dailyTrends ?? []).map((t) => ({
     label: new Date(t.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
     value: t.revenue,
+    date: t.date,
   }));
 
   const categoryData = (data?.categories ?? []).slice(0, 8).map((c) => ({
@@ -490,7 +494,15 @@ export default function SalesReportPage() {
                 </div>
               </CardHeader>
               <CardContent>
-                <BarChart data={trendData} height={220} />
+                <BarChart
+                  data={trendData}
+                  height={220}
+                  onBarClick={(d) => {
+                    // Drill into the day's orders on the Orders ledger
+                    const day = String(d["date"] ?? "");
+                    if (day) router.push(`/orders?from=${day}&to=${day}`);
+                  }}
+                />
               </CardContent>
             </Card>
 

@@ -427,8 +427,12 @@ const DONUT_POP = 3; // px a hovered segment lifts outwards
 export function DonutChart({ data, size = 160, className, center }: DonutChartProps) {
   const measure = useTextMeasure();
   const wrapRef = React.useRef<HTMLDivElement | null>(null);
+  const svgRef = React.useRef<SVGSVGElement | null>(null);
   const [hover, setHover] = React.useState<number | null>(null); // data index
   const [tip, setTip] = React.useState<{ x: number; y: number; above: boolean } | null>(null);
+  // Roving tabindex over the segments — one tab stop, arrow keys walk them.
+  const [focusIndex, setFocusIndex] = React.useState(0);
+  const arcRefs = React.useRef<Array<SVGPathElement | null>>([]);
 
   const percent = React.useMemo(
     () => new Intl.NumberFormat("en-US", { style: "percent", maximumFractionDigits: 1 }),
@@ -515,7 +519,45 @@ export function DonutChart({ data, size = 160, className, center }: DonutChartPr
     });
   }
 
+  /** Tooltip position for a segment when it is reached by keyboard — the
+   *  midpoint of its arc, converted from SVG user units to wrapper pixels. */
+  function tipPositionAtSegment(dataIndex: number) {
+    const wrap = wrapRef.current;
+    const svg = svgRef.current;
+    const arc = arcs.find((a) => a.dataIndex === dataIndex);
+    if (!wrap || !svg || !arc) return null;
+    const wrapRect = wrap.getBoundingClientRect();
+    const svgRect = svg.getBoundingClientRect();
+    const rad = toRad(arc.mid);
+    const r = (radius + innerRadius) / 2;
+    const margin = Math.min(90, wrapRect.width / 2);
+    const rawX = svgRect.left - wrapRect.left + cx + r * Math.cos(rad);
+    const rawY = svgRect.top - wrapRect.top + cy + r * Math.sin(rad);
+    return {
+      x: Math.min(Math.max(rawX, margin), Math.max(margin, wrapRect.width - margin)),
+      y: Math.max(rawY, 8),
+      above: rawY >= 96,
+    };
+  }
+
+  function moveSegmentFocus(fromArcIndex: number, target: number | "first" | "last") {
+    const count = arcs.length;
+    if (count === 0) return;
+    const nextIndex =
+      target === "first"
+        ? 0
+        : target === "last"
+          ? count - 1
+          : (fromArcIndex + target + count) % count;
+    setFocusIndex(nextIndex);
+    arcRefs.current[nextIndex]?.focus();
+    const arc = arcs[nextIndex]!;
+    setHover(arc.dataIndex);
+    setTip(tipPositionAtSegment(arc.dataIndex));
+  }
+
   const hoveredItem = hover !== null ? data[hover] : undefined;
+  const effectiveFocus = arcs.length > 0 ? Math.min(focusIndex, arcs.length - 1) : 0;
 
   return (
     <div
@@ -526,26 +568,35 @@ export function DonutChart({ data, size = 160, className, center }: DonutChartPr
       )}
     >
       <svg
+        ref={svgRef}
         width={size}
         height={size}
         viewBox={`0 0 ${size} ${size}`}
         className="shrink-0"
-        role="img"
+        role="group"
         aria-label={data
           .map((d) => `${d.label}: ${valueTextFor(d.value)} (${pctTextFor(d.value)})`)
           .join(", ")}
       >
-        {arcs.map((arc) => {
+        {arcs.map((arc, arcIndex) => {
           const isHovered = hover === arc.dataIndex;
           const rad = toRad(arc.mid);
           const dx = Math.cos(rad) * DONUT_POP;
           const dy = Math.sin(rad) * DONUT_POP;
+          const label = `${arc.item.label}: ${valueTextFor(arc.item.value)} (${pctTextFor(arc.item.value)})`;
           return (
             <path
               key={arc.dataIndex}
+              ref={(el) => {
+                arcRefs.current[arcIndex] = el;
+              }}
               d={arc.path}
               fill={arc.item.color}
               opacity={hover === null || isHovered ? 1 : 0.5}
+              tabIndex={arcIndex === effectiveFocus ? 0 : -1}
+              role="img"
+              aria-label={label}
+              className="neu-focus"
               style={{
                 transform: isHovered ? `translate(${dx}px, ${dy}px)` : undefined,
                 transition: "transform 150ms ease, opacity 150ms ease",
@@ -556,8 +607,31 @@ export function DonutChart({ data, size = 160, className, center }: DonutChartPr
                 setTip(null);
               }}
               onMouseMove={handleSegmentMove}
+              onFocus={() => {
+                setHover(arc.dataIndex);
+                setTip(tipPositionAtSegment(arc.dataIndex));
+              }}
+              onBlur={() => {
+                setHover((h) => (h === arc.dataIndex ? null : h));
+                setTip(null);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+                  e.preventDefault();
+                  moveSegmentFocus(arcIndex, 1);
+                } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+                  e.preventDefault();
+                  moveSegmentFocus(arcIndex, -1);
+                } else if (e.key === "Home") {
+                  e.preventDefault();
+                  moveSegmentFocus(arcIndex, "first");
+                } else if (e.key === "End") {
+                  e.preventDefault();
+                  moveSegmentFocus(arcIndex, "last");
+                }
+              }}
             >
-              <title>{`${arc.item.label}: ${valueTextFor(arc.item.value)} (${pctTextFor(arc.item.value)})`}</title>
+              <title>{label}</title>
             </path>
           );
         })}

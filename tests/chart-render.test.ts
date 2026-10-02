@@ -104,6 +104,21 @@ test("DonutChart: legend wraps full labels and shows exact percentages", () => {
   assert.ok(!html.includes("NaN"), "NaN leaked into the donut");
 });
 
+test("DonutChart: segments are keyboard-reachable with a roving tabindex", () => {
+  const donut = [
+    { label: "Cash payments", value: 900000, color: "var(--neu-ink-green)" },
+    { label: "Card payments", value: 600000, color: "var(--neu-accent-line)" },
+  ];
+  const html = renderText(React.createElement(DonutChart, { data: donut }));
+  // Exactly one tab stop (roving tabindex), segments announce themselves.
+  assert.equal((html.match(/tabindex="0"/g) ?? []).length, 1, "expected one tab stop");
+  assert.ok(html.includes('tabindex="-1"'), "other segments stay off the tab order");
+  assert.ok(html.includes('role="img" aria-label="Cash payments: $9,000.00 (60%)"'),
+    "segment aria-label missing");
+  // Zero-value rows are never focusable (they draw no segment).
+  assert.ok(!html.includes('aria-label="Zero'), "zero rows must not render segments");
+});
+
 test("LineChart: renders a polyline and end dot for a series", () => {
   const html = render(React.createElement(LineChart, { data: [3, 5, 4, 9] }));
   assert.ok(html.includes("<polyline"));
