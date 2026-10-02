@@ -296,10 +296,12 @@ export default function SalesReportPage() {
   };
 
   // Prepare chart data. Rows keep their raw date so a bar click can drill
-  // into that day's orders (see the onBarClick wiring below).
+  // into that day's orders (see the onBarClick wiring below), and their
+  // order count so the tooltip shows volume next to revenue.
   const trendData = (data?.dailyTrends ?? []).map((t) => ({
     label: new Date(t.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
     value: t.revenue,
+    orders: t.orders,
     date: t.date,
   }));
 

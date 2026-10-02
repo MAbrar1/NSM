@@ -579,6 +579,21 @@ export default function DashboardPage() {
   const heatmapMax = Math.max(1, ...(data?.weekHourly.map((h) => h.revenue) ?? [1]));
   const heatmapHasData = (data?.weekHourly ?? []).some((h) => h.revenue > 0);
 
+  // Roving-focus state for the heatmap grid (a11y): one tab stop for the
+  // whole grid, arrow keys walk cell-wise — the same interaction model as
+  // the donut segments. Defaults to today's row so Tab lands somewhere
+  // meaningful. Cells drill into the day's orders on click/Enter.
+  const [hmFocus, setHmFocus] = React.useState<{ row: number; col: number } | null>(null);
+  const hmGridRef = React.useRef<HTMLDivElement | null>(null);
+  const hmDefault = React.useMemo(() => {
+    const today = new Date().toISOString().split("T")[0];
+    const row = Math.max(
+      0,
+      heatmapRows.findIndex((r) => r.date === today)
+    );
+    return { row, col: 9 };
+  }, [heatmapRows]);
+
   const updatedLabel = updatedAt
     ? `${t("dashboard.updatedAt")} ${updatedAt.toLocaleTimeString(locale === "ur" ? "ur-PK" : "en-US", { hour: "2-digit", minute: "2-digit" })}`
     : t("dashboard.updatedAt");
@@ -1284,8 +1299,8 @@ export default function DashboardPage() {
                   ))}
                 </div>
                 {/* Day rows */}
-                <div className="mt-1.5 space-y-1">
-                  {heatmapRows.map((row) => {
+                <div ref={hmGridRef} className="mt-1.5 space-y-1">
+                  {heatmapRows.map((row, ri) => {
                     const isToday = row.date === new Date().toISOString().split("T")[0];
                     const dayLabel = new Date(`${row.date}T00:00:00`).toLocaleDateString(
                       locale === "ur" ? "ur-PK" : "en-US",
@@ -1309,26 +1324,57 @@ export default function DashboardPage() {
                             {formatCurrency(dayTotal)}
                           </span>
                         </span>
-                        {row.cells.map((cell) => {
+                        {row.cells.map((cell, ci) => {
                           const intensity = cell.revenue > 0 ? Math.max(0.08, Math.min(1, cell.revenue / heatmapMax)) : 0;
+                          const isRovingFocus = hmFocus
+                            ? hmFocus.row === ri && hmFocus.col === ci
+                            : ri === hmDefault.row && ci === hmDefault.col;
+                          const cellLabel = `${dayLabel} · ${hourLabel(cell.hour)} — ${formatCurrency(cell.revenue)} · ${cell.orders} ${t("dashboard.orders")}`;
                           return (
-                            <div
+                            <button
                               key={cell.hour}
-                              className="group/cell relative h-6 rounded-[3px] bg-neu-sunken transition-shadow hover:ring-2 hover:ring-neu-accent-line"
-                              title={`${dayLabel} · ${hourLabel(cell.hour)} — ${formatCurrency(cell.revenue)} · ${cell.orders} ${t("dashboard.orders")}`}
+                              type="button"
+                              data-hm-cell={`${ri}-${ci}`}
+                              tabIndex={isRovingFocus ? 0 : -1}
+                              className="group/cell relative h-6 rounded-[3px] bg-neu-sunken transition-shadow hover:ring-2 hover:ring-neu-accent-line neu-focus focus-visible:z-10"
+                              aria-label={cellLabel}
+                              title={cellLabel}
+                              onFocus={() => setHmFocus({ row: ri, col: ci })}
+                              onKeyDown={(e) => {
+                                // Grid roving focus: arrows move cell-wise with
+                                // clamping, Home/End jump within the row.
+                                const go = (r: number, c: number) => {
+                                  e.preventDefault();
+                                  setHmFocus({ row: r, col: c });
+                                  hmGridRef.current
+                                    ?.querySelector<HTMLButtonElement>(`[data-hm-cell="${r}-${c}"]`)
+                                    ?.focus();
+                                };
+                                if (e.key === "ArrowRight" && ci < 23) go(ri, ci + 1);
+                                else if (e.key === "ArrowLeft" && ci > 0) go(ri, ci - 1);
+                                else if (e.key === "ArrowDown" && ri < heatmapRows.length - 1) go(ri + 1, ci);
+                                else if (e.key === "ArrowUp" && ri > 0) go(ri - 1, ci);
+                                else if (e.key === "Home") go(ri, 0);
+                                else if (e.key === "End") go(ri, 23);
+                              }}
+                              onClick={() => {
+                                // Drill into the day's orders (same pattern as
+                                // the GitHub contribution heatmap).
+                                router.push(`/orders?from=${row.date}&to=${row.date}`);
+                              }}
                             >
                               <div
                                 className="absolute inset-0 rounded-[3px] bg-neu-accent-solid transition-opacity dark:bg-neu-accent-solid"
                                 style={{ opacity: intensity === 0 ? 0 : intensity }}
                               />
                               {cell.revenue > 0 && (
-                                <span className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-0 transition-opacity group-hover/cell:opacity-100">
+                                <span className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-0 transition-opacity group-hover/cell:opacity-100 group-focus-visible/cell:opacity-100">
                                   <span className="rounded bg-neu-scrim/80 px-1 py-px text-[9px] font-semibold text-white">
                                     {cell.orders}
                                   </span>
                                 </span>
                               )}
-                            </div>
+                            </button>
                           );
                         })}
                       </div>

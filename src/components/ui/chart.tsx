@@ -88,6 +88,8 @@ function roundedTopRect(x: number, y: number, w: number, h: number): string {
 
 // ─── Bar Chart ───
 // Rows may carry extra metadata (e.g. a raw month key) for drill-down.
+// An optional numeric `orders` per row is shown in the tooltip next to
+// the value ("Rs 1,234.56 · 7 orders") when present.
 type BarRow = { label: string; value: number; [key: string]: unknown };
 
 interface BarChartProps {
@@ -110,6 +112,7 @@ export function BarChart({
   onBarClick,
   className,
 }: BarChartProps) {
+  const { t } = useI18n();
   const measure = useTextMeasure();
   const wrapRef = React.useRef<HTMLDivElement | null>(null);
   const scrollRef = React.useRef<HTMLDivElement | null>(null);
@@ -207,6 +210,16 @@ export function BarChart({
   const p = plan!;
 
   const hoveredRow = hover !== null ? data[hover] : undefined;
+  const hoveredOrders =
+    hoveredRow && typeof hoveredRow["orders"] === "number" && Number.isFinite(hoveredRow["orders"])
+      ? (hoveredRow["orders"] as number)
+      : null;
+  const tooltipLine2 =
+    hoveredRow === undefined
+      ? ""
+      : hoveredOrders === null
+        ? formatValue(hoveredRow.value)
+        : `${formatValue(hoveredRow.value)} · ${hoveredOrders} ${t("dashboard.orders")}`;
   const scrollLeft = scrollRef.current?.scrollLeft ?? 0;
   const tipWidth = Math.min(TOOLTIP_MAX_W, Math.max(120, p.width - 16));
   const tipHalf = tipWidth / 2 + 4;
@@ -342,7 +355,15 @@ export function BarChart({
                   className={cn("neu-focus", onBarClick && "cursor-pointer")}
                   role={onBarClick ? "button" : undefined}
                   tabIndex={onBarClick ? 0 : undefined}
-                  aria-label={onBarClick ? `${d.label}: ${formatValue(d.value)}` : undefined}
+                  aria-label={
+                    onBarClick
+                      ? `${d.label}: ${
+                          typeof d["orders"] === "number" && Number.isFinite(d["orders"])
+                            ? `${formatValue(d.value)} · ${d["orders"]} orders`
+                            : formatValue(d.value)
+                        }`
+                      : undefined
+                  }
                   onMouseEnter={() => setHover(i)}
                   onMouseLeave={() => setHover((h) => (h === i ? null : h))}
                   onFocus={onBarClick ? () => setHover(i) : undefined}
@@ -359,7 +380,11 @@ export function BarChart({
                       : undefined
                   }
                 >
-                  <title>{`${d.label}: ${formatValue(d.value)}`}</title>
+                  <title>{`${d.label}: ${
+                    typeof d["orders"] === "number" && Number.isFinite(d["orders"])
+                      ? `${formatValue(d.value)} · ${d["orders"]} orders`
+                      : formatValue(d.value)
+                  }`}</title>
                 </rect>
               </g>
             );
@@ -385,9 +410,7 @@ export function BarChart({
             <p className="break-words text-xs font-semibold leading-4 text-neu-primary">
               {hoveredRow.label}
             </p>
-            <p className="mt-0.5 text-xs tabular-nums leading-4 text-neu-muted">
-              {formatValue(hoveredRow.value)}
-            </p>
+            <p className="mt-0.5 text-xs tabular-nums leading-4 text-neu-muted">{tooltipLine2}</p>
           </div>
         </div>
       )}

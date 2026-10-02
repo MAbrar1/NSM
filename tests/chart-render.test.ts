@@ -75,6 +75,18 @@ test("BarChart: full values are exact in titles and aria, compact on axis", () =
   assert.ok(!html.includes("123.5K"), "raw-cent compact label leaked");
 });
 
+test("BarChart: rows with an orders count show it in the tooltip text", () => {
+  const withOrders = BARS.map((b, i) => ({ ...b, orders: i + 1 }));
+  const html = renderText(React.createElement(BarChart, { data: withOrders }));
+  // "· N orders" appears next to the value in <title>s / aria labels.
+  assert.ok(html.includes("· 1 orders"), "orders count missing from tooltip text");
+  assert.ok(html.includes("$1,234.56 · 1 orders"), "value+orders pair missing");
+  // Rows without the field keep the plain value (no "undefined orders").
+  const plain = renderText(React.createElement(BarChart, { data: BARS }));
+  assert.ok(plain.includes("$1,234.56"));
+  assert.ok(!plain.includes("orders"), "plain rows must not grow an orders label");
+});
+
 test("BarChart: a dense series keeps its axis and edge labels", () => {
   const dense = Array.from({ length: 31 }, (_, i) => ({
     label: `Jan ${i + 1}`,
