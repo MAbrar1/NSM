@@ -444,9 +444,9 @@ export default function InventoryReportPage() {
           {activeTab === "overview" && (
             <div className="grid gap-6 lg:grid-cols-2">
               {/* Category Chart */}
-              <Card>
+              <Card className="flex flex-col">
                 <CardHeader><CardTitle>{t("reports.stockByCategory")}</CardTitle></CardHeader>
-                <CardContent><BarChart data={categoryChartData} height={250} color="var(--neu-accent-line)" /></CardContent>
+                <CardContent className="flex flex-col"><BarChart data={categoryChartData} height={250} color="var(--neu-accent-line)" fillHeight /></CardContent>
               </Card>
 
               {/* Category Table */}

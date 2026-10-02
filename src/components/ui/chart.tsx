@@ -32,6 +32,14 @@ const GUTTER_MAX = 140;
 const PLOT_TOP = 16; // head-room for the tallest bar's value label
 const MAX_VISIBLE_X_LABELS = 24;
 const TOOLTIP_MAX_W = 240;
+const SCROLLBAR_RESERVE = 14; // px stolen by a horizontal scrollbar
+const AVG_MIN_BARS = 3; // the mean line needs at least a few bars to mean anything
+
+/** Compact plain-number formatter for sparkline min/max labels (non-money). */
+const compactNumber = new Intl.NumberFormat("en-US", {
+  notation: "compact",
+  maximumFractionDigits: 1,
+});
 
 const useIsomorphicLayoutEffect =
   typeof window !== "undefined" ? React.useLayoutEffect : React.useEffect;
@@ -99,6 +107,14 @@ interface BarChartProps {
   formatValue?: (v: number) => string;
   /** Show compact values (12.3K) atop bars/axis instead of full currency. */
   compactValueLabels?: boolean;
+  /** Fill the parent's height instead of a fixed pixel height — for cards
+   *  that stretch in a grid row. The parent must have a real height. */
+  fillHeight?: boolean;
+  /** Draw a dashed mean guide across the plot (right-edge mini label). */
+  showAverage?: boolean;
+  /** 24-slot hour series: labels get sparser (every other hour reads fine).
+   *  The tooltip always shows the full label for skipped slots. */
+  sparseLabels?: boolean;
   onBarClick?: (entry: BarRow) => void;
   className?: string;
 }
@@ -109,6 +125,9 @@ export function BarChart({
   color = "var(--neu-accent-line)",
   formatValue = formatCurrency,
   compactValueLabels = false,
+  fillHeight = false,
+  showAverage = false,
+  sparseLabels = false,
   onBarClick,
   className,
 }: BarChartProps) {
@@ -117,12 +136,17 @@ export function BarChart({
   const wrapRef = React.useRef<HTMLDivElement | null>(null);
   const scrollRef = React.useRef<HTMLDivElement | null>(null);
   const [containerWidth, setContainerWidth] = React.useState(0);
+  const [containerHeight, setContainerHeight] = React.useState(0);
   const [hover, setHover] = React.useState<number | null>(null);
+  const gradientId = React.useId().replace(/:/g, "");
 
   useIsomorphicLayoutEffect(() => {
     const el = wrapRef.current;
     if (!el) return;
-    const update = () => setContainerWidth(el.clientWidth);
+    const update = () => {
+      setContainerWidth(el.clientWidth);
+      setContainerHeight(el.clientHeight);
+    };
     update();
     if (typeof ResizeObserver === "undefined") {
       window.addEventListener("resize", update);
@@ -145,6 +169,10 @@ export function BarChart({
       compactValueLabels ? formatCurrencyCompact(v) : formatValue(v);
 
     const maxVal = data.reduce((m, d) => (Number.isFinite(d.value) ? Math.max(m, d.value) : m), 0);
+    const peakIndex = data.reduce((best, d, i) => (d.value > data[best]!.value ? i : best), 0);
+    const positive = data.filter((d) => Number.isFinite(d.value) && d.value > 0);
+    const mean = positive.length > 0 ? positive.reduce((s, d) => s + d.value, 0) / positive.length : 0;
+    const drawAverage = showAverage && n >= AVG_MIN_BARS && positive.length > 0 && mean > 0 && mean < maxVal;
     const { ticks, niceMax } = niceTicks(maxVal, 4);
     const scaleMax = Math.max(1, niceMax);
 
@@ -162,16 +190,26 @@ export function BarChart({
     const plotW = Math.max(plotViewport, n * MIN_SLOT);
     const scrolls = plotW > plotViewport + 1;
 
+    // Fluid mode: take the card's measured height (minus a scrollbar
+    // reserve) so the chart fills the grid row with no dead space.
+    const svgHeight = fillHeight
+      ? Math.max(120, (containerHeight || height) - (scrolls ? SCROLLBAR_RESERVE : 0))
+      : height + (scrolls ? SCROLLBAR_RESERVE : 0);
+
     const xPlan = planXLabels(
       data.map((d) => d.label),
       slot,
       (t) => measure(t),
-      { allowWrap: n <= 16, maxLabelCount: MAX_VISIBLE_X_LABELS }
+      {
+        allowWrap: n <= 16,
+        maxLabelCount: sparseLabels ? 12 : MAX_VISIBLE_X_LABELS,
+        padding: sparseLabels ? 10 : 6,
+      }
     );
     const shownLabels = new Set(selectLabelIndices(n, xPlan.step));
 
     const xAxisH = xPlan.lines ? 32 : 20;
-    const plotBottom = height - xAxisH;
+    const plotBottom = svgHeight - xAxisH;
     const plotH = Math.max(10, plotBottom - PLOT_TOP);
     const barW = Math.min(MAX_BAR_W, Math.max(4, slot - BAR_GAP));
 
@@ -185,6 +223,13 @@ export function BarChart({
       n <= 20
         ? data.map((d) => `${d.label}: ${formatValue(d.value)}`).join(", ")
         : `Bar chart with ${n} points, from ${data[0]!.label} to ${data[n - 1]!.label}`;
+
+    const avgLabel = drawAverage ? formatLabel(mean) : null;
+    const ariaLabelFull =
+      (n <= 20
+        ? data.map((d) => `${d.label}: ${formatValue(d.value)}`).join(", ")
+        : `Bar chart with ${n} points, from ${data[0]!.label} to ${data[n - 1]!.label}`) +
+      (avgLabel ? `. Average ${avgLabel}.` : "");
 
     return {
       n,
@@ -201,12 +246,18 @@ export function BarChart({
       plotH,
       barW,
       valueLabelsFit,
-      ariaLabel,
+      svgHeight,
+      peakIndex,
+      drawAverage,
+      mean,
+      avgLabel,
+      ariaLabel: ariaLabelFull,
       width,
     };
-  }, [data, containerWidth, height, compactValueLabels, formatValue, measure]);
+  }, [data, containerWidth, containerHeight, height, compactValueLabels, formatValue, measure, fillHeight, showAverage, sparseLabels]);
 
-  if (data.length === 0) return <EmptyChart height={height} className={className} />;
+  if (data.length === 0)
+    return <EmptyChart height={height} fill={fillHeight} className={className} />;
   const p = plan!;
 
   const hoveredRow = hover !== null ? data[hover] : undefined;
@@ -239,7 +290,7 @@ export function BarChart({
   return (
     <div ref={wrapRef} className={cn("relative flex", className)}>
       {/* Sticky y-axis gutter — never scrolls with the plot */}
-      <svg width={p.gutter} height={height} aria-hidden className="shrink-0">
+      <svg width={p.gutter} height={p.svgHeight} aria-hidden className="shrink-0">
         {p.ticks.map((tick) => (
           <text
             key={tick}
@@ -257,15 +308,23 @@ export function BarChart({
       <div
         ref={scrollRef}
         className="min-w-0 flex-1 overflow-x-auto overscroll-x-contain [scrollbar-width:thin]"
-        style={{ height: height + (p.scrolls ? 12 : 0) }}
+        style={{ height: p.svgHeight }}
         onScroll={() => setHover(null)}
       >
         <svg
           width={p.plotW}
-          height={height}
+          height={p.svgHeight}
           role={onBarClick ? "group" : "img"}
           aria-label={p.ariaLabel}
         >
+          {/* Vertical ink gradient — bars get depth without leaving the
+              token system (top = full color, bottom = soft wash). */}
+          <defs>
+            <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={color} />
+              <stop offset="100%" stopColor={color} stopOpacity={0.3} />
+            </linearGradient>
+          </defs>
           {/* Grid lines + baseline (horizontal — unaffected by scrolling) */}
           {p.ticks.map((tick) => (
             <line
@@ -287,6 +346,32 @@ export function BarChart({
             className="neu-chart-baseline"
             aria-hidden
           />
+
+          {/* Mean guide — dashed line + compact label at the right edge.
+              Answers "is this bar above or below average?" at a glance. */}
+          {p.drawAverage && (
+            <g aria-hidden className="fade-in-30">
+              <line
+                x1={0}
+                x2={p.plotW}
+                y1={yFor(p.mean)}
+                y2={yFor(p.mean)}
+                stroke={color}
+                strokeWidth={1}
+                strokeDasharray="2 4"
+                opacity={0.55}
+              />
+              <text
+                x={p.plotW - 4}
+                y={yFor(p.mean) - 4}
+                textAnchor="end"
+                fontWeight={600}
+                className="neu-chart-axis"
+              >
+                {p.avgLabel}
+              </text>
+            </g>
+          )}
 
           {data.map((d, i) => {
             const slotX = i * p.slot;
@@ -315,10 +400,25 @@ export function BarChart({
                 {barH > 0 && (
                   <path
                     d={roundedTopRect(barX, barY, p.barW, barH)}
-                    fill={color}
+                    fill={`url(#${gradientId})`}
+                    stroke={color}
+                    strokeWidth={1}
                     className="neu-chart-bar-enter transition-opacity duration-150"
                     style={{ animationDelay: `${Math.min(i * 24, 360)}ms` }}
-                    opacity={hover === null || isHovered ? 0.92 : 0.45}
+                    opacity={hover === null || isHovered ? 1 : 0.5}
+                    aria-hidden
+                  />
+                )}
+                {/* Peak crown — the max bar gets a solid top cap so the eye
+                    lands on the champion first. */}
+                {i === p.peakIndex && barH >= 12 && (
+                  <rect
+                    x={barX}
+                    y={barY}
+                    width={p.barW}
+                    height={3}
+                    rx={1.5}
+                    fill={color}
                     aria-hidden
                   />
                 )}
@@ -442,13 +542,15 @@ interface DonutChartProps {
     value: string;
     label: string;
   };
+  /** Render the side legend (default true). Pages that already list the
+   *  values in their own table turn it off to avoid saying everything twice. */
+  legend?: boolean;
 }
 
 const DONUT_GAP_DEG = 1; // visual separation between segments
 const DONUT_POP = 3; // px a hovered segment lifts outwards
 
-export function DonutChart({ data, size = 160, className, center }: DonutChartProps) {
-  const measure = useTextMeasure();
+export function DonutChart({ data, size = 160, className, center, legend = true }: DonutChartProps) {
   const wrapRef = React.useRef<HTMLDivElement | null>(null);
   const svgRef = React.useRef<SVGSVGElement | null>(null);
   const [hover, setHover] = React.useState<number | null>(null); // data index
@@ -456,6 +558,7 @@ export function DonutChart({ data, size = 160, className, center }: DonutChartPr
   // Roving tabindex over the segments — one tab stop, arrow keys walk them.
   const [focusIndex, setFocusIndex] = React.useState(0);
   const arcRefs = React.useRef<Array<SVGPathElement | null>>([]);
+  const measure = useTextMeasure();
 
   const percent = React.useMemo(
     () => new Intl.NumberFormat("en-US", { style: "percent", maximumFractionDigits: 1 }),
@@ -519,9 +622,21 @@ export function DonutChart({ data, size = 160, className, center }: DonutChartPr
       Number.isFinite(item.value) && item.value > 0 ? dataIndex : null,
   }));
 
+  const hoveredItem = hover !== null ? data[hover] : undefined;
+  const effectiveFocus = arcs.length > 0 ? Math.min(focusIndex, arcs.length - 1) : 0;
+
+  // Elite touch: while a segment is hovered/focused the CENTER becomes a
+  // live readout for that slice (value + share), reverting to the total on
+  // leave — the fitted font sizing below absorbs any length difference.
+  const activeSegment = hoveredItem && hoveredItem.value > 0 ? hoveredItem : null;
+  const centerValue = activeSegment
+    ? valueTextFor(activeSegment.value)
+    : center?.value ?? formatCurrency(total);
+  const centerLabel = activeSegment
+    ? pctTextFor(activeSegment.value)
+    : center?.label ?? "Total";
+
   // Center text shrinks to fit the donut hole instead of overflowing it.
-  const centerValue = center?.value ?? formatCurrency(total);
-  const centerLabel = center?.label ?? "Total";
   const hole = innerRadius * 2;
   const fitFont = (text: string, maxW: number, base: number, min: number, weight: number) => {
     const per100 = measure(text, weight, 100);
@@ -579,9 +694,6 @@ export function DonutChart({ data, size = 160, className, center }: DonutChartPr
     setTip(tipPositionAtSegment(arc.dataIndex));
   }
 
-  const hoveredItem = hover !== null ? data[hover] : undefined;
-  const effectiveFocus = arcs.length > 0 ? Math.min(focusIndex, arcs.length - 1) : 0;
-
   return (
     <div
       ref={wrapRef}
@@ -595,7 +707,7 @@ export function DonutChart({ data, size = 160, className, center }: DonutChartPr
         width={size}
         height={size}
         viewBox={`0 0 ${size} ${size}`}
-        className="shrink-0"
+        className="neu-chart-donut-enter shrink-0"
         role="group"
         aria-label={data
           .map((d) => `${d.label}: ${valueTextFor(d.value)} (${pctTextFor(d.value)})`)
@@ -676,7 +788,12 @@ export function DonutChart({ data, size = 160, className, center }: DonutChartPr
 
       {/* Legend — full width on mobile, side-by-side on sm+.
           Labels wrap; values and percentages stay right-aligned. */}
-      <div className="w-full min-w-0 space-y-1 sm:w-auto sm:flex-1">
+      <div
+        className={cn(
+          "w-full min-w-0 space-y-1 sm:w-auto sm:flex-1",
+          !legend && "hidden"
+        )}
+      >
         {legendItems.map(({ item, dataIndex }, index) => {
           const isHovered = dataIndex !== null && hover === dataIndex;
           return (
@@ -747,6 +864,10 @@ interface LineChartProps {
   height?: number;
   color?: string;
   className?: string;
+  /** Larger stroke + area + first/last labels + peak dot for hero cards. */
+  axis?: boolean;
+  /** Fill the parent's height instead of a fixed pixel height. */
+  fillHeight?: boolean;
 }
 
 export function LineChart({
@@ -755,58 +876,101 @@ export function LineChart({
   height = 40,
   color = "var(--neu-accent-line)",
   className,
+  axis = false,
+  fillHeight = false,
 }: LineChartProps) {
   const gradientId = React.useId().replace(/:/g, "");
+  const wrapRef = React.useRef<HTMLDivElement | null>(null);
+  const [box, setBox] = React.useState({ w: width, h: height });
+
+  useIsomorphicLayoutEffect(() => {
+    if (!fillHeight) return;
+    const el = wrapRef.current;
+    if (!el) return;
+    const update = () => setBox({ w: el.clientWidth || width, h: el.clientHeight || height });
+    update();
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [fillHeight, width, height]);
+
   if (data.length === 0) return null;
 
+  const w = fillHeight ? Math.max(80, box.w) : width;
+  const h = fillHeight ? Math.max(40, box.h) : height;
+  const padX = axis ? 2 : 0;
   const max = Math.max(...data, 1);
   const min = Math.min(...data, 0);
   const range = max - min || 1;
+  const peakIndex = data.reduce((best, v, i) => (v > data[best]! ? i : best), 0);
 
   const points = data.map((val, i) => {
-    const x = (i / Math.max(data.length - 1, 1)) * width;
-    const y = height - ((val - min) / range) * (height - 4) - 2;
+    const x = padX + (i / Math.max(data.length - 1, 1)) * (w - padX * 2);
+    const y = h - ((val - min) / range) * (h - 4) - 2;
     return { x, y };
   });
   const pointStr = points.map((p) => `${p.x},${p.y}`).join(" ");
-  const fillPoints = [`0,${height}`, ...points.map((p) => `${p.x},${p.y}`), `${width},${height}`].join(" ");
+  const fillPoints = [`0,${h}`, ...points.map((p) => `${p.x},${p.y}`), `${w},${h}`].join(" ");
   const last = points[points.length - 1]!;
+  const peak = points[peakIndex]!;
 
   return (
-    <svg
-      width={width}
-      height={height}
-      viewBox={`0 0 ${width} ${height}`}
-      className={className}
-      aria-hidden
-    >
-      <defs>
-        <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity={0.22} />
-          <stop offset="100%" stopColor={color} stopOpacity={0.02} />
-        </linearGradient>
-      </defs>
-      <polygon points={fillPoints} fill={`url(#${gradientId})`} />
-      <polyline
-        points={pointStr}
-        fill="none"
-        stroke={color}
-        strokeWidth={1.75}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <circle cx={last.x} cy={last.y} r={2.25} fill={color} />
-    </svg>
+    <div ref={wrapRef} className={cn(!fillHeight && "contents", className)}>
+      <svg
+        width={w}
+        height={h}
+        viewBox={`0 0 ${w} ${h}`}
+        className={fillHeight ? "block" : undefined}
+        aria-hidden
+      >
+        <defs>
+          <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={color} stopOpacity={0.22} />
+            <stop offset="100%" stopColor={color} stopOpacity={0.02} />
+          </linearGradient>
+        </defs>
+        <polygon points={fillPoints} fill={`url(#${gradientId})`} />
+        <polyline
+          points={pointStr}
+          fill="none"
+          stroke={color}
+          strokeWidth={axis ? 2.25 : 1.75}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        {axis && peak.y <= last.y && <circle cx={peak.x} cy={peak.y} r={2.75} fill={color} />}
+        <circle cx={last.x} cy={last.y} r={axis ? 2.75 : 2.25} fill={color} />
+        {axis && (
+          <>
+            <text x={0} y={h - 2} className="neu-chart-axis" aria-hidden>
+              {compactNumber.format(min)}
+            </text>
+            <text x={w} y={10} textAnchor="end" className="neu-chart-axis" aria-hidden>
+              {compactNumber.format(max)}
+            </text>
+          </>
+        )}
+      </svg>
+    </div>
   );
 }
 
 // ─── Empty Chart Placeholder ───
-function EmptyChart({ height = 200, className }: { height?: number; className?: string }) {
+function EmptyChart({
+  height = 200,
+  fill = false,
+  className,
+}: {
+  height?: number;
+  fill?: boolean;
+  className?: string;
+}) {
   const { t } = useI18n();
   return (
     <div
       className={cn("neu-inset flex items-center justify-center", className)}
-      style={{ height }}
+      style={fill ? undefined : { height }}
     >
       <p className="text-sm text-neu-muted">{t("common.noData")}</p>
     </div>

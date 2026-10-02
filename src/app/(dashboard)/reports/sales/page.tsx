@@ -478,7 +478,7 @@ export default function SalesReportPage() {
           {/* Charts Row */}
           <div className="grid gap-6 lg:grid-cols-3">
             {/* Revenue Trend */}
-            <Card className="lg:col-span-2">
+            <Card className="flex flex-col lg:col-span-2">
               <CardHeader>
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <CardTitle>{t("reports.revenueTrend")}</CardTitle>
@@ -495,10 +495,12 @@ export default function SalesReportPage() {
                   )}
                 </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="flex flex-col">
                 <BarChart
                   data={trendData}
                   height={220}
+                  fillHeight
+                  showAverage
                   onBarClick={(d) => {
                     // Drill into the day's orders on the Orders ledger
                     const day = String(d["date"] ?? "");

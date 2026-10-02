@@ -181,8 +181,12 @@ still win at the call site.
   data). Measured real-pixel SVG (no viewBox text scaling); x-labels wrap
   (≤ 2 lines) then step, never truncate; dense series scroll under a sticky
   y-gutter; hover/focus shows an elevated tooltip plus a wash column; bars
-  grow once via `.neu-chart-bar-enter` (transform-only, disabled under
-  `prefers-reduced-motion`).
+  grow once via `.neu-chart-bar-enter`, the donut sweeps in via
+  `.neu-chart-donut-enter` (transform-only, disabled under
+  `prefers-reduced-motion`). `fillHeight` lets a chart stretch with its
+  grid card (no dead space below); `showAverage` draws a dashed mean guide;
+  the peak bar wears a solid crown; hovering a donut slice turns the
+  center into a live value/share readout.
   Colour variants are **ink** (`text-neu-ink-*`), so the 12px labels clear AA.
   `.neu-badge-solid` is the filled escape hatch: accent fill + near-black same-hue
   ink (4.97–11.90:1).

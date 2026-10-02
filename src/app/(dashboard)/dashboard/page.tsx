@@ -11,7 +11,7 @@ import { useStoreCurrency } from "@/components/providers/currency-provider";
 import { useWarehouseStore } from "@/stores/warehouse-store";
 import { useDashboardPrefsStore, commitDashboardPrefs } from "@/stores/settings-store";
 import { formatCurrency, cn, percentDelta, getInitials } from "@/lib/utils";
-import { BarChart, DonutChart, monthRange } from "@/components/ui/chart";
+import { BarChart, DonutChart, LineChart, monthRange } from "@/components/ui/chart";
 import {
   StatCard,
   StatIcon,
@@ -579,6 +579,33 @@ export default function DashboardPage() {
   const heatmapMax = Math.max(1, ...(data?.weekHourly.map((h) => h.revenue) ?? [1]));
   const heatmapHasData = (data?.weekHourly ?? []).some((h) => h.revenue > 0);
 
+  // Weekday revenue mix (Mon → Sun) — rolled up from the same weekHourly
+  // series the heatmap uses, so it costs zero extra fetches.
+  const weekdayDonut = React.useMemo(() => {
+    const byDow = new Map<number, number>();
+    for (const h of data?.weekHourly ?? []) {
+      const dow = new Date(`${h.date}T00:00:00`).getDay(); // 0 = Sun
+      byDow.set(dow, (byDow.get(dow) ?? 0) + h.revenue);
+    }
+    if (byDow.size === 0) return [];
+    const order = [1, 2, 3, 4, 5, 6, 0]; // Monday first — business week
+    const cycle = [
+      "var(--neu-accent-line)",
+      "var(--neu-ink-green)",
+      "var(--neu-ink-amber)",
+      "var(--neu-ink-violet)",
+      "var(--neu-ink-red)",
+    ];
+    return order.map((dow, i) => ({
+      label: new Date(2024, 0, 7 + dow).toLocaleDateString(
+        locale === "ur" ? "ur-PK" : "en-US",
+        { weekday: "short" }
+      ),
+      value: byDow.get(dow) ?? 0,
+      color: cycle[i % cycle.length]!,
+    }));
+  }, [data, locale]);
+
   // Roving-focus state for the heatmap grid (a11y): one tab stop for the
   // whole grid, arrow keys walk cell-wise — the same interaction model as
   // the donut segments. Defaults to today's row so Tab lands somewhere
@@ -814,7 +841,7 @@ export default function DashboardPage() {
       {/* ─── Revenue trend + low stock + live activity ─── */}
       <div className="grid gap-6 lg:grid-cols-3">
         {/* 7-day revenue trend */}
-        <Card className="lg:col-span-2 lg:row-span-1">
+        <Card className="flex flex-col lg:col-span-2 lg:row-span-1">
           <CardHeader>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <CardTitle className="flex items-center gap-2">
@@ -836,7 +863,7 @@ export default function DashboardPage() {
               )}
             </div>
           </CardHeader>
-          <CardContent className="transition-opacity duration-300">
+          <CardContent className="flex min-h-[190px] flex-1 flex-col transition-opacity duration-300">
             {!hasLoadedOnce ? (
               <div className="skeleton h-[190px] w-full rounded-lg" />
             ) : weekTrendData.length === 0 || weekTrendData.every((d) => d.value === 0) ? (
@@ -844,7 +871,7 @@ export default function DashboardPage() {
                 <p className="text-sm text-neu-faint">{t("dashboard.noWeekData")}</p>
               </div>
             ) : (
-              <BarChart data={weekTrendData} height={190} compactValueLabels />
+              <BarChart data={weekTrendData} height={190} compactValueLabels fillHeight showAverage />
             )}
           </CardContent>
         </Card>
@@ -1005,7 +1032,7 @@ export default function DashboardPage() {
       </div>
 
       {/* ─── Sales by hour (today) ─── */}
-      <Card>
+      <Card className="flex flex-col">
         <CardHeader>
           <div className="flex flex-wrap items-center justify-between gap-2">
             <CardTitle className="flex items-center gap-2">
@@ -1034,7 +1061,7 @@ export default function DashboardPage() {
             )}
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex min-h-[150px] flex-1 flex-col">
           {!hasLoadedOnce ? (
             <div className="skeleton h-[150px] w-full rounded-lg" />
           ) : !hasHourlyData ? (
@@ -1049,7 +1076,15 @@ export default function DashboardPage() {
               }
             />
           ) : (
-            <BarChart data={hourlyData} height={150} color="var(--neu-accent-line)" compactValueLabels />
+            <BarChart
+              data={hourlyData}
+              height={150}
+              color="var(--neu-accent-line)"
+              compactValueLabels
+              fillHeight
+              showAverage
+              sparseLabels
+            />
           )}
         </CardContent>
       </Card>
@@ -1129,7 +1164,7 @@ export default function DashboardPage() {
       {/* ─── Refund analytics — trend (6 months) + top reasons ─── */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Refund trend */}
-        <Card>
+        <Card className="flex flex-col">
           <CardHeader>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <CardTitle className="flex items-center gap-2">
@@ -1155,7 +1190,7 @@ export default function DashboardPage() {
               </Link>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex min-h-[190px] flex-1 flex-col">
             {!hasLoadedOnce ? (
               <div className="skeleton h-[190px] w-full rounded-lg" />
             ) : !hasRefundData ? (
@@ -1175,6 +1210,8 @@ export default function DashboardPage() {
                 height={190}
                 color="var(--neu-ink-red)"
                 compactValueLabels
+                fillHeight
+                showAverage
                 onBarClick={(d) => {
                   // Drill into the month's refunds on the Refunds ledger
                   const range = monthRange(String(d["month"] ?? ""));
@@ -1246,8 +1283,8 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      {/* ─── Sales heatmap — last 7 days × 24 hours ─── */}
-      <Card>
+      {/* ─── Sales heatmap — last 7 days × 24 hours + weekday mix donut ─── */}
+      <Card className="flex flex-col">
         <CardHeader>
           <div className="flex flex-wrap items-center justify-between gap-2">
             <CardTitle className="flex items-center gap-2">
@@ -1272,7 +1309,7 @@ export default function DashboardPage() {
             )}
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex min-h-[210px] flex-1 flex-col justify-center">
           {!hasLoadedOnce ? (
             <div className="skeleton h-[210px] w-full rounded-lg" />
           ) : !heatmapHasData ? (
@@ -1382,6 +1419,21 @@ export default function DashboardPage() {
                   })}
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* Weekday revenue mix — which day of the week earns most,
+              derived from the weekHourly series already fetched. Hovering
+              a slice lights its weekday in the center. */}
+          {heatmapHasData && weekdayDonut.length > 0 && (
+            <div className="mt-6 border-t border-neu-hairline pt-5">
+              <div className="mb-2 flex items-center justify-between">
+                <p className="text-xs font-semibold uppercase tracking-wider text-neu-faint">
+                  {t("dashboard.weekdayMix")}
+                </p>
+                <p className="text-xs text-neu-faint">{t("dashboard.weekdayMixSub")}</p>
+              </div>
+              <DonutChart data={weekdayDonut} size={132} legend={false} />
             </div>
           )}
         </CardContent>

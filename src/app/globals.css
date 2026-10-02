@@ -551,6 +551,11 @@
   from { transform: scaleY(0.04); }
   to   { transform: scaleY(1); }
 }
+/* Donut sweeps open once on mount (transform-only, same rationale). */
+@keyframes neuChartDonutIn {
+  from { transform: rotate(-72deg) scale(0.94); }
+  to   { transform: rotate(0deg)   scale(1); }
+}
 
 @layer components {
 
@@ -980,6 +985,12 @@
     transform-origin: bottom;
     animation: neuChartBarGrow 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
+  /* Donut entrance — a one-shot sweep from the top. */
+  .neu-chart-donut-enter {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: neuChartDonutIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
 
   /* ─── Golden overrides for shared chart primitives ───
      The chart recipes read --neu-* tokens, so Golden just re-points the
@@ -1366,7 +1377,8 @@
   .neu-dialog-panel,
   .is-success,
   .is-status-in,
-  .neu-chart-bar-enter { animation: none; }
+  .neu-chart-bar-enter,
+  .neu-chart-donut-enter { animation: none; }
 }
 
 /* ═══════════════════════════════════════════════════════════════

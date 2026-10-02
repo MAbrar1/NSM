@@ -253,6 +253,8 @@
     "noCustomerData": "No customer data yet.",
     "noDues": "All bills settled",
     "noHeatmapData": "No sales activity in the last 7 days",
+    "weekdayMix": "Weekday revenue mix",
+    "weekdayMixSub": "This week, Mon → Sun",
     "noHourData": "No sales recorded yet today",
     "noOrderData": "No orders yet.",
     "noOrdersToday": "No orders yet today",
