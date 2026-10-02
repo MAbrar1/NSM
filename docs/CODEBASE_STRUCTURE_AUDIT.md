@@ -18,7 +18,7 @@ Excluded from all output: `node_modules`, `.next`, `.git`, `dist`, `build`, `out
 ├── .prettierrc
 ├── CODEBASE_STRUCTURE_AUDIT.md
 ├── eslint.config.mjs
-├── next-env.d.ts
+├── next-env.d.ts (generated; gitignored — see .gitignore)
 ├── next.config.ts
 ├── NSM_PRINT_TASK.md
 ├── package.json
@@ -505,7 +505,7 @@ Note: `.next/` (816 MB) and `.next-prod/` (404 MB) are build outputs and exclude
 | `postcss.config.mjs` | ✅ | Single plugin: `@tailwindcss/postcss` |
 | `.editorconfig` | ❌ absent | — |
 | `.env.example` | ✅ | Exists at root (contents not reported — env file) |
-| Other | — | `next-env.d.ts` (generated); `tsconfig.tsbuildinfo` (build artifact, present at root); `package-lock.json` (name only per scope) |
+| Other | — | `next-env.d.ts` (generated; **gitignored** — machine-written, content depends on active distDir, CI runs `next typegen` before typecheck); `tsconfig.tsbuildinfo` (build artifact, present at root); `package-lock.json` (name only per scope) |
 
 ---
 

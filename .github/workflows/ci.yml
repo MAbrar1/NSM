@@ -36,6 +36,14 @@ jobs:
       - name: Generate Prisma client
         run: npx prisma generate
 
+      # Writes the route/page/layout types (`.next/types/`) that next-env.d.ts
+      # references. On a fresh clone neither exists yet, so a bare
+      # `tsc --noEmit` would fail with TS6053 (missing reference path) before
+      # the build step ever gets a chance to generate them. Cheap (no compile)
+      # and also lets typecheck validate typed-route definitions.
+      - name: Generate Next route types
+        run: npx next typegen
+
       - name: Typecheck
         run: npx tsc --noEmit
 

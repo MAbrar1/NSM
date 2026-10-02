@@ -7,6 +7,11 @@ node_modules/
 .next/
 # Isolated production build dir (NEXT_DIST_DIR, see next.config.ts)
 .next-prod/
+# Machine-written by every next command; its content depends on the active
+# distDir (.next vs .next-prod), so tracking it flip-flops between builds and
+# its generated reference path breaks `tsc` on fresh clones (TS6053).
+# CI runs `next typegen` before typechecking instead (see ci.yml).
+/next-env.d.ts
 out/
 
 # Production build
